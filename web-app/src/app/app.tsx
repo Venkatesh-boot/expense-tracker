@@ -8,6 +8,7 @@ import DashboardPage from './modules/dashboard/DashboardPage';
 import AccountPage from './modules/account/AccountPage';
 import SettingsPage from './modules/settings/SettingsPage';
 import AddExpensesPage from './modules/add-expenses/AddExpensesPage';
+import SubscriptionPlans from './modules/subscription/SubscriptionPlans';
 import { Provider } from 'react-redux';
 import store from './store/store';
 
@@ -37,6 +38,7 @@ export function App() {
         <Route path="/add-expenses" element={<AddExpensesPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/account" element={<AccountPage />} />
+        <Route path="/subscription" element={<SubscriptionPlans />} />
         </Routes>
       </div>
     </Provider>
