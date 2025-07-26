@@ -1,0 +1,37 @@
+import { call, put, takeLatest } from 'redux-saga/effects';
+import {
+  fetchAccountStart,
+  fetchAccountSuccess,
+  fetchAccountFailure,
+  changePasswordStart,
+  changePasswordSuccess,
+  changePasswordFailure,
+} from './accountSlice';
+import api from '../utils/api';
+
+import { PayloadAction } from '@reduxjs/toolkit';
+
+function* fetchAccountSaga(): Generator<any, void, any> {
+  try {
+    // Replace with real API endpoint
+    const response = yield call(api.get, '/account');
+    yield put(fetchAccountSuccess(response.data));
+  } catch (error) {
+    yield put(fetchAccountFailure((error as Error).message || 'Failed to fetch account details'));
+  }
+}
+
+function* changePasswordSaga(action: PayloadAction<{ currentPassword: string; newPassword: string }>): Generator<any, void, any> {
+  try {
+    // Replace with real API endpoint
+    yield call(api.post, '/account/change-password', action.payload);
+    yield put(changePasswordSuccess());
+  } catch (error) {
+    yield put(changePasswordFailure((error as Error).message || 'Failed to change password'));
+  }
+}
+
+export default function* accountSaga() {
+  yield takeLatest(fetchAccountStart.type, fetchAccountSaga);
+  yield takeLatest(changePasswordStart.type, changePasswordSaga);
+}
