@@ -1,0 +1,13 @@
+{
+  "name": "@expense-tracker/source",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {},
+  "private": true,
+  "dependencies": {},
+  "devDependencies": {
+    "@nx/js": "21.3.7",
+    "@nx/workspace": "21.3.7",
+    "nx": "21.3.7"
+  }
+}
