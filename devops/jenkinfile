@@ -1,0 +1,32 @@
+pipeline {
+  agent any
+  environment {
+    DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        git url: 'https://github.com/your-org/expense-tracker.git'
+      }
+    }
+    stage('Build Docker Image') {
+      steps {
+        sh 'docker build -t your-dockerhub/web-app:latest -f apps/web-app/Dockerfile .'
+      }
+    }
+    stage('Push to DockerHub') {
+      steps {
+        script {
+          docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-creds') {
+            docker.image('your-dockerhub/web-app:latest').push()
+          }
+        }
+      }
+    }
+    stage('Deploy to Kubernetes') {
+      steps {
+        sh 'kubectl apply -f k8s/web-app-deployment.yaml'
+      }
+    }
+  }
+}
