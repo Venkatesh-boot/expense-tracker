@@ -38,14 +38,18 @@ export default function SettingsPage() {
     localStorage.setItem('monthlyBudget', e.target.value);
   };
 
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+      <div className="bg-white dark:bg-gray-900">
+        <Header />
+      </div>
       <div className="flex-1 flex flex-col items-center justify-center px-2 py-4 sm:px-4 md:px-8">
-        <div className="bg-white rounded-lg shadow p-3 sm:p-6 w-full max-w-xs sm:max-w-md">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-blue-700">Settings</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-6 w-full max-w-xs sm:max-w-md">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-blue-700 dark:text-green-200">Settings</h2>
+
           <div className="mb-3 sm:mb-4">
-            <label className="block text-gray-700 mb-1">Default Currency</label>
+            <label className="block text-gray-700 dark:text-gray-200 mb-1">Default Currency</label>
             <select
               className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
               value={currency}
@@ -59,7 +63,7 @@ export default function SettingsPage() {
             </select>
           </div>
           <div className="mb-3 sm:mb-4">
-            <label className="block text-gray-700 mb-1">Date Format</label>
+            <label className="block text-gray-700 dark:text-gray-200 mb-1">Date Format</label>
             <select
               className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
               value={dateFormat}
@@ -71,7 +75,7 @@ export default function SettingsPage() {
             </select>
           </div>
           <div className="mb-3 sm:mb-4">
-            <label className="block text-gray-700 mb-1">Monthly Budget</label>
+            <label className="block text-gray-700 dark:text-gray-200 mb-1">Monthly Budget</label>
             <input
               type="number"
               min="0"
@@ -83,7 +87,9 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
-      <Footer />
+      <div className="bg-white dark:bg-gray-900">
+        <Footer />
+      </div>
     </div>
   );
 }

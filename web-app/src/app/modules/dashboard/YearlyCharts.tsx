@@ -133,7 +133,7 @@ function getHeatColor(amount: number) {
     <div className="flex flex-col gap-6">
       {/* Year Selection */}
       <div className="flex justify-end mb-2">
-        <label className="mr-2 font-medium text-green-700">Year:</label>
+        <label className="mr-2 font-medium text-green-700 dark:text-green-200">Year:</label>
         <select
           className="border rounded px-2 py-1 text-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
           value={selectedYear}

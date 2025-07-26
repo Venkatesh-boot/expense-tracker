@@ -93,7 +93,7 @@ export default function MonthlyCharts() {
       {/* Month and Year Selection */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-2 sm:mb-4">
         <div className="flex-1">
-          <label className="block text-gray-700 mb-1">Month</label>
+          <label className="block text-gray-700 dark:text-gray-200 mb-1">Month</label>
           <select
             className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
             value={selectedMonth}
@@ -105,7 +105,7 @@ export default function MonthlyCharts() {
           </select>
         </div>
         <div className="flex-1">
-          <label className="block text-gray-700 mb-1">Year</label>
+          <label className="block text-gray-700 dark:text-gray-200 mb-1">Year</label>
           <input
             type="number"
             className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"

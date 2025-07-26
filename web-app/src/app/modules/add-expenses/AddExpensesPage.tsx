@@ -25,25 +25,25 @@ export default function AddExpensesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <Header />
       <div className="flex-1 flex flex-col items-center justify-center px-2 py-4 sm:px-4 md:px-8">
-        <div className="bg-white rounded-lg shadow p-3 sm:p-6 w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-blue-700">Add Daily Expense</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-6 w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-blue-700 dark:text-green-200">Add Daily Expense</h2>
           <form className="space-y-3 sm:space-y-4">
             <div>
-              <label className="block text-gray-700 mb-1">Date</label>
+              <label className="block text-gray-700 dark:text-gray-200 mb-1">Date</label>
               <input type="date" className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base" required />
             </div>
             <div>
-              <label className="block text-gray-700 mb-1">Amount</label>
+              <label className="block text-gray-700 dark:text-gray-200 mb-1">Amount</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-base sm:text-lg">{currencySymbols[currency] || currency}</span>
                 <input type="number" className="w-full pl-8 sm:pl-9 pr-2 sm:pr-3 py-2 border border-gray-300 rounded-lg text-sm sm:text-base" min="1" required />
               </div>
             </div>
             <div>
-              <label className="block text-gray-700 mb-1">Category</label>
+              <label className="block text-gray-700 dark:text-gray-200 mb-1">Category</label>
               <select
                 className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
                 required
@@ -68,11 +68,11 @@ export default function AddExpensesPage() {
               )}
             </div>
             <div>
-              <label className="block text-gray-700 mb-1">Description</label>
+              <label className="block text-gray-700 dark:text-gray-200 mb-1">Description</label>
               <input type="text" className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base" placeholder="Optional" />
             </div>
             <div>
-              <label className="block text-gray-700 mb-1">Payment Method</label>
+              <label className="block text-gray-700 dark:text-gray-200 mb-1">Payment Method</label>
               <select className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base">
                 <option value="">Select Method</option>
                 <option value="Cash">Cash</option>
@@ -84,7 +84,7 @@ export default function AddExpensesPage() {
             </div>
             {/* Optional file attachment */}
             <div>
-              <label className="block text-gray-700 mb-1">Attach Bills / Files (optional, multiple allowed)</label>
+              <label className="block text-gray-700 dark:text-gray-200 mb-1">Attach Bills / Files (optional, multiple allowed)</label>
               <input
                 type="file"
                 className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"

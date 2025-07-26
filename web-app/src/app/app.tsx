@@ -12,7 +12,19 @@ import { Provider } from 'react-redux';
 import store from './store/store';
 
 
+
+import React from 'react';
+
 export function App() {
+  React.useEffect(() => {
+    const darkMode = localStorage.getItem('darkMode') === 'true';
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
   return (
     <Provider store={store}>
       <div className="app-container">
