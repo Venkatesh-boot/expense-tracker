@@ -62,13 +62,13 @@ const OtpPage = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-yellow-100 to-blue-200">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-lg p-8">
-        <h2 className="text-3xl font-bold text-center mb-8 text-yellow-700">Verify OTP</h2>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-yellow-100 to-blue-200 px-2 sm:px-0">
+      <div className="w-full max-w-xs sm:max-w-md bg-white rounded-xl shadow-lg p-4 sm:p-8">
+        <h2 className="text-2xl sm:text-3xl font-bold text-center mb-6 sm:mb-8 text-yellow-700">Verify OTP</h2>
         {!isOtpLengthValid ? (
           <div className="text-red-500 text-center">OTP length must be between 3 and 10.</div>
         ) : (
-          <form onSubmit={onSubmit} className="space-y-5">
+          <form onSubmit={onSubmit} className="space-y-4 sm:space-y-5">
             <div className="flex justify-center gap-2">
               {otp.map((digit, idx) => (
                 <input
@@ -77,7 +77,7 @@ const OtpPage = () => {
                   type="text"
                   inputMode="numeric"
                   maxLength={1}
-                  className="w-12 h-12 text-center text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                  className="w-10 h-10 sm:w-12 sm:h-12 text-center text-xl sm:text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"
                   value={digit}
                   onChange={e => handleChange(idx, e.target.value)}
                   onKeyDown={e => handleKeyDown(idx, e)}
@@ -89,7 +89,7 @@ const OtpPage = () => {
             {otp.join('').length !== OTP_LENGTH && (
               <span className="text-red-500 text-sm block text-center">Please enter the {OTP_LENGTH}-digit OTP</span>
             )}
-            <button type="submit" className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-3 rounded-lg transition-colors" disabled={loading || otp.join('').length !== OTP_LENGTH}>
+            <button type="submit" className="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-semibold py-2 sm:py-3 rounded-lg transition-colors text-sm sm:text-base" disabled={loading || otp.join('').length !== OTP_LENGTH}>
               {loading ? 'Verifying...' : 'Verify'}
             </button>
             {error && <div className="text-red-500 text-center mt-2">{error}</div>}
