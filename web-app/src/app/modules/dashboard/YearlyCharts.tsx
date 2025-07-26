@@ -1,68 +1,102 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, LineChart, Line, ReferenceLine } from 'recharts';
 
-const barData = [
-  { month: 'Jan', amount: 1200, Food: 400, Transport: 100, Shopping: 300, Bills: 250, Entertainment: 150 },
-  { month: 'Feb', amount: 900, Food: 300, Transport: 80, Shopping: 200, Bills: 220, Entertainment: 100 },
-  { month: 'Mar', amount: 1500, Food: 500, Transport: 120, Shopping: 400, Bills: 300, Entertainment: 180 },
-  { month: 'Apr', amount: 1100, Food: 350, Transport: 90, Shopping: 250, Bills: 250, Entertainment: 160 },
-  { month: 'May', amount: 1700, Food: 600, Transport: 150, Shopping: 500, Bills: 300, Entertainment: 150 },
-  { month: 'Jun', amount: 1300, Food: 400, Transport: 110, Shopping: 350, Bills: 300, Entertainment: 140 },
-  { month: 'Jul', amount: 1400, Food: 450, Transport: 120, Shopping: 400, Bills: 300, Entertainment: 130 },
-  { month: 'Aug', amount: 1600, Food: 500, Transport: 130, Shopping: 500, Bills: 320, Entertainment: 150 },
-  { month: 'Sep', amount: 1250, Food: 380, Transport: 100, Shopping: 300, Bills: 300, Entertainment: 170 },
-  { month: 'Oct', amount: 1800, Food: 650, Transport: 160, Shopping: 600, Bills: 300, Entertainment: 90 },
-  { month: 'Nov', amount: 1350, Food: 400, Transport: 120, Shopping: 400, Bills: 300, Entertainment: 130 },
-  { month: 'Dec', amount: 1550, Food: 500, Transport: 120, Shopping: 500, Bills: 300, Entertainment: 130 },
-];
 
-const pieData = [
-  { name: 'Food', value: 8000 },
-  { name: 'Transport', value: 3500 },
-  { name: 'Shopping', value: 12000 },
-  { name: 'Bills', value: 9000 },
-  { name: 'Entertainment', value: 4000 },
-];
+const yearlyData: Record<string, { barData: any[]; pieData: any[]; lastYearTotal: number }> = {
+  '2024': {
+    barData: [
+      { month: 'Jan', amount: 1200, Food: 400, Transport: 100, Shopping: 300, Bills: 250, Entertainment: 150 },
+      { month: 'Feb', amount: 900, Food: 300, Transport: 80, Shopping: 200, Bills: 220, Entertainment: 100 },
+      { month: 'Mar', amount: 1500, Food: 500, Transport: 120, Shopping: 400, Bills: 300, Entertainment: 180 },
+      { month: 'Apr', amount: 1100, Food: 350, Transport: 90, Shopping: 250, Bills: 250, Entertainment: 160 },
+      { month: 'May', amount: 1700, Food: 600, Transport: 150, Shopping: 500, Bills: 300, Entertainment: 150 },
+      { month: 'Jun', amount: 1300, Food: 400, Transport: 110, Shopping: 350, Bills: 300, Entertainment: 140 },
+      { month: 'Jul', amount: 1400, Food: 450, Transport: 120, Shopping: 400, Bills: 300, Entertainment: 130 },
+      { month: 'Aug', amount: 1600, Food: 500, Transport: 130, Shopping: 500, Bills: 320, Entertainment: 150 },
+      { month: 'Sep', amount: 1250, Food: 380, Transport: 100, Shopping: 300, Bills: 300, Entertainment: 170 },
+      { month: 'Oct', amount: 1800, Food: 650, Transport: 160, Shopping: 600, Bills: 300, Entertainment: 90 },
+      { month: 'Nov', amount: 1350, Food: 400, Transport: 120, Shopping: 400, Bills: 300, Entertainment: 130 },
+      { month: 'Dec', amount: 1550, Food: 500, Transport: 120, Shopping: 500, Bills: 300, Entertainment: 130 },
+    ],
+    pieData: [
+      { name: 'Food', value: 8000 },
+      { name: 'Transport', value: 3500 },
+      { name: 'Shopping', value: 12000 },
+      { name: 'Bills', value: 9000 },
+      { name: 'Entertainment', value: 4000 },
+    ],
+    lastYearTotal: 17000,
+  },
+  '2023': {
+    barData: [
+      { month: 'Jan', amount: 1000, Food: 350, Transport: 90, Shopping: 250, Bills: 200, Entertainment: 110 },
+      { month: 'Feb', amount: 800, Food: 250, Transport: 70, Shopping: 150, Bills: 180, Entertainment: 80 },
+      { month: 'Mar', amount: 1200, Food: 400, Transport: 100, Shopping: 300, Bills: 250, Entertainment: 150 },
+      { month: 'Apr', amount: 950, Food: 300, Transport: 80, Shopping: 200, Bills: 200, Entertainment: 120 },
+      { month: 'May', amount: 1400, Food: 500, Transport: 120, Shopping: 400, Bills: 300, Entertainment: 80 },
+      { month: 'Jun', amount: 1100, Food: 350, Transport: 90, Shopping: 250, Bills: 250, Entertainment: 160 },
+      { month: 'Jul', amount: 1200, Food: 400, Transport: 100, Shopping: 300, Bills: 250, Entertainment: 150 },
+      { month: 'Aug', amount: 1300, Food: 450, Transport: 110, Shopping: 350, Bills: 300, Entertainment: 90 },
+      { month: 'Sep', amount: 1100, Food: 350, Transport: 90, Shopping: 250, Bills: 250, Entertainment: 160 },
+      { month: 'Oct', amount: 1500, Food: 600, Transport: 150, Shopping: 500, Bills: 300, Entertainment: 150 },
+      { month: 'Nov', amount: 1200, Food: 400, Transport: 100, Shopping: 300, Bills: 250, Entertainment: 150 },
+      { month: 'Dec', amount: 1300, Food: 450, Transport: 110, Shopping: 350, Bills: 300, Entertainment: 90 },
+    ],
+    pieData: [
+      { name: 'Food', value: 6500 },
+      { name: 'Transport', value: 2800 },
+      { name: 'Shopping', value: 9500 },
+      { name: 'Bills', value: 7000 },
+      { name: 'Entertainment', value: 3200 },
+    ],
+    lastYearTotal: 16000,
+  },
+};
+
+
 
 // Removed duplicate COLORS
 
-// Yearly summary calculations
-const totalSpent = barData.reduce((sum, d) => sum + d.amount, 0);
-const avgMonth = Math.round(totalSpent / barData.length);
-const highestMonth = barData.reduce((max, d) => d.amount > max.amount ? d : max, barData[0]);
-const lowestMonth = barData.reduce((min, d) => d.amount < min.amount ? d : min, barData[0]);
-// Removed unused numTransactions
-const noSpendMonths = barData.filter(d => d.amount === 0).length;
-const biggestExpense = Math.max(...barData.map(d => d.amount));
 
-// Top 3 categories
-const topCategories = [...pieData].sort((a, b) => b.value - a.value).slice(0, 3);
-
-// Budget (example)
-const yearlyBudget = 18000;
-const budgetUsed = Math.min(100, Math.round((totalSpent / yearlyBudget) * 100));
-
-// Recurring expenses (simulated)
-const recurring = [
-  { name: 'Netflix', amount: 499 * 12 },
-  { name: 'Gym', amount: 1200 * 12 },
-];
-
-// Savings suggestion
-const highestCategory = topCategories[0];
-const savingsSuggestion = highestCategory.value > 0.4 * totalSpent
-  ? `Consider reducing your ${highestCategory.name} expenses to save more.`
-  : '';
-
-// Last year comparison (simulated)
-const lastYearTotal = 17000;
-const percentChange = lastYearTotal ? Math.round(((totalSpent - lastYearTotal) / lastYearTotal) * 100) : 0;
-
-// Month-over-month trend data (line chart)
-const lineData = barData.map(d => ({ month: d.month, amount: d.amount }));
-
-// Category trend (stacked bar)
 const categoryKeys = ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment'];
+
+export default function YearlyCharts() {
+  const [selectedYear, setSelectedYear] = useState('2024');
+  const { barData, pieData, lastYearTotal } = yearlyData[selectedYear];
+
+  // Yearly summary calculations
+  const totalSpent = barData.reduce((sum, d) => sum + d.amount, 0);
+  const avgMonth = Math.round(totalSpent / barData.length);
+  const highestMonth = barData.reduce((max, d) => d.amount > max.amount ? d : max, barData[0]);
+  const lowestMonth = barData.reduce((min, d) => d.amount < min.amount ? d : min, barData[0]);
+  const noSpendMonths = barData.filter(d => d.amount === 0).length;
+  const biggestExpense = Math.max(...barData.map(d => d.amount));
+
+  // Top 3 categories
+  const topCategories = [...pieData].sort((a, b) => b.value - a.value).slice(0, 3);
+
+  // Budget (example)
+  const yearlyBudget = 18000;
+  const budgetUsed = Math.min(100, Math.round((totalSpent / yearlyBudget) * 100));
+
+  // Recurring expenses (simulated)
+  const recurring = [
+    { name: 'Netflix', amount: 499 * 12 },
+    { name: 'Gym', amount: 1200 * 12 },
+  ];
+
+  // Savings suggestion
+  const highestCategory = topCategories[0];
+  const savingsSuggestion = highestCategory.value > 0.4 * totalSpent
+    ? `Consider reducing your ${highestCategory.name} expenses to save more.`
+    : '';
+
+  // Last year comparison (simulated)
+  const percentChange = lastYearTotal ? Math.round(((totalSpent - lastYearTotal) / lastYearTotal) * 100) : 0;
+
+  // Month-over-month trend data (line chart)
+  const lineData = barData.map(d => ({ month: d.month, amount: d.amount }));
+
 
 // Heatmap data (simulate hotness by amount)
 // Removed unused heatmapColors
@@ -75,27 +109,41 @@ function getHeatColor(amount: number) {
   return 'bg-red-400';
 }
 
-// CSV Export
-function exportCSV() {
-  const rows = [
-    ['Month', 'Amount'],
-    ...barData.map(d => [d.month, d.amount])
-  ];
-  const csv = rows.map(r => r.join(',')).join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'yearly-expenses.csv';
-  a.click();
-  URL.revokeObjectURL(url);
-}
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CFF'];
+  // CSV Export
+  function exportCSV() {
+    const rows = [
+      ['Month', 'Amount'],
+      ...barData.map(d => [d.month, d.amount])
+    ];
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `yearly-expenses-${selectedYear}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
 
-export default function YearlyCharts() {
+
+  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CFF'];
+
   return (
     <div className="flex flex-col gap-6">
+      {/* Year Selection */}
+      <div className="flex justify-end mb-2">
+        <label className="mr-2 font-medium text-green-700">Year:</label>
+        <select
+          className="border rounded px-2 py-1 text-green-700 focus:outline-none focus:ring-2 focus:ring-green-400"
+          value={selectedYear}
+          onChange={e => setSelectedYear(e.target.value)}
+        >
+          {Object.keys(yearlyData).map(year => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+      </div>
       {/* Summary Widgets */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">

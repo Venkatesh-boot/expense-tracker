@@ -7,14 +7,7 @@ import ExpenseTable from './ExpenseTable';
 import MonthlyCharts from './MonthlyCharts';
 import YearlyCharts from './YearlyCharts';
 
-const months = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
-
 const DashboardPage = () => {
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState<'monthly' | 'yearly' | 'expenses'>('monthly');
   const navigate = useNavigate();
 
@@ -31,31 +24,7 @@ const DashboardPage = () => {
       <div className="flex-1 w-full flex flex-col items-center justify-start px-2 py-4 sm:px-4 md:px-8">
         <div className="w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-4xl bg-white rounded-lg shadow p-3 sm:p-6">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-blue-700">Expense Dashboard</h1>
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8">
-            <div className="flex-1">
-              <label className="block text-gray-700 mb-1">Month</label>
-              <select
-                className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
-                value={selectedMonth}
-                onChange={e => setSelectedMonth(Number(e.target.value))}
-              >
-                {months.map((m, idx) => (
-                  <option key={m} value={idx}>{m}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex-1">
-              <label className="block text-gray-700 mb-1">Year</label>
-              <input
-                type="number"
-                className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
-                value={selectedYear}
-                onChange={e => setSelectedYear(Number(e.target.value))}
-                min={2000}
-                max={2100}
-              />
-            </div>
-          </div>
+          {/* Month and Year selection removed; now handled inside MonthlyCharts */}
           <div className="mb-6 sm:mb-8">
             <div className="flex border-b mb-3 sm:mb-4">
               <button

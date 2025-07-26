@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine } from 'recharts';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CFF'];
@@ -79,8 +79,43 @@ function exportCSV() {
 // Removed duplicate barData and COLORS
 
 export default function MonthlyCharts() {
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  // TODO: Use selectedMonth and selectedYear to filter data as needed
+
   return (
     <div className="flex flex-col gap-6">
+      {/* Month and Year Selection */}
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-2 sm:mb-4">
+        <div className="flex-1">
+          <label className="block text-gray-700 mb-1">Month</label>
+          <select
+            className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
+            value={selectedMonth}
+            onChange={e => setSelectedMonth(Number(e.target.value))}
+          >
+            {months.map((m, idx) => (
+              <option key={m} value={idx}>{m}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex-1">
+          <label className="block text-gray-700 mb-1">Year</label>
+          <input
+            type="number"
+            className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
+            value={selectedYear}
+            onChange={e => setSelectedYear(Number(e.target.value))}
+            min={2000}
+            max={2100}
+          />
+        </div>
+      </div>
       {/* Summary Widgets */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">

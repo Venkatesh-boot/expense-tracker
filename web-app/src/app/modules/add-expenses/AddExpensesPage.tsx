@@ -82,6 +82,16 @@ export default function AddExpensesPage() {
                 <option value="Other">Other</option>
               </select>
             </div>
+            {/* Optional file attachment */}
+            <div>
+              <label className="block text-gray-700 mb-1">Attach Bills / Files (optional, multiple allowed)</label>
+              <input
+                type="file"
+                className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
+                accept="image/*,application/pdf"
+                multiple
+              />
+            </div>
             <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition text-sm sm:text-base">Add Expense</button>
           </form>
         </div>
