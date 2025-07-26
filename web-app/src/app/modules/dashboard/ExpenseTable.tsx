@@ -1,4 +1,4 @@
-
+import React, { useState, useMemo } from 'react';
 import { useTable, useSortBy, usePagination, useGlobalFilter } from 'react-table';
 
 type Expense = {
@@ -8,6 +8,7 @@ type Expense = {
   description: string;
 };
 
+// Example data, in real app this would come from props or API
 const data: Expense[] = [
   { date: '2025-07-01', category: 'Food', amount: 500, description: 'Lunch at cafe' },
   { date: '2025-07-02', category: 'Transport', amount: 200, description: 'Bus fare' },
@@ -17,7 +18,13 @@ const data: Expense[] = [
   // ...more rows
 ];
 
-const columns: any[] = [
+
+
+
+
+
+
+const columns = [
   { Header: 'Date', accessor: 'date' },
   { Header: 'Category', accessor: 'category' },
   { Header: 'Amount', accessor: 'amount' },
@@ -25,14 +32,36 @@ const columns: any[] = [
 ];
 
 export default function ExpenseTable() {
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [selectedRows, setSelectedRows] = useState<number[]>([]);
+  const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
+  const [searchInput, setSearchInput] = useState('');
+  const [csvUrl, setCsvUrl] = useState('');
+
+  // Filter data by date range
+  const filteredData = useMemo(() => {
+    let filtered = data;
+    if (dateFrom) filtered = filtered.filter(d => d.date >= dateFrom);
+    if (dateTo) filtered = filtered.filter(d => d.date <= dateTo);
+    if (searchInput) {
+      filtered = filtered.filter(d =>
+        d.category.toLowerCase().includes(searchInput.toLowerCase()) ||
+        d.description.toLowerCase().includes(searchInput.toLowerCase())
+      );
+    }
+    return filtered;
+  }, [dateFrom, dateTo, searchInput]);
+
+  // Table instance
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
     prepareRow,
     page,
-    setGlobalFilter,
-    state: { globalFilter, pageIndex, pageSize },
+    // setGlobalFilter, // not used
+    state: { pageIndex, pageSize },
     canPreviousPage,
     canNextPage,
     pageOptions,
@@ -40,72 +69,205 @@ export default function ExpenseTable() {
     previousPage,
     setPageSize,
   } = useTable(
-    { columns, data, initialState: { pageIndex: 0, pageSize: 5 } },
+    { columns, data: filteredData, initialState: { pageIndex: 0, pageSize: 5 } },
     useGlobalFilter,
     useSortBy,
     usePagination
   );
 
+  // Total expenses (filtered and page)
+  const totalFiltered = filteredData.reduce((sum, d) => sum + d.amount, 0);
+  const totalPage = page.reduce((sum: number, row: { original: { amount: number } }) => sum + (row.original.amount || 0), 0);
+
+  // Category breakdown
+  const categoryBreakdown = useMemo(() => {
+    const map: Record<string, number> = {};
+    filteredData.forEach(d => {
+      map[d.category] = (map[d.category] || 0) + d.amount;
+    });
+    return map;
+  }, [filteredData]);
+
+  // Export to CSV
+  const handleExportCSV = () => {
+    const rows = [
+      ['Date', 'Category', 'Amount', 'Description'],
+      ...filteredData.map(d => [d.date, d.category, d.amount, d.description])
+    ];
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    setCsvUrl(URL.createObjectURL(blob));
+  };
+
+  // Search suggestions (simple demo)
+  React.useEffect(() => {
+    if (!searchInput) setSearchSuggestions([]);
+    else {
+      const cats = Array.from(new Set(data.map(d => d.category)));
+      setSearchSuggestions(cats.filter(c => c.toLowerCase().includes(searchInput.toLowerCase())));
+    }
+  }, [searchInput]);
+
+  // Row selection for bulk actions
+  const toggleRow = (idx: number) => {
+    setSelectedRows(sel => sel.includes(idx) ? sel.filter(i => i !== idx) : [...sel, idx]);
+  };
+  const allSelected = page.length > 0 && page.every((row: { index: number }) => selectedRows.includes(row.index));
+  const toggleAll = () => {
+    if (allSelected) setSelectedRows(sel => sel.filter((i: number) => !page.map((row: { index: number }) => row.index).includes(i)));
+    else setSelectedRows(sel => [...sel, ...page.map((row: { index: number }) => row.index).filter((i: number) => !sel.includes(i))]);
+  };
+
+  // Highlight large expenses (demo: >1000)
+  const isLarge = (amount: number) => amount > 1000;
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg p-2 sm:p-4">
-      <div className="mb-2 flex justify-between items-center">
-        <input
-          value={globalFilter || ''}
-          onChange={e => setGlobalFilter(e.target.value)}
-          placeholder="Search..."
-          className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
-        />
-        <select
-          value={pageSize}
-          onChange={e => setPageSize(Number(e.target.value))}
-          className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
-        >
-          {[5, 10, 20].map(size => (
-            <option key={size} value={size}>
-              Show {size}
-            </option>
-          ))}
-        </select>
+      {/* Info Bar */}
+      <div className="flex flex-col sm:flex-row sm:justify-between gap-2 mb-2">
+        <div className="flex flex-wrap gap-2 items-center">
+          <span className="font-semibold text-gray-700 dark:text-gray-100">Total (filtered): <span className="text-blue-700 dark:text-green-200">₹{totalFiltered.toLocaleString()}</span></span>
+          <span className="font-semibold text-gray-700 dark:text-gray-100">This page: <span className="text-blue-700 dark:text-green-200">₹{totalPage.toLocaleString()}</span></span>
+          <span className="font-semibold text-gray-700 dark:text-gray-100">Showing {page.length} of {filteredData.length} expenses</span>
+        </div>
+        <div className="flex gap-2 items-center">
+          <button onClick={handleExportCSV} className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm">Export CSV</button>
+          {csvUrl && <a href={csvUrl} download="expenses.csv" className="text-blue-600 underline text-sm">Download</a>}
+        </div>
       </div>
+      {/* Category Breakdown */}
+      <div className="flex flex-wrap gap-2 mb-2">
+        {Object.entries(categoryBreakdown).map(([cat, amt]) => (
+          <span key={cat} className="px-2 py-1 rounded bg-blue-100 dark:bg-gray-900 text-blue-700 dark:text-green-200 text-xs font-semibold">{cat}: ₹{amt.toLocaleString()}</span>
+        ))}
+      </div>
+      {/* Filters */}
+      <div className="mb-2 flex flex-col sm:flex-row sm:justify-between gap-2 items-center">
+        <div className="flex gap-2 items-center w-full sm:w-auto">
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={e => setDateFrom(e.target.value)}
+            className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
+            placeholder="From"
+          />
+          <input
+            type="date"
+            value={dateTo}
+            onChange={e => setDateTo(e.target.value)}
+            className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
+            placeholder="To"
+          />
+        </div>
+        <div className="flex gap-2 items-center w-full sm:w-auto">
+          <div className="relative w-full sm:w-auto">
+            <input
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              placeholder="Search..."
+              className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 w-full"
+              onFocus={() => setSearchSuggestions([])}
+            />
+            {searchSuggestions.length > 0 && (
+              <ul className="absolute left-0 top-9 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow z-10 w-full">
+                {searchSuggestions.map(s => (
+                  <li key={s} className="px-3 py-1 cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700" onClick={() => setSearchInput(s)}>{s}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <select
+            value={pageSize}
+            onChange={e => setPageSize(Number(e.target.value))}
+            className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
+          >
+            {[5, 10, 20].map(size => (
+              <option key={size} value={size}>
+                Show {size}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      {/* Table */}
       <div className="overflow-x-auto rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
         <table {...getTableProps()} className="min-w-full text-left bg-white dark:bg-gray-800">
           <thead className="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-gray-900 dark:to-gray-800 sticky top-0 z-10">
-            {headerGroups.map((headerGroup: any) => (
-              <tr {...headerGroup.getHeaderGroupProps()}>
-                {headerGroup.headers.map((column: any) => (
+            {headerGroups.map((headerGroup: { getHeaderGroupProps: () => unknown; headers: Array<{ getHeaderProps: (props?: unknown) => unknown; getSortByToggleProps: () => unknown; isSorted?: boolean; isSortedDesc?: boolean; render: (type: string) => React.ReactNode; id: string }> }) => (
+              <tr {...(headerGroup.getHeaderGroupProps() as object)}>
+                <th className="py-3 px-2 border-b text-center">
+                  <input type="checkbox" checked={allSelected} onChange={toggleAll} />
+                </th>
+                {headerGroup.headers.map((column) => (
                   <th
-                    {...column.getHeaderProps(column.getSortByToggleProps())}
-                    className="py-3 px-5 border-b font-semibold text-blue-700 dark:text-blue-200 text-base cursor-pointer select-none whitespace-nowrap"
+                    {...(column.getHeaderProps(column.getSortByToggleProps()) as object)}
+                    className={`py-3 px-5 border-b font-semibold text-blue-700 dark:text-blue-200 text-base cursor-pointer select-none whitespace-nowrap ${column.isSorted ? 'bg-blue-200 dark:bg-gray-700' : ''}`}
                   >
                     {column.render('Header')}
                     <span>
-                      {column.isSorted ? (column.isSortedDesc ? ' 🔽' : ' 🔼') : ''}
+                      {column.isSorted ? (column.isSortedDesc ? <span role="img" aria-label="sorted descending"> 🔽</span> : <span role="img" aria-label="sorted ascending"> 🔼</span>) : ''}
                     </span>
                   </th>
                 ))}
+                <th className="py-3 px-2 border-b text-center">Actions</th>
               </tr>
             ))}
           </thead>
           <tbody {...getTableBodyProps()}>
-            {page.map((row: any, idx: number) => {
+            {page.map((row: { index: number; original: { amount: number; category: string }; getRowProps: () => unknown; cells: Array<{ getCellProps: () => unknown; column: { id: string }; value: unknown; render: (type: string) => React.ReactNode }>; }, idx: number) => {
               prepareRow(row);
+              const isSelected = selectedRows.includes(row.index);
               return (
                 <tr
-                  {...row.getRowProps()}
-                  className={
-                    `transition-colors ${idx % 2 === 0 ? 'bg-blue-50 dark:bg-gray-900' : 'bg-white dark:bg-gray-800'} hover:bg-blue-100 dark:hover:bg-gray-700`}
+                  {...(row.getRowProps() as object)}
+                  className={`transition-colors ${idx % 2 === 0 ? 'bg-blue-50 dark:bg-gray-900' : 'bg-white dark:bg-gray-800'} hover:bg-blue-100 dark:hover:bg-gray-700 ${isLarge(row.original.amount) ? 'border-l-4 border-red-500' : ''}`}
                 >
-                  {row.cells.map((cell: any) => (
-                    <td className="py-3 px-5 border-b text-gray-700 dark:text-gray-200 whitespace-nowrap" {...cell.getCellProps()}>
-                      {cell.render('Cell')}
+                  <td className="py-3 px-2 border-b text-center">
+                    <input type="checkbox" checked={isSelected} onChange={() => toggleRow(row.index)} />
+                  </td>
+                  {row.cells.map((cell, cidx: number) => (
+                    <td className="py-3 px-5 border-b text-gray-700 dark:text-gray-200 whitespace-nowrap" {...(cell.getCellProps() as object)}>
+                      {/* Recurring indicator, notes/tags, receipt icon, currency formatting */}
+                      {cell.column.id === 'amount' ? (
+                        <span className="inline-flex items-center gap-1">
+                          ₹{typeof cell.value === 'number' ? cell.value.toLocaleString() : (cell.value as string)}
+                          {typeof cell.value === 'number' && isLarge(cell.value) && <span title="Large expense" className="ml-1 text-red-500 font-bold" role="img" aria-label="Large expense">!</span>}
+                        </span>
+                      ) : cell.column.id === 'category' ? (
+                        <span className="inline-flex items-center gap-1">
+                          {cell.value as string}
+                          {/* Recurring demo: mark 'Bills' as recurring */}
+                          {cell.value === 'Bills' && <span title="Recurring" className="ml-1 text-green-500" role="img" aria-label="Recurring">♻️</span>}
+                        </span>
+                      ) : cell.column.id === 'description' ? (
+                        <span className="inline-flex items-center gap-1">
+                          {cell.value as string}
+                          {/* Notes/tags demo: show tag for 'Groceries' */}
+                          {row.original.category === 'Shopping' && <span className="ml-1 px-1 rounded bg-yellow-100 text-yellow-800 text-xs">groceries</span>}
+                        </span>
+                      ) : cell.render('Cell')}
                     </td>
                   ))}
+                  <td className="py-3 px-2 border-b text-center">
+                    {/* Row actions: edit/delete, receipt (demo) */}
+                    <button className="text-blue-600 hover:underline text-xs mr-2">Edit</button>
+                    <button className="text-red-600 hover:underline text-xs mr-2">Delete</button>
+                    <button className="text-green-600 hover:underline text-xs" title="View Receipt"><span role="img" aria-label="View Receipt">📎</span></button>
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
       </div>
+      {/* Bulk actions */}
+      {selectedRows.length > 0 && (
+        <div className="flex gap-2 mt-2">
+          <button className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700 text-sm">Delete Selected</button>
+          <button className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm">Export Selected</button>
+        </div>
+      )}
+      {/* Pagination */}
       <div className="flex justify-between items-center mt-2">
         <button onClick={() => previousPage()} disabled={!canPreviousPage} className="px-3 py-1 border rounded disabled:opacity-50 dark:text-gray-100">Previous</button>
         <span className="dark:text-gray-100">
