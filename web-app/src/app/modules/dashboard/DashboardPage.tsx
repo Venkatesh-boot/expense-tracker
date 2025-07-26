@@ -8,7 +8,7 @@ import MonthlyCharts from './MonthlyCharts';
 import YearlyCharts from './YearlyCharts';
 
 const DashboardPage = () => {
-  const [activeTab, setActiveTab] = useState<'monthly' | 'yearly' | 'expenses'>('monthly');
+  const [activeTab, setActiveTab] = useState<'monthly' | 'yearly' | 'recent-expenses'>('monthly');
   const navigate = useNavigate();
 
   // Currency from settings
@@ -40,10 +40,10 @@ const DashboardPage = () => {
                 Yearly
               </button>
               <button
-                className={`px-2 sm:px-4 py-2 font-semibold focus:outline-none ${activeTab === 'expenses' ? 'border-b-2 border-purple-600 text-purple-700 dark:text-purple-200' : 'text-gray-500 dark:text-gray-300'}`}
-                onClick={() => setActiveTab('expenses')}
+                className={`px-2 sm:px-4 py-2 font-semibold focus:outline-none ${activeTab === 'recent-expenses' ? 'border-b-2 border-purple-600 text-purple-700 dark:text-purple-200' : 'text-gray-500 dark:text-gray-300'}`}
+                onClick={() => setActiveTab('recent-expenses')}
               >
-                Expenses
+                Recent Expenses
               </button>
             </div>
             {activeTab === 'monthly' && (
@@ -62,9 +62,9 @@ const DashboardPage = () => {
                 <YearlyCharts />
               </div>
             )}
-            {activeTab === 'expenses' && (
+            {activeTab === 'recent-expenses' && (
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-3 sm:p-6 w-full overflow-x-auto">
-                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 dark:text-purple-200">Expenses</h2>
+                <h2 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 dark:text-purple-200">Recent Expenses</h2>
                 <ExpenseTable />
               </div>
             )}

@@ -1,27 +1,27 @@
 import React from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-
-const categories = [
-  'Food',
-  'Transport',
-  'Shopping',
-  'Bills',
-  'Entertainment',
-  'Health',
-  'Education',
-  'Other',
-];
+import { categories } from '../../config/categories';
 
 export default function AddExpensesPage() {
   const currency = localStorage.getItem('currency') || 'INR';
   const currencySymbols: Record<string, string> = { INR: '₹', USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
   const [category, setCategory] = React.useState('');
   const [customCategory, setCustomCategory] = React.useState('');
+  const [type, setType] = React.useState('expense');
+  const [categorySearch, setCategorySearch] = React.useState('');
+  const [showCategoryDropdown, setShowCategoryDropdown] = React.useState(false);
 
-  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setCategory(e.target.value);
-    if (e.target.value !== 'Other') setCustomCategory('');
+  const filteredCategories = categories.filter(cat =>
+    (cat.type === type || cat.label === 'Other') &&
+    cat.label.toLowerCase().includes(categorySearch.toLowerCase())
+  );
+
+  const handleCategorySelect = (label: string) => {
+    setCategory(label);
+    setShowCategoryDropdown(false);
+    setCategorySearch('');
+    if (label !== 'Other') setCustomCategory('');
   };
 
   return (
@@ -43,19 +43,58 @@ export default function AddExpensesPage() {
               </div>
             </div>
             <div>
-              <label className="block text-gray-700 dark:text-gray-200 mb-1">Category</label>
+              <label className="block text-gray-700 dark:text-gray-200 mb-1">Type</label>
               <select
                 className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
+                value={type}
+                onChange={e => setType(e.target.value)}
                 required
-                value={category}
-                onChange={handleCategoryChange}
               >
-                <option value="">Select Category</option>
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-                <option value="Other">Other (Add Custom)</option>
+                <option value="expense">Expense</option>
+                <option value="savings">Savings</option>
+                <option value="income">Income</option>
               </select>
+            </div>
+            <div>
+              <label className="block text-gray-700 dark:text-gray-200 mb-1">Category</label>
+              <div className="relative">
+                <input
+                  type="text"
+                  className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
+                  placeholder="Search or select category"
+                  value={category ? (categories.find(c => c.label === category)?.icon + ' ' + category) : categorySearch}
+                  onChange={e => {
+                    setCategory('');
+                    setCategorySearch(e.target.value);
+                    setShowCategoryDropdown(true);
+                  }}
+                  onFocus={() => setShowCategoryDropdown(true)}
+                  readOnly={category === 'Other'}
+                  required
+                />
+                {showCategoryDropdown && (
+                  <ul className="absolute left-0 right-0 max-h-48 overflow-y-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow z-20 mt-1">
+                    {filteredCategories.length === 0 && (
+                      <li className="px-3 py-2 text-gray-400">No categories found</li>
+                    )}
+                    {filteredCategories.map(cat => (
+                      <li
+                        key={cat.label}
+                        className={`px-3 py-2 cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700 flex items-center gap-2 ${category === cat.label ? 'bg-blue-50 dark:bg-gray-800 font-semibold' : ''}`}
+                        onClick={() => handleCategorySelect(cat.label)}
+                      >
+                        <span>{cat.icon}</span> <span>{cat.label}</span>
+                      </li>
+                    ))}
+                    <li
+                      className={`px-3 py-2 cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700 flex items-center gap-2 ${category === 'Other' ? 'bg-blue-50 dark:bg-gray-800 font-semibold' : ''}`}
+                      onClick={() => handleCategorySelect('Other')}
+                    >
+                      <span role="img" aria-label="Add">➕</span> <span>Other (Add Custom)</span>
+                    </li>
+                  </ul>
+                )}
+              </div>
               {category === 'Other' && (
                 <input
                   type="text"

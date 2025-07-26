@@ -32,6 +32,9 @@ const columns = [
 ];
 
 export default function ExpenseTable() {
+  React.useEffect(() => {
+    document.title = 'Recent Expenses';
+  }, []);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
@@ -123,6 +126,7 @@ export default function ExpenseTable() {
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg p-2 sm:p-4">
+      <h2 className="text-xl font-bold mb-2 text-blue-700 dark:text-blue-200">Recent Expenses</h2>
       {/* Info Bar */}
       <div className="flex flex-col sm:flex-row sm:justify-between gap-2 mb-2">
         <div className="flex flex-wrap gap-2 items-center">
