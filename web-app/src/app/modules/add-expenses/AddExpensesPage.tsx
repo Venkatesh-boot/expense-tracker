@@ -16,6 +16,14 @@ const categories = [
 export default function AddExpensesPage() {
   const currency = localStorage.getItem('currency') || 'INR';
   const currencySymbols: Record<string, string> = { INR: '₹', USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
+  const [category, setCategory] = React.useState('');
+  const [customCategory, setCustomCategory] = React.useState('');
+
+  const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setCategory(e.target.value);
+    if (e.target.value !== 'Other') setCustomCategory('');
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
@@ -36,12 +44,28 @@ export default function AddExpensesPage() {
             </div>
             <div>
               <label className="block text-gray-700 mb-1">Category</label>
-              <select className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base" required>
+              <select
+                className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
+                required
+                value={category}
+                onChange={handleCategoryChange}
+              >
                 <option value="">Select Category</option>
                 {categories.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
+                <option value="Other">Other (Add Custom)</option>
               </select>
+              {category === 'Other' && (
+                <input
+                  type="text"
+                  className="mt-2 w-full px-2 py-2 sm:px-3 border border-blue-300 rounded-lg text-sm sm:text-base"
+                  placeholder="Enter custom category"
+                  value={customCategory}
+                  onChange={e => setCustomCategory(e.target.value)}
+                  required
+                />
+              )}
             </div>
             <div>
               <label className="block text-gray-700 mb-1">Description</label>
