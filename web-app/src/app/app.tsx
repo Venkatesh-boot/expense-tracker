@@ -1,49 +1,25 @@
-import NxWelcome from './nx-welcome';
 
-import { Route, Routes, Link } from 'react-router-dom';
+
+import { Route, Routes, Navigate } from 'react-router-dom';
+import LoginPage from './modules/login/LoginPage';
+import RegistrationPage from './modules/registration/RegistrationPage';
+import OtpPage from './modules/otp/OtpPage';
+import { Provider } from 'react-redux';
+import store from './store/store';
+
 
 export function App() {
   return (
-    <div>
-      <NxWelcome title="web-app" />
-
-      {/* START: routes */}
-      {/* These routes and navigation have been generated for you */}
-      {/* Feel free to move and update them to fit your needs */}
-      <br />
-      <hr />
-      <br />
-      <div role="navigation">
-        <ul>
-          <li>
-            <Link to="/">Home</Link>
-          </li>
-          <li>
-            <Link to="/page-2">Page 2</Link>
-          </li>
-        </ul>
+    <Provider store={store}>
+      <div className="app-container">
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegistrationPage />} />
+        <Route path="/otp" element={<OtpPage />} />
+        </Routes>
       </div>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <div>
-              This is the generated root route.{' '}
-              <Link to="/page-2">Click here for page 2.</Link>
-            </div>
-          }
-        />
-        <Route
-          path="/page-2"
-          element={
-            <div>
-              <Link to="/">Click here to go back to root page.</Link>
-            </div>
-          }
-        />
-      </Routes>
-      {/* END: routes */}
-    </div>
+    </Provider>
   );
 }
 
