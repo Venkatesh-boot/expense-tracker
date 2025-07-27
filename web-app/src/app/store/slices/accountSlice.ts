@@ -70,5 +70,4 @@ export const {
   changePasswordFailure,
   clearPasswordChangeStatus,
 } = accountSlice.actions;
-
 export default accountSlice.reducer;

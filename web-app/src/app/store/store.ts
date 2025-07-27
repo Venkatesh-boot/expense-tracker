@@ -1,9 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
 import createSagaMiddleware from 'redux-saga';
-import registrationReducer from './registrationSlice';
-import otpReducer from './otpSlice';
-import accountReducer from './accountSlice';
-import accountSaga from './accountSaga';
+
+import registrationReducer from './slices/registrationSlice';
+import otpReducer from './slices/otpSlice';
+import accountReducer from './slices/accountSlice';
 import rootSaga from './rootSaga';
 
 const sagaMiddleware = createSagaMiddleware();
@@ -18,7 +18,6 @@ const store = configureStore({
 });
 
 sagaMiddleware.run(rootSaga);
-sagaMiddleware.run(accountSaga);
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

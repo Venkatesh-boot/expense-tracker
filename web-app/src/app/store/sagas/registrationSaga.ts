@@ -1,10 +1,8 @@
-
 import { call, put, takeLatest } from 'redux-saga/effects';
-import { registerRequest, registerSuccess, registerFailure } from './registrationSlice';
-import API_CONFIG from '../config/api-config';
+import { registerRequest, registerSuccess, registerFailure } from '../slices/registrationSlice';
+import API_CONFIG from '../../config/api-config';
 
-
-import type { RegistrationFormData } from '../types/formTypes';
+import type { RegistrationFormData } from '../../types/formTypes';
 interface RegisterAction {
   type: string;
   payload: RegistrationFormData;

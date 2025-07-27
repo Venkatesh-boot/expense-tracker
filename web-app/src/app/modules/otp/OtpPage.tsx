@@ -2,7 +2,7 @@
 import React, { useRef, useState } from 'react';
 import { OTP_LENGTH } from '../../config/otp-config';
 import { useDispatch, useSelector } from 'react-redux';
-import { verifyOtpRequest, resetOtp } from '../../store/otpSlice';
+import { verifyOtpRequest, resetOtp } from '../../store/slices/otpSlice';
 import type { RootState } from '../../store/store';
 import { useNavigate } from 'react-router-dom';
 

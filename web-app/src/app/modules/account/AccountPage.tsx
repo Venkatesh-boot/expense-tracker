@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
-import { fetchAccountStart, changePasswordStart, clearPasswordChangeStatus } from '../../store/accountSlice';
+import { fetchAccountStart, changePasswordStart, clearPasswordChangeStatus } from '../../store/slices/accountSlice';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 

@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import type { RegistrationFormData } from '../../types/formTypes';
 import { useDispatch, useSelector } from 'react-redux';
 import { COUNTRY_CODES } from '../../config/country-codes';
-import { registerRequest, resetRegistration } from '../../store/registrationSlice';
+import { registerRequest, resetRegistration } from '../../store/slices/registrationSlice';
 import type { RootState } from '../../store/store';
 
 const RegistrationPage = () => {

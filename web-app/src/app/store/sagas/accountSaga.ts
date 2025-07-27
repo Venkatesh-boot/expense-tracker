@@ -6,8 +6,8 @@ import {
   changePasswordStart,
   changePasswordSuccess,
   changePasswordFailure,
-} from './accountSlice';
-import api from '../utils/api';
+} from '../slices/accountSlice';
+import api from '../../utils/api';
 
 import { PayloadAction } from '@reduxjs/toolkit';
 

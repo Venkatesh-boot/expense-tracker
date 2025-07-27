@@ -1,6 +1,6 @@
 import { call, put, takeLatest } from 'redux-saga/effects';
-import { verifyOtpRequest, verifyOtpSuccess, verifyOtpFailure } from './otpSlice';
-import API_CONFIG from '../config/api-config';
+import { verifyOtpRequest, verifyOtpSuccess, verifyOtpFailure } from '../slices/otpSlice';
+import API_CONFIG from '../../config/api-config';
 
 interface VerifyOtpAction {
   type: string;

@@ -1,6 +1,5 @@
-
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { RegistrationFormData } from '../types/formTypes';
+import type { RegistrationFormData } from '../../types/formTypes';
 
 const initialState = {
   loading: false,

@@ -9,6 +9,7 @@ import AccountPage from './modules/account/AccountPage';
 import SettingsPage from './modules/settings/SettingsPage';
 import AddExpensesPage from './modules/add-expenses/AddExpensesPage';
 import SubscriptionPlans from './modules/subscription/SubscriptionPlans';
+import GroupManagementPage from './modules/group/GroupManagementPage';
 import { Provider } from 'react-redux';
 import store from './store/store';
 
@@ -39,6 +40,7 @@ export function App() {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/account" element={<AccountPage />} />
         <Route path="/subscription" element={<SubscriptionPlans />} />
+        <Route path="/group" element={<GroupManagementPage />} />
         </Routes>
       </div>
     </Provider>
