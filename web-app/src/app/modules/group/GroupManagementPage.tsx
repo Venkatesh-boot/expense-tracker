@@ -1,28 +1,35 @@
 
-import React, { useState } from 'react';
-import ManageGroupMembers, { Member } from './ManageGroupMembers';
+
+import React, { useEffect, useState } from 'react';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { inviteMemberRequest } from '../../store/slices/inviteSlice';
+import type { InviteState } from '../../store/slices/inviteSlice';
+import { fetchMembersRequest, removeMemberRequest } from '../../store/slices/groupMembersSlice';
+import type { GroupMembersState } from '../../store/slices/groupMembersSlice';
+import ManageGroupMembers from './ManageGroupMembers';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 
-const initialMembers: Member[] = [
-  { id: '1', name: 'Alice', email: 'alice@email.com' },
-  { id: '2', name: 'Bob', email: 'bob@email.com' },
-];
+
+
 
 function GroupManagementPage() {
-  const [members, setMembers] = useState<Member[]>(initialMembers);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteName, setInviteName] = useState('');
-  const [message, setMessage] = useState<string | null>(null);
   const [removeId, setRemoveId] = useState<string | null>(null);
+  const dispatch = useAppDispatch();
+  const invite = useAppSelector(state => state.invite as InviteState);
+  const groupMembers = useAppSelector(state => state.groupMembers as GroupMembersState);
+
+  useEffect(() => {
+    dispatch(fetchMembersRequest());
+  }, [dispatch]);
 
   function handleInvite() {
     if (!inviteEmail || !inviteName) {
-      setMessage('Please enter both name and email.');
       return;
     }
-    setMembers([...members, { id: Date.now().toString(), name: inviteName, email: inviteEmail }]);
-    setMessage(`Invitation sent to ${inviteName} (${inviteEmail})`);
+    dispatch(inviteMemberRequest({ name: inviteName, email: inviteEmail }));
     setInviteEmail('');
     setInviteName('');
   }
@@ -33,8 +40,7 @@ function GroupManagementPage() {
 
   function confirmRemove() {
     if (removeId) {
-      setMembers(members.filter((m: Member) => m.id !== removeId));
-      setMessage('Member removed.');
+      dispatch(removeMemberRequest({ id: removeId }));
       setRemoveId(null);
     }
   }
@@ -68,10 +74,19 @@ function GroupManagementPage() {
               Invite
             </button>
           </div>
-          {message && <div className="text-green-600 dark:text-green-300 mt-2">{message}</div>}
+          {invite.success && (
+            <div className="text-green-600 dark:text-green-300 mt-2">
+              Invitation sent to {invite.invitedName} ({invite.invitedEmail})
+            </div>
+          )}
+          {invite.error && (
+            <div className="text-red-600 dark:text-red-300 mt-2">
+              {invite.error}
+            </div>
+          )}
 
           <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Group Members</h2>
-          <ManageGroupMembers members={members} onRemove={handleRemove} />
+          <ManageGroupMembers members={groupMembers.members} onRemove={handleRemove} />
         </div>
 
         {/* Remove confirmation dialog */}

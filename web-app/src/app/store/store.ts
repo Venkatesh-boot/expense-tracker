@@ -13,6 +13,8 @@ const store = configureStore({
     registration: registrationReducer,
     otp: otpReducer,
     account: accountReducer,
+    invite: require('./slices/inviteSlice').default,
+    groupMembers: require('./slices/groupMembersSlice').default,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({ thunk: false }).concat(sagaMiddleware),
 });
