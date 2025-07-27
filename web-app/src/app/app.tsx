@@ -10,6 +10,8 @@ import SettingsPage from './modules/settings/SettingsPage';
 import AddExpensesPage from './modules/add-expenses/AddExpensesPage';
 import SubscriptionPlans from './modules/subscription/SubscriptionPlans';
 import GroupManagementPage from './modules/group/GroupManagementPage';
+
+import ExpensesPage from './modules/expenses/ExpensesPage';
 import { Provider } from 'react-redux';
 import store from './store/store';
 
@@ -36,6 +38,7 @@ export function App() {
         <Route path="/register" element={<RegistrationPage />} />
         <Route path="/otp" element={<OtpPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/expenses" element={<ExpensesPage />} />
         <Route path="/add-expenses" element={<AddExpensesPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/account" element={<AccountPage />} />

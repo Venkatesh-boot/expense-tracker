@@ -58,6 +58,14 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
       </div>
       {/* User Avatar, Language, Account & Menu */}
       <div className="relative flex items-center gap-4">
+        {/* Expenses Menu */}
+        <button
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 dark:bg-gray-800 shadow-sm hover:shadow-md transition text-sm font-medium"
+          onClick={() => navigate('/expenses')}
+        >
+          <svg className="w-5 h-5 text-purple-600 dark:text-purple-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" /></svg>
+          <span>Expenses</span>
+        </button>
         {/* Group Menu */}
         <button
           className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-green-200 bg-green-50 dark:bg-gray-800 shadow-sm hover:shadow-md transition text-sm font-medium"

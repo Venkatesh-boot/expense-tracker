@@ -1,29 +1,7 @@
-// ExpenseTable has been moved to ../expenses/ExpensesTable.tsx
-import React, { useState, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useAppSelector } from '../../store/hooks';
+import type { ExpensesState } from '../../store/slices/expensesSlice';
 import { useTable, useSortBy, usePagination, useGlobalFilter } from 'react-table';
-
-type Expense = {
-  date: string;
-  category: string;
-  amount: number;
-  description: string;
-};
-
-// Example data, in real app this would come from props or API
-const data: Expense[] = [
-  { date: '2025-07-01', category: 'Food', amount: 500, description: 'Lunch at cafe' },
-  { date: '2025-07-02', category: 'Transport', amount: 200, description: 'Bus fare' },
-  { date: '2025-07-03', category: 'Shopping', amount: 1200, description: 'Groceries' },
-  { date: '2025-07-04', category: 'Bills', amount: 800, description: 'Electricity bill' },
-  { date: '2025-07-05', category: 'Entertainment', amount: 300, description: 'Movie' },
-  // ...more rows
-];
-
-
-
-
-
-
 
 const columns = [
   { Header: 'Date', accessor: 'date' },
@@ -32,10 +10,18 @@ const columns = [
   { Header: 'Description', accessor: 'description' },
 ];
 
-export default function ExpenseTable() {
-  React.useEffect(() => {
-    document.title = 'Recent Expenses';
-  }, []);
+// Generate 50 mock expenses for demo
+const mockExpenses = Array.from({ length: 50 }, (_, i) => ({
+  date: `2025-07-${String((i % 30) + 1).padStart(2, '0')}`,
+  category: ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Health', 'Travel', 'Education', 'Other'][i % 9],
+  amount: Math.floor(Math.random() * 2000) + 100,
+  description: `Mock expense #${i + 1}`,
+}));
+
+export default function ExpensesTable() {
+  // Use mock data for demo; replace with Redux state for real app
+  // const { expenses } = useAppSelector(state => state.expenses as ExpensesState);
+  const expenses = mockExpenses;
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
@@ -45,17 +31,17 @@ export default function ExpenseTable() {
 
   // Filter data by date range
   const filteredData = useMemo(() => {
-    let filtered = data;
+    let filtered = expenses;
     if (dateFrom) filtered = filtered.filter(d => d.date >= dateFrom);
     if (dateTo) filtered = filtered.filter(d => d.date <= dateTo);
     if (searchInput) {
       filtered = filtered.filter(d =>
         d.category.toLowerCase().includes(searchInput.toLowerCase()) ||
-        d.description.toLowerCase().includes(searchInput.toLowerCase())
+        (d.description || '').toLowerCase().includes(searchInput.toLowerCase())
       );
     }
     return filtered;
-  }, [dateFrom, dateTo, searchInput]);
+  }, [expenses, dateFrom, dateTo, searchInput]);
 
   // Table instance
   const {
@@ -64,7 +50,6 @@ export default function ExpenseTable() {
     headerGroups,
     prepareRow,
     page,
-    // setGlobalFilter, // not used
     state: { pageIndex, pageSize },
     canPreviousPage,
     canNextPage,
@@ -107,10 +92,10 @@ export default function ExpenseTable() {
   React.useEffect(() => {
     if (!searchInput) setSearchSuggestions([]);
     else {
-      const cats = Array.from(new Set(data.map(d => d.category)));
+      const cats = Array.from(new Set(expenses.map(d => d.category)));
       setSearchSuggestions(cats.filter(c => c.toLowerCase().includes(searchInput.toLowerCase())));
     }
-  }, [searchInput]);
+  }, [searchInput, expenses]);
 
   // Row selection for bulk actions
   const toggleRow = (idx: number) => {
@@ -198,14 +183,14 @@ export default function ExpenseTable() {
       <div className="overflow-x-auto rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
         <table {...getTableProps()} className="min-w-full text-left bg-white dark:bg-gray-800">
           <thead className="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-gray-900 dark:to-gray-800 sticky top-0 z-10">
-            {headerGroups.map((headerGroup: { getHeaderGroupProps: () => unknown; headers: Array<{ getHeaderProps: (props?: unknown) => unknown; getSortByToggleProps: () => unknown; isSorted?: boolean; isSortedDesc?: boolean; render: (type: string) => React.ReactNode; id: string }> }) => (
-              <tr {...(headerGroup.getHeaderGroupProps() as object)}>
+            {headerGroups.map((headerGroup: any) => (
+              <tr {...headerGroup.getHeaderGroupProps()}>
                 <th className="py-3 px-2 border-b text-center">
                   <input type="checkbox" checked={allSelected} onChange={toggleAll} />
                 </th>
-                {headerGroup.headers.map((column) => (
+                {headerGroup.headers.map((column: any) => (
                   <th
-                    {...(column.getHeaderProps(column.getSortByToggleProps()) as object)}
+                    {...column.getHeaderProps(column.getSortByToggleProps())}
                     className={`py-3 px-5 border-b font-semibold text-blue-700 dark:text-blue-200 text-base cursor-pointer select-none whitespace-nowrap ${column.isSorted ? 'bg-blue-200 dark:bg-gray-700' : ''}`}
                   >
                     {column.render('Header')}
@@ -219,20 +204,19 @@ export default function ExpenseTable() {
             ))}
           </thead>
           <tbody {...getTableBodyProps()}>
-            {page.map((row: { index: number; original: { amount: number; category: string }; getRowProps: () => unknown; cells: Array<{ getCellProps: () => unknown; column: { id: string }; value: unknown; render: (type: string) => React.ReactNode }>; }, idx: number) => {
+            {page.map((row: any, idx: number) => {
               prepareRow(row);
               const isSelected = selectedRows.includes(row.index);
               return (
                 <tr
-                  {...(row.getRowProps() as object)}
+                  {...row.getRowProps()}
                   className={`transition-colors ${idx % 2 === 0 ? 'bg-blue-50 dark:bg-gray-900' : 'bg-white dark:bg-gray-800'} hover:bg-blue-100 dark:hover:bg-gray-700 ${isLarge(row.original.amount) ? 'border-l-4 border-red-500' : ''}`}
                 >
                   <td className="py-3 px-2 border-b text-center">
                     <input type="checkbox" checked={isSelected} onChange={() => toggleRow(row.index)} />
                   </td>
-                  {row.cells.map((cell, cidx: number) => (
-                    <td className="py-3 px-5 border-b text-gray-700 dark:text-gray-200 whitespace-nowrap" {...(cell.getCellProps() as object)}>
-                      {/* Recurring indicator, notes/tags, receipt icon, currency formatting */}
+                  {row.cells.map((cell: any, cidx: number) => (
+                    <td className="py-3 px-5 border-b text-gray-700 dark:text-gray-200 whitespace-nowrap" {...cell.getCellProps()}>
                       {cell.column.id === 'amount' ? (
                         <span className="inline-flex items-center gap-1">
                           ₹{typeof cell.value === 'number' ? cell.value.toLocaleString() : (cell.value as string)}
@@ -241,20 +225,17 @@ export default function ExpenseTable() {
                       ) : cell.column.id === 'category' ? (
                         <span className="inline-flex items-center gap-1">
                           {cell.value as string}
-                          {/* Recurring demo: mark 'Bills' as recurring */}
                           {cell.value === 'Bills' && <span title="Recurring" className="ml-1 text-green-500" role="img" aria-label="Recurring">♻️</span>}
                         </span>
                       ) : cell.column.id === 'description' ? (
                         <span className="inline-flex items-center gap-1">
                           {cell.value as string}
-                          {/* Notes/tags demo: show tag for 'Groceries' */}
                           {row.original.category === 'Shopping' && <span className="ml-1 px-1 rounded bg-yellow-100 text-yellow-800 text-xs">groceries</span>}
                         </span>
                       ) : cell.render('Cell')}
                     </td>
                   ))}
                   <td className="py-3 px-2 border-b text-center">
-                    {/* Row actions: edit/delete, receipt (demo) */}
                     <button className="text-blue-600 hover:underline text-xs mr-2">Edit</button>
                     <button className="text-red-600 hover:underline text-xs mr-2">Delete</button>
                     <button className="text-green-600 hover:underline text-xs" title="View Receipt"><span role="img" aria-label="View Receipt">📎</span></button>
@@ -265,14 +246,12 @@ export default function ExpenseTable() {
           </tbody>
         </table>
       </div>
-      {/* Bulk actions */}
       {selectedRows.length > 0 && (
         <div className="flex gap-2 mt-2">
           <button className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700 text-sm">Delete Selected</button>
           <button className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm">Export Selected</button>
         </div>
       )}
-      {/* Pagination */}
       <div className="flex justify-between items-center mt-2">
         <button onClick={() => previousPage()} disabled={!canPreviousPage} className="px-3 py-1 border rounded disabled:opacity-50 dark:text-gray-100">Previous</button>
         <span className="dark:text-gray-100">
