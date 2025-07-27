@@ -12,7 +12,7 @@ import { PayloadAction } from '@reduxjs/toolkit';
 
 function* fetchMembersSaga(): Generator<unknown, void, unknown> {
   try {
-    const response = (yield call(fetch, `${API_CONFIG.BASE_URL}/group/members`)) as Response;
+    const response = (yield call(fetch, `${API_CONFIG.BASE_URL}${API_CONFIG.GROUP_MEMBERS}`)) as Response;
     if (!response.ok) {
       const errorText = (yield call([response, 'text'])) as string;
       throw new Error(errorText || 'Failed to fetch members');
@@ -28,7 +28,7 @@ function* fetchMembersSaga(): Generator<unknown, void, unknown> {
 
 function* removeMemberSaga(action: PayloadAction<{ id: string }>): Generator<unknown, void, unknown> {
   try {
-    const response = (yield call(fetch, `${API_CONFIG.BASE_URL}/group/members/${action.payload.id}`, {
+    const response = (yield call(fetch, `${API_CONFIG.BASE_URL}${API_CONFIG.GROUP_MEMBER(action.payload.id)}`, {
       method: 'DELETE',
     })) as Response;
     if (!response.ok) {

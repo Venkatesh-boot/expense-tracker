@@ -5,7 +5,7 @@ import { PayloadAction } from '@reduxjs/toolkit';
 
 function* handleInviteMember(action: PayloadAction<{ name: string; email: string }>): Generator<unknown, void, unknown> {
   try {
-    const response = (yield call(fetch, `${API_CONFIG.BASE_URL}/group/invite`, {
+    const response = (yield call(fetch, `${API_CONFIG.BASE_URL}${API_CONFIG.GROUP_INVITE}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(action.payload),

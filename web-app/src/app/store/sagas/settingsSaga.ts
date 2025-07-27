@@ -6,7 +6,7 @@ import { PayloadAction } from '@reduxjs/toolkit';
 function* handleUpdateSettings(action: PayloadAction<{ currency: string; dateFormat: string; monthlyBudget: string }>): Generator<unknown, void, unknown> {
   try {
     // Simulate API call
-    const response = (yield call(fetch, `${API_CONFIG.BASE_URL}/settings`, {
+    const response = (yield call(fetch, `${API_CONFIG.BASE_URL}${API_CONFIG.SETTINGS}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(action.payload),

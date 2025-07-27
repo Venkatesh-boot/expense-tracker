@@ -10,7 +10,7 @@ interface RegisterAction {
 
 function* handleRegister(action: RegisterAction): Generator<unknown, void, unknown> {
   try {
-    const response = (yield call(fetch, `${API_CONFIG.BASE_URL}/register`, {
+    const response = (yield call(fetch, `${API_CONFIG.BASE_URL}${API_CONFIG.REGISTER}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(action.payload),

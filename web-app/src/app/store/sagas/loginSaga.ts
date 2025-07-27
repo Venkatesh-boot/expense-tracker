@@ -7,13 +7,13 @@ function* handleLogin(action: PayloadAction<{ email?: string; password?: string;
   try {
     let response: Response;
     if (action.payload.email && action.payload.password) {
-      response = (yield call(fetch, `${API_CONFIG.BASE_URL}/login`, {
+      response = (yield call(fetch, `${API_CONFIG.BASE_URL}${API_CONFIG.LOGIN}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: action.payload.email, password: action.payload.password }),
       })) as Response;
     } else {
-      response = (yield call(fetch, `${API_CONFIG.BASE_URL}/login/mobile`, {
+      response = (yield call(fetch, `${API_CONFIG.BASE_URL}${API_CONFIG.LOGIN_MOBILE}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ countryCode: action.payload.countryCode, mobile: action.payload.mobile }),

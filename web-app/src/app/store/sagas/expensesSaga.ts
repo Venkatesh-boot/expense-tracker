@@ -15,7 +15,7 @@ function* handleAddExpense(action: PayloadAction<any>): Generator<unknown, void,
         formData.append(key, String(value));
       }
     });
-    const response = (yield call(fetch, `${API_CONFIG.BASE_URL}/expenses`, {
+    const response = (yield call(fetch, `${API_CONFIG.BASE_URL}${API_CONFIG.EXPENSES}`, {
       method: 'POST',
       body: formData,
     })) as Response;

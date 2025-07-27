@@ -9,7 +9,7 @@ interface VerifyOtpAction {
 
 function* handleVerifyOtp(action: VerifyOtpAction): Generator<unknown, void, unknown> {
   try {
-    const response = (yield call(fetch, `${API_CONFIG.BASE_URL}/verify-otp`, {
+    const response = (yield call(fetch, `${API_CONFIG.BASE_URL}${API_CONFIG.VERIFY_OTP}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(action.payload),
