@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from 'react';
-import { useAppSelector } from '../../store/hooks';
-import type { ExpensesState } from '../../store/slices/expensesSlice';
+import React, { useMemo, useState, useEffect } from 'react';
+import { useAppSelector, useAppDispatch } from '../../store/hooks';
+import { fetchExpensesTableRequest } from '../../store/slices/expensesTableSlice';
+import type { ExpensesTableState } from '../../store/slices/expensesTableSlice';
 import { useTable, useSortBy, usePagination, useGlobalFilter } from 'react-table';
 
 const columns = [
@@ -10,18 +11,15 @@ const columns = [
   { Header: 'Description', accessor: 'description' },
 ];
 
-// Generate 50 mock expenses for demo
-const mockExpenses = Array.from({ length: 50 }, (_, i) => ({
-  date: `2025-07-${String((i % 30) + 1).padStart(2, '0')}`,
-  category: ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Health', 'Travel', 'Education', 'Other'][i % 9],
-  amount: Math.floor(Math.random() * 2000) + 100,
-  description: `Mock expense #${i + 1}`,
-}));
+
 
 export default function ExpensesTable() {
-  // Use mock data for demo; replace with Redux state for real app
-  // const { expenses } = useAppSelector(state => state.expenses as ExpensesState);
-  const expenses = mockExpenses;
+  const dispatch = useAppDispatch();
+  const { rows: expenses, loading, error } = useAppSelector(state => state.expensesTable as ExpensesTableState);
+
+  useEffect(() => {
+    dispatch(fetchExpensesTableRequest());
+  }, [dispatch]);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [selectedRows, setSelectedRows] = useState<number[]>([]);

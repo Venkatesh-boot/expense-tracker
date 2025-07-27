@@ -9,7 +9,9 @@ import inviteSaga from './sagas/inviteSaga';
 import groupMembersSaga from './sagas/groupMembersSaga';
 import loginSaga from './sagas/loginSaga';
 import settingsSaga from './sagas/settingsSaga';
+
 import expensesSaga from './sagas/expensesSaga';
+import expensesTableSaga from './sagas/expensesTableSaga';
 
 
 export default function* rootSaga() {
@@ -22,5 +24,6 @@ export default function* rootSaga() {
     loginSaga(),
     settingsSaga(),
     expensesSaga(),
+    expensesTableSaga(),
   ]);
 }

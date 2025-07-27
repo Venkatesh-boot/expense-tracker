@@ -18,6 +18,7 @@ const store = configureStore({
     login: require('./slices/loginSlice').default,
     settings: require('./slices/settingsSlice').default,
     expenses: require('./slices/expensesSlice').default,
+    expensesTable: require('./slices/expensesTableSlice').default,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({ thunk: false }).concat(sagaMiddleware),
 });
