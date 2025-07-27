@@ -15,6 +15,8 @@ const store = configureStore({
     account: accountReducer,
     invite: require('./slices/inviteSlice').default,
     groupMembers: require('./slices/groupMembersSlice').default,
+    login: require('./slices/loginSlice').default,
+    settings: require('./slices/settingsSlice').default,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({ thunk: false }).concat(sagaMiddleware),
 });

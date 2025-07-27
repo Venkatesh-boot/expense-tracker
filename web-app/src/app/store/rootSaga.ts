@@ -7,6 +7,8 @@ import otpSaga from './sagas/otpSaga';
 import accountSaga from './sagas/accountSaga';
 import inviteSaga from './sagas/inviteSaga';
 import groupMembersSaga from './sagas/groupMembersSaga';
+import loginSaga from './sagas/loginSaga';
+import settingsSaga from './sagas/settingsSaga';
 
 
 export default function* rootSaga() {
@@ -16,5 +18,7 @@ export default function* rootSaga() {
     accountSaga(),
     inviteSaga(),
     groupMembersSaga(),
+    loginSaga(),
+    settingsSaga(),
   ]);
 }

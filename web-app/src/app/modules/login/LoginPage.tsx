@@ -1,8 +1,12 @@
 
 import React, { useState } from 'react';
 import { COUNTRY_CODES } from '../../config/country-codes';
+
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { loginRequest } from '../../store/slices/loginSlice';
+import type { LoginState } from '../../store/slices/loginSlice';
 
 
 type LoginFormData = {
@@ -17,7 +21,10 @@ interface MobileLoginFormData {
 
 
 const LoginPage = () => {
+
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const login = useAppSelector(state => state.login as LoginState);
   const [loginMode, setLoginMode] = useState<'email' | 'mobile'>('email');
 
   // Email/password form
@@ -27,17 +34,20 @@ const LoginPage = () => {
     defaultValues: { countryCode: '+91' }
   });
 
+
   const onEmailSubmit = (data: LoginFormData) => {
-    // Add authentication logic here
-    // alert(`Email: ${data.email}\nPassword: ${data.password}`);
-    navigate('/dashboard');
+    dispatch(loginRequest({ email: data.email, password: data.password }));
   };
 
   const onMobileSubmit = (data: MobileLoginFormData) => {
-    // Add mobile OTP logic here
-    // alert(`Mobile: ${data.countryCode} ${data.mobile}\nOTP sent!`);
-    navigate('/dashboard');
+    dispatch(loginRequest({ countryCode: data.countryCode, mobile: data.mobile }));
   };
+
+  React.useEffect(() => {
+    if (login.isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [login.isAuthenticated, navigate]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 px-2 sm:px-0">
@@ -79,7 +89,10 @@ const LoginPage = () => {
               />
               {emailErrors.password && <span className="text-red-500 text-sm mt-1 block">{emailErrors.password.message}</span>}
             </div>
-            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-lg transition-colors text-sm sm:text-base">Login</button>
+            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-lg transition-colors text-sm sm:text-base" disabled={login.loading}>
+              {login.loading ? 'Logging in...' : 'Login'}
+            </button>
+            {login.error && <div className="text-red-500 text-sm mt-2">{login.error}</div>}
           </form>
         ) : (
           <form onSubmit={handleMobileSubmit(onMobileSubmit)} className="space-y-4 sm:space-y-6">
@@ -103,7 +116,10 @@ const LoginPage = () => {
               />
             </div>
             {mobileErrors.mobile && <span className="text-red-500 text-sm mt-1 block">{mobileErrors.mobile.message}</span>}
-            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-lg transition-colors text-sm sm:text-base">Send OTP</button>
+            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-lg transition-colors text-sm sm:text-base" disabled={login.loading}>
+              {login.loading ? 'Sending...' : 'Send OTP'}
+            </button>
+            {login.error && <div className="text-red-500 text-sm mt-2">{login.error}</div>}
           </form>
         )}
         <p className="mt-4 sm:mt-6 text-center text-gray-600 text-sm sm:text-base">

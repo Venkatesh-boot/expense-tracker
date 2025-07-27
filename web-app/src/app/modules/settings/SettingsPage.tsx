@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { updateSettingsRequest, loadSettings } from '../../store/slices/settingsSlice';
+import type { SettingsState } from '../../store/slices/settingsSlice';
 
 const currencyOptions = [
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
@@ -18,23 +22,48 @@ const dateFormatOptions = [
 ];
 
 
+
 export default function SettingsPage() {
-  const [currency, setCurrency] = useState(localStorage.getItem('currency') || 'INR');
-  const [dateFormat, setDateFormat] = useState(localStorage.getItem('dateFormat') || 'DD/MM/YYYY');
-  const [budget, setBudget] = useState(localStorage.getItem('monthlyBudget') || '12000');
+  const dispatch = useAppDispatch();
+  const settings = useAppSelector(state => state.settings as SettingsState);
+  const [currency, setCurrency] = useState(settings.currency);
+  const [dateFormat, setDateFormat] = useState(settings.dateFormat);
+  const [budget, setBudget] = useState(settings.monthlyBudget);
+
+  useEffect(() => {
+    // Load from localStorage on mount
+    const stored = {
+      currency: localStorage.getItem('currency') || 'INR',
+      dateFormat: localStorage.getItem('dateFormat') || 'DD/MM/YYYY',
+      monthlyBudget: localStorage.getItem('monthlyBudget') || '12000',
+    };
+    dispatch(loadSettings(stored));
+    setCurrency(stored.currency);
+    setDateFormat(stored.dateFormat);
+    setBudget(stored.monthlyBudget);
+  }, [dispatch]);
+
+  useEffect(() => {
+    setCurrency(settings.currency);
+    setDateFormat(settings.dateFormat);
+    setBudget(settings.monthlyBudget);
+  }, [settings.currency, settings.dateFormat, settings.monthlyBudget]);
 
   const handleCurrencyChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setCurrency(e.target.value);
+    dispatch(updateSettingsRequest({ currency: e.target.value, dateFormat, monthlyBudget: budget }));
     localStorage.setItem('currency', e.target.value);
   };
 
   const handleDateFormatChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setDateFormat(e.target.value);
+    dispatch(updateSettingsRequest({ currency, dateFormat: e.target.value, monthlyBudget: budget }));
     localStorage.setItem('dateFormat', e.target.value);
   };
 
   const handleBudgetChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setBudget(e.target.value);
+    dispatch(updateSettingsRequest({ currency, dateFormat, monthlyBudget: e.target.value }));
     localStorage.setItem('monthlyBudget', e.target.value);
   };
 
