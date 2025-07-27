@@ -1,8 +1,15 @@
 const { NxAppWebpackPlugin } = require('@nx/webpack/app-plugin');
 const { NxReactWebpackPlugin } = require('@nx/react/webpack-plugin');
 const { join } = require('path');
+const webpack = require('webpack');
 
 module.exports = {
+  ignoreWarnings: [
+    {
+      module: /tough-cookie/,
+      message: /Critical dependency: require function is used/,
+    },
+  ],
   output: {
     path: join(__dirname, '../dist/web-app'),
   },
@@ -15,6 +22,9 @@ module.exports = {
     },
   },
   plugins: [
+    new webpack.IgnorePlugin({
+      resourceRegExp: /^tough-cookie$/,
+    }),
     new NxAppWebpackPlugin({
       tsConfig: './tsconfig.app.json',
       compiler: 'babel',
