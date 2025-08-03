@@ -17,17 +17,29 @@ public class LoginController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> loginRequest) {
-        String username = loginRequest.get("username");
+        String email = loginRequest.get("email");
         String password = loginRequest.get("password");
-        boolean authenticated = authService.authenticate(username, password);
         Map<String, Object> response = new HashMap<>();
+        if (email == null || password == null) {
+            response.put("success", false);
+            response.put("message", "Email and password are required");
+            return ResponseEntity.badRequest().body(response);
+        }
+        // Check if user exists
+        if (authService.findByEmail(email) == null) {
+            response.put("success", false);
+            response.put("message", "User not found");
+            return ResponseEntity.status(404).body(response);
+        }
+        boolean authenticated = authService.authenticate(email, password);
         response.put("success", authenticated);
         if (authenticated) {
             response.put("message", "Login successful");
+            return ResponseEntity.ok(response);
         } else {
-            response.put("message", "Invalid username or password");
+            response.put("message", "Invalid email or password");
+            return ResponseEntity.status(401).body(response);
         }
-        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/test")

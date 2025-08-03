@@ -24,7 +24,7 @@ const LoginPage = () => {
 
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const login = useAppSelector(state => state.login as LoginState);
+  const login:any = useAppSelector(state => state.login as LoginState);
   const [loginMode, setLoginMode] = useState<'email' | 'mobile'>('email');
 
   // Email/password form
@@ -71,6 +71,28 @@ const LoginPage = () => {
         </div>
         {loginMode === 'email' ? (
           <form onSubmit={handleEmailSubmit(onEmailSubmit)} className="space-y-4 sm:space-y-6">
+            {login.error && (() => {
+              let errorObj = login.error;
+              if (typeof login.error === 'string') {
+                try {
+                  // Try to parse if it looks like a JSON object
+                  if (login.error.trim().startsWith('{') && login.error.trim().endsWith('}')) {
+                    errorObj = JSON.parse(login.error);
+                  }
+                } catch (e) {
+                  // Not a JSON string, leave as is
+                }
+              }
+              return (
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-2 text-center font-semibold">
+                  {typeof errorObj === 'string'
+                    ? errorObj
+                    : errorObj && errorObj.message
+                      ? errorObj.message
+                      : 'An error occurred. Please try again.'}
+                </div>
+              );
+            })()}
             <div>
               <input
                 type="email"
@@ -92,10 +114,18 @@ const LoginPage = () => {
             <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-lg transition-colors text-sm sm:text-base" disabled={login.loading}>
               {login.loading ? 'Logging in...' : 'Login'}
             </button>
-            {login.error && <div className="text-red-500 text-sm mt-2">{login.error}</div>}
           </form>
         ) : (
           <form onSubmit={handleMobileSubmit(onMobileSubmit)} className="space-y-4 sm:space-y-6">
+            {login.error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-2 text-center font-semibold">
+                {typeof login.error === 'string'
+                  ? login.error
+                  : login.error && login.error.message
+                    ? login.error.message
+                    : 'An error occurred. Please try again.'}
+              </div>
+            )}
             <div className="flex gap-2">
               <select
                 className="px-2 sm:px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white text-sm sm:text-base"
@@ -119,7 +149,6 @@ const LoginPage = () => {
             <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-lg transition-colors text-sm sm:text-base" disabled={login.loading}>
               {login.loading ? 'Sending...' : 'Send OTP'}
             </button>
-            {login.error && <div className="text-red-500 text-sm mt-2">{login.error}</div>}
           </form>
         )}
         <p className="mt-4 sm:mt-6 text-center text-gray-600 text-sm sm:text-base">

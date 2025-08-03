@@ -1,8 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+
+// Allow error to be string or object (for richer API error responses)
+export type LoginError = string | { message?: string; [key: string]: any } | null;
+
 export interface LoginState {
   loading: boolean;
-  error: string | null;
+  error: LoginError;
   isAuthenticated: boolean;
   email?: string | null;
 }
@@ -32,7 +36,7 @@ const loginSlice = createSlice({
       state.loading = false;
       state.isAuthenticated = true;
     },
-    loginFailure(state, action: PayloadAction<string>) {
+    loginFailure(state, action: PayloadAction<LoginError>) {
       state.loading = false;
       state.error = action.payload;
       state.isAuthenticated = false;
