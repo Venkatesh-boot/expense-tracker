@@ -2,8 +2,10 @@ package com.hamsacorp.expense.controller;
 
 import com.hamsacorp.expense.model.User;
 import com.hamsacorp.expense.service.AuthService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -17,7 +19,13 @@ public class RegistrationController {
   private AuthService authService;
 
   @PostMapping("/register")
-  public ResponseEntity<?> register(@RequestBody User user) {
+  public ResponseEntity<?> register(@Valid @RequestBody User user, BindingResult bindingResult) {
+    if (bindingResult.hasErrors()) {
+      Map<String, Object> errors = new HashMap<>();
+      bindingResult.getFieldErrors().forEach(error -> errors.put(error.getField(), error.getDefaultMessage()));
+      return ResponseEntity.badRequest().body(errors);
+    }
+
     String email = user.getEmail();
     String password = user.getPassword();
     String firstName = user.getFirstName();
