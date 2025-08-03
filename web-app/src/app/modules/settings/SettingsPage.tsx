@@ -69,12 +69,12 @@ export default function SettingsPage() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col">
       <div className="bg-white dark:bg-gray-900">
         <Header />
       </div>
       <div className="flex-1 flex flex-col items-center justify-center px-2 py-4 sm:px-4 md:px-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-6 w-full max-w-xs sm:max-w-md">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-8 w-full max-w-xs sm:max-w-md border border-blue-100 dark:border-gray-700">
           <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-blue-700 dark:text-green-200">Settings</h2>
 
           <div className="mb-3 sm:mb-4">

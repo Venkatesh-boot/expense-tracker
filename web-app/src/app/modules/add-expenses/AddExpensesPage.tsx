@@ -66,12 +66,12 @@ export default function AddExpensesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col">
       <Header />
       <div className="flex-1 flex flex-col items-center justify-center px-2 py-4 sm:px-4 md:px-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-6 w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl">
-          <h2 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-blue-700 dark:text-green-200">Add Daily Expense</h2>
-          <form className="space-y-3 sm:space-y-4" onSubmit={handleSubmit}>
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-8 w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl border border-blue-100 dark:border-gray-700">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 dark:from-blue-300 dark:via-purple-300 dark:to-pink-200">Add Daily Expense</h2>
+          <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
             <div>
               <label className="block text-gray-700 dark:text-gray-200 mb-1">Date</label>
               <input type="date" className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base" value={date} onChange={e => setDate(e.target.value)} required />
@@ -174,12 +174,16 @@ export default function AddExpensesPage() {
               />
             </div>
             <div className="flex gap-2">
-              <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition text-sm sm:text-base" disabled={expenses.loading}>
+              <button
+                type="submit"
+                className="flex-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white font-semibold py-2 rounded-lg shadow transition text-sm sm:text-base border-0"
+                disabled={expenses.loading}
+              >
                 {expenses.loading ? 'Adding...' : 'Add Expense'}
               </button>
               <button
                 type="button"
-                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition text-sm sm:text-base border border-gray-300"
+                className="flex-1 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-300 dark:from-gray-700 dark:via-gray-800 dark:to-gray-900 text-gray-800 dark:text-gray-200 font-semibold py-2 rounded-lg shadow transition text-sm sm:text-base border border-gray-300 dark:border-gray-700"
                 onClick={() => {
                   setDate('');
                   setAmount('');

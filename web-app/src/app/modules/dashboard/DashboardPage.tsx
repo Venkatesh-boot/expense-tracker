@@ -17,14 +17,34 @@ const DashboardPage = () => {
   // Placeholder data
   const monthlyExpenses = 12345;
   const yearlyExpenses = 98765;
+  const monthlyIncome = 20000;
+  const monthlySavings = 3000;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <Header />
-      <div className="flex-1 w-full flex flex-col items-center justify-start px-2 py-4 sm:px-4 md:px-8">
-        <div className="w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-4xl bg-white dark:bg-gray-800 rounded-lg shadow p-3 sm:p-6">
+      <div className="flex-1 w-full flex flex-col items-center justify-start px-2 py-4 sm:px-4 md:px-8 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-4xl">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-blue-700 dark:text-green-200">Expense Dashboard</h1>
-          {/* Month and Year selection removed; now handled inside MonthlyCharts */}
+          {/* Colorful summary cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-blue-400 to-blue-600 text-white flex flex-col items-start">
+              <div className="flex items-center gap-2 mb-2"><span className="text-2xl">💸</span><span className="font-semibold">Monthly Expenses</span></div>
+              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlyExpenses}</div>
+            </div>
+            <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-green-400 to-green-600 text-white flex flex-col items-start">
+              <div className="flex items-center gap-2 mb-2"><span className="text-2xl">📅</span><span className="font-semibold">Yearly Expenses</span></div>
+              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {yearlyExpenses}</div>
+            </div>
+            <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-pink-400 to-pink-600 text-white flex flex-col items-start">
+              <div className="flex items-center gap-2 mb-2"><span className="text-2xl">💰</span><span className="font-semibold">Monthly Income</span></div>
+              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlyIncome}</div>
+            </div>
+            <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-purple-400 to-purple-600 text-white flex flex-col items-start">
+              <div className="flex items-center gap-2 mb-2"><span className="text-2xl">🏦</span><span className="font-semibold">Monthly Savings</span></div>
+              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlySavings}</div>
+            </div>
+          </div>
           <div className="mb-6 sm:mb-8">
             <div className="flex border-b mb-3 sm:mb-4">
               <button

@@ -46,7 +46,7 @@ function GroupManagementPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col">
       <Header />
       <main className="flex-1 flex flex-col items-center justify-center px-2 sm:px-4 md:px-6">
         <div className="w-full max-w-md md:max-w-lg lg:max-w-xl bg-white dark:bg-gray-800 rounded-xl shadow-lg p-4 sm:p-6 mt-6 sm:mt-10">
@@ -86,13 +86,13 @@ function GroupManagementPage() {
           )}
 
           <h2 className="text-xl sm:text-2xl font-semibold mb-4 text-gray-800 dark:text-gray-100">Group Members</h2>
-          <ManageGroupMembers members={groupMembers.members} onRemove={handleRemove} />
+            <ManageGroupMembers members={groupMembers.members} onRemove={handleRemove} />
         </div>
 
         {/* Remove confirmation dialog */}
         {removeId && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50 px-2">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6 w-full max-w-xs">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-8 w-full max-w-xs border border-blue-100 dark:border-gray-700">
               <div className="mb-4 text-gray-800 dark:text-gray-100 font-semibold">Are you sure you want to remove this member?</div>
               <div className="flex gap-2 justify-end">
                 <button className="px-4 py-2 rounded bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200" onClick={() => setRemoveId(null)}>Cancel</button>

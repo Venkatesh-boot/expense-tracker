@@ -49,12 +49,14 @@ export default function SubscriptionPlans() {
     setLoading(null);
   }
 
+
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col">
       <Header />
-      <main className="flex-1 flex flex-col items-center justify-center py-8 px-2">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-blue-700 dark:text-green-200">Choose Your Plan</h1>
-        <div className="flex flex-col sm:flex-row gap-6 w-full max-w-3xl justify-center">
+      <main className="flex-1 flex flex-col items-center justify-center py-8 px-2 w-full">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 dark:from-blue-300 dark:via-purple-300 dark:to-pink-200">Choose Your Plan</h1>
+        <div className="flex flex-col sm:flex-row gap-6 w-full max-w-3xl justify-center mb-10">
           {plans.map(plan => (
             <div
               key={plan.name}
@@ -74,7 +76,7 @@ export default function SubscriptionPlans() {
                 ))}
               </ul>
               <button
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition text-base disabled:opacity-60"
+                className="w-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white font-semibold py-2 rounded-lg shadow transition text-base disabled:opacity-60"
                 onClick={() => handleSubscribe(plan.name)}
                 disabled={loading === plan.name}
               >
@@ -83,6 +85,7 @@ export default function SubscriptionPlans() {
             </div>
           ))}
         </div>
+
       </main>
       <Footer />
     </div>
