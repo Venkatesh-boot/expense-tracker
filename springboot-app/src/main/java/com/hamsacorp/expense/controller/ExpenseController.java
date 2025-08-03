@@ -9,6 +9,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,13 +36,18 @@ public class ExpenseController {
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size,
+            HttpServletRequest request) {
+        String userEmail = (String) request.getAttribute("userEmail");
+        if (userEmail == null) {
+            return ResponseEntity.status(401).body("Unauthorized: No user info in token");
+        }
         if (from != null && to != null) {
             // No pagination if both dates are provided
-            return ResponseEntity.ok(expenseService.getExpensesByDateRange(from, to));
+            return ResponseEntity.ok(expenseService.getExpensesByDateRangeAndCreatedBy(from, to, userEmail));
         } else {
             Pageable pageable = PageRequest.of(page, size);
-            return ResponseEntity.ok(expenseService.getAllExpenses(pageable));
+            return ResponseEntity.ok(expenseService.getAllExpensesByCreatedBy(userEmail, pageable));
         }
     }
 

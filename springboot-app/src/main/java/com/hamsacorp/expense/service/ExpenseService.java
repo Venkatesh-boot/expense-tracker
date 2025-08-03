@@ -47,4 +47,14 @@ public class ExpenseService {
         LocalDate toDate = LocalDate.parse(to);
         return expenseRepository.findAllByDateBetweenOrderByDateDesc(fromDate, toDate, pageable);
     }
+
+    public Page<Expense> getAllExpensesByCreatedBy(String createdBy, Pageable pageable) {
+        return expenseRepository.findAllByCreatedByOrderByDateDesc(createdBy, pageable);
+    }
+
+    public List<Expense> getExpensesByDateRangeAndCreatedBy(String from, String to, String createdBy) {
+        LocalDate fromDate = LocalDate.parse(from);
+        LocalDate toDate = LocalDate.parse(to);
+        return expenseRepository.findAllByDateBetweenAndCreatedByOrderByDateDesc(fromDate, toDate, createdBy);
+    }
 }
