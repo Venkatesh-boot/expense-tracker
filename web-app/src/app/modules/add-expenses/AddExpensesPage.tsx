@@ -173,11 +173,53 @@ export default function AddExpensesPage() {
                 onChange={e => setFiles(Array.from(e.target.files || []))}
               />
             </div>
-            <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition text-sm sm:text-base" disabled={expenses.loading}>
-              {expenses.loading ? 'Adding...' : 'Add Expense'}
-            </button>
-            {expenses.error && <div className="text-red-500 text-sm mt-2">{expenses.error}</div>}
-            {expenses.success && <div className="text-green-600 text-sm mt-2">Expense added successfully!</div>}
+            <div className="flex gap-2">
+              <button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition text-sm sm:text-base" disabled={expenses.loading}>
+                {expenses.loading ? 'Adding...' : 'Add Expense'}
+              </button>
+              <button
+                type="button"
+                className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-2 rounded-lg transition text-sm sm:text-base border border-gray-300"
+                onClick={() => {
+                  setDate('');
+                  setAmount('');
+                  setCategory('');
+                  setCustomCategory('');
+                  setDescription('');
+                  setPaymentMethod('');
+                  setFiles([]);
+                  dispatch(resetExpenseStatus());
+                }}
+              >
+                Clear All
+              </button>
+            </div>
+            {expenses.error && (
+              <div className="text-red-500 text-sm mt-2 transition-opacity duration-500 ease-in-out animate-fade-in">
+                {expenses.error}
+              </div>
+            )}
+            {expenses.success && (
+              <div className="flex flex-col items-center gap-2 mt-2 transition-opacity duration-500 ease-in-out animate-fade-in">
+                <div className="text-green-600 text-sm">Expense added successfully!</div>
+                <button
+                  type="button"
+                  className="bg-green-100 hover:bg-green-200 text-green-800 font-semibold px-4 py-1 rounded transition text-xs border border-green-300"
+                  onClick={() => {
+                    setDate('');
+                    setAmount('');
+                    setCategory('');
+                    setCustomCategory('');
+                    setDescription('');
+                    setPaymentMethod('');
+                    setFiles([]);
+                    dispatch(resetExpenseStatus());
+                  }}
+                >
+                  Add Another
+                </button>
+              </div>
+            )}
           </form>
         </div>
       </div>
