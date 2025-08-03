@@ -27,6 +27,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
+        // Handle preflight OPTIONS requests for CORS
+        if (request.getMethod().equalsIgnoreCase("OPTIONS")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         String header = request.getHeader("Authorization");
         if (header == null || !header.startsWith("Bearer ")) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -36,7 +41,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         String token = header.substring(7);
         try {
             Claims claims = authService.validateJwtToken(token);
-            // Optionally, set user info in request attribute for downstream use
             request.setAttribute("userEmail", claims.getSubject());
         } catch (JwtException e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -46,4 +50,3 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 }
-
