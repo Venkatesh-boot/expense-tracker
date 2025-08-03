@@ -33,11 +33,24 @@ function* handleUpdateExpense(action: any): Generator<any, void, any> {
 
 
 
-function* handleFetchExpensesTable(): Generator<any, void, any> {
+function* handleFetchExpensesTable(action: any): Generator<any, void, any> {
   try {
-    const response = yield call(api.get, `${API_CONFIG.EXPENSES}`);
-    // Support paged API: extract content array
-    const data = response.data && response.data.content ? response.data.content : [];
+    const { fromDate, toDate } = action.payload || {};
+    let url = `${API_CONFIG.EXPENSES}`;
+    const params = [];
+    if (fromDate) params.push(`from=${encodeURIComponent(fromDate)}`);
+    if (toDate) params.push(`to=${encodeURIComponent(toDate)}`);
+    if (params.length > 0) url += `?${params.join('&')}`;
+    const response = yield call(api.get, url);
+    // Support paged and unpaged API: extract content array if present, else use data directly
+    let data = [];
+    if (response.data && Array.isArray(response.data.content)) {
+      data = response.data.content;
+    } else if (Array.isArray(response.data)) {
+      data = response.data;
+    } else {
+      data = [];
+    }
     yield put(fetchExpensesTableSuccess(data));
   } catch (error: any) {
     yield put(fetchExpensesTableFailure(error.message || 'Unknown error'));

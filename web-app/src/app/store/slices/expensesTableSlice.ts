@@ -28,7 +28,7 @@ const expensesTableSlice = createSlice({
   name: 'expensesTable',
   initialState,
   reducers: {
-    fetchExpensesTableRequest(state) {
+    fetchExpensesTableRequest(state, _action: PayloadAction<{ fromDate?: string; toDate?: string } | undefined>) {
       state.loading = true;
       state.error = null;
     },

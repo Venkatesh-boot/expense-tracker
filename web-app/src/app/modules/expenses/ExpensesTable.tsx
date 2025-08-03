@@ -56,21 +56,35 @@ export default function ExpensesTable() {
     setEditForm({});
   };
 
+  // Default to first and last day of current month
+  // Always use the first day of the current month as from date
+  const today = new Date();
+  const getFirstDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth(), 1);
+  };
+  const getLastDayOfMonth = (date: Date) => {
+    return new Date(date.getFullYear(), date.getMonth() + 1, 0);
+  };
+  // Helper to format date as YYYY-MM-DD in local time
+  const formatLocalDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  const [dateFrom, setDateFrom] = useState(() => formatLocalDate(getFirstDayOfMonth(new Date())));
+  const [dateTo, setDateTo] = useState(() => formatLocalDate(getLastDayOfMonth(new Date())));
   useEffect(() => {
-    dispatch(fetchExpensesTableRequest());
-  }, [dispatch]);
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+    dispatch(fetchExpensesTableRequest({ fromDate: dateFrom, toDate: dateTo }));
+  }, [dispatch, dateFrom, dateTo]);
   const [selectedRows, setSelectedRows] = useState<number[]>([]);
   const [searchSuggestions, setSearchSuggestions] = useState<string[]>([]);
   const [searchInput, setSearchInput] = useState('');
   const [csvUrl, setCsvUrl] = useState('');
 
-  // Filter data by date range
+  // Filter data by search only (date filtering is now backend)
   const filteredData = useMemo(() => {
     let filtered = expenses;
-    if (dateFrom) filtered = filtered.filter(d => d.date >= dateFrom);
-    if (dateTo) filtered = filtered.filter(d => d.date <= dateTo);
     if (searchInput) {
       filtered = filtered.filter(d =>
         d.category?.toLowerCase().includes(searchInput.toLowerCase()) ||
@@ -78,32 +92,38 @@ export default function ExpensesTable() {
       );
     }
     return filtered;
-  }, [expenses, dateFrom, dateTo, searchInput]);
+  }, [expenses, searchInput]);
 
   // Table instance
+  // If both dateFrom and dateTo are selected, show all filtered data (no pagination)
+  const usePaginate = !(dateFrom && dateTo);
+  const tableInstance = useTable(
+    { columns, data: filteredData, initialState: { pageIndex: 0, pageSize: 5 } },
+    useGlobalFilter,
+    useSortBy,
+    ...(usePaginate ? [usePagination] : [])
+  );
   const {
     getTableProps,
     getTableBodyProps,
     headerGroups,
     prepareRow,
-    page,
-    state: { pageIndex, pageSize },
-    canPreviousPage,
-    canNextPage,
-    pageOptions,
-    nextPage,
-    previousPage,
+    state,
     setPageSize,
-  } = useTable(
-    { columns, data: filteredData, initialState: { pageIndex: 0, pageSize: 5 } },
-    useGlobalFilter,
-    useSortBy,
-    usePagination
-  );
+    // Only available if paginating
+    page = filteredData,
+    canPreviousPage = false,
+    canNextPage = false,
+    pageOptions = [0],
+    nextPage = () => {},
+    previousPage = () => {},
+  } = tableInstance;
+  // If not paginating, show all filtered data as react-table rows
+  const displayRows = usePaginate ? page : tableInstance.rows;
 
   // Total expenses (filtered and page)
   const totalFiltered = filteredData.reduce((sum, d) => sum + d.amount, 0);
-  const totalPage = page.reduce((sum: number, row: { original: { amount: number } }) => sum + (row.original.amount || 0), 0);
+  const totalPage = displayRows.reduce((sum: number, row: any) => sum + (row.original ? row.original.amount : row.amount || 0), 0);
 
   // Category breakdown
   const categoryBreakdown = useMemo(() => {
@@ -138,10 +158,17 @@ export default function ExpensesTable() {
   const toggleRow = (idx: number) => {
     setSelectedRows(sel => sel.includes(idx) ? sel.filter(i => i !== idx) : [...sel, idx]);
   };
-  const allSelected = page.length > 0 && page.every((row: { index: number }) => selectedRows.includes(row.index));
+  // Select all visible rows (displayRows) when header checkbox is toggled
+  const allSelected = displayRows.length > 0 && displayRows.every((row: any) => selectedRows.includes(row.index));
   const toggleAll = () => {
-    if (allSelected) setSelectedRows(sel => sel.filter((i: number) => !page.map((row: { index: number }) => row.index).includes(i)));
-    else setSelectedRows(sel => [...sel, ...page.map((row: { index: number }) => row.index).filter((i: number) => !sel.includes(i))]);
+    if (allSelected) {
+      setSelectedRows(sel => sel.filter((i: number) => !displayRows.map((row: any) => row.index).includes(i)));
+    } else {
+      setSelectedRows(sel => [
+        ...sel,
+        ...displayRows.map((row: any) => row.index).filter((i: number) => !sel.includes(i))
+      ]);
+    }
   };
 
   // Highlight large expenses (demo: >1000)
@@ -204,9 +231,10 @@ export default function ExpensesTable() {
             )}
           </div>
           <select
-            value={pageSize}
+            value={usePaginate ? state.pageSize : 5}
             onChange={e => setPageSize(Number(e.target.value))}
             className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
+            disabled={!usePaginate}
           >
             {[5, 10, 20].map(size => (
               <option key={size} value={size}>
@@ -220,103 +248,129 @@ export default function ExpensesTable() {
       <div className="overflow-x-auto rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
         <table {...getTableProps()} className="min-w-full text-left bg-white dark:bg-gray-800">
           <thead className="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-gray-900 dark:to-gray-800 sticky top-0 z-10">
-            {headerGroups.map((headerGroup: any) => (
-              <tr {...headerGroup.getHeaderGroupProps()}>
-                <th className="py-3 px-2 border-b text-center">
-                  <input type="checkbox" checked={allSelected} onChange={toggleAll} />
-                </th>
-                {headerGroup.headers.map((column: any) => (
-                  <th
-                    {...column.getHeaderProps(column.getSortByToggleProps())}
-                    className={`py-3 px-5 border-b font-semibold text-blue-700 dark:text-blue-200 text-base cursor-pointer select-none whitespace-nowrap ${column.isSorted ? 'bg-blue-200 dark:bg-gray-700' : ''}`}
-                  >
-                    {column.render('Header')}
-                    <span>
-                      {column.isSorted ? (column.isSortedDesc ? <span role="img" aria-label="sorted descending"> 🔽</span> : <span role="img" aria-label="sorted ascending"> 🔼</span>) : ''}
-                    </span>
+            {headerGroups.map((headerGroup: any) => {
+              const headerGroupProps = headerGroup.getHeaderGroupProps();
+              const headerGroupKey = headerGroupProps.key;
+              const { key, ...restHeaderGroupProps } = headerGroupProps;
+              return (
+                <tr key={headerGroupKey} {...restHeaderGroupProps}>
+                  <th className="py-3 px-2 border-b text-center">
+                    <input type="checkbox" checked={allSelected} onChange={toggleAll} />
                   </th>
-                ))}
-                <th className="py-3 px-2 border-b text-center">Actions</th>
-              </tr>
-            ))}
+                  <th className="py-3 px-2 border-b text-center">#</th>
+                  {headerGroup.headers.map((column: any) => {
+                    const { key, ...thProps } = column.getHeaderProps(column.getSortByToggleProps());
+                    return (
+                      <th
+                        key={key}
+                        {...thProps}
+                        className={`py-3 px-5 border-b font-semibold text-blue-700 dark:text-blue-200 text-base cursor-pointer select-none whitespace-nowrap ${column.isSorted ? 'bg-blue-200 dark:bg-gray-700' : ''}`}
+                      >
+                        {column.render('Header')}
+                        <span>
+                          {column.isSorted ? (column.isSortedDesc ? <span role="img" aria-label="sorted descending"> 🔽</span> : <span role="img" aria-label="sorted ascending"> 🔼</span>) : ''}
+                        </span>
+                      </th>
+                    );
+                  })}
+                  <th className="py-3 px-2 border-b text-center">Actions</th>
+                </tr>
+              );
+            })}
           </thead>
           <tbody {...getTableBodyProps()}>
-            {page.map((row: any, idx: number) => {
+            {displayRows.map((row: any, idx: number) => {
               prepareRow(row);
               const isSelected = selectedRows.includes(row.index);
+              const rowProps = row.getRowProps();
+              const rowKey = rowProps.key;
+              const { key, ...restRowProps } = rowProps;
               return (
                 <tr
-                  {...row.getRowProps()}
+                  key={rowKey}
+                  {...restRowProps}
                   className={`transition-colors ${idx % 2 === 0 ? 'bg-blue-50 dark:bg-gray-900' : 'bg-white dark:bg-gray-800'} hover:bg-blue-100 dark:hover:bg-gray-700 ${isLarge(row.original.amount) ? 'border-l-4 border-red-500' : ''}`}
                 >
                   <td className="py-3 px-2 border-b text-center">
                     <input type="checkbox" checked={isSelected} onChange={() => toggleRow(row.index)} />
                   </td>
+                  <td className="py-3 px-2 border-b text-center">{idx + 1}</td>
                   {row.cells.map((cell: any, cidx: number) => (
-                    <td className="py-3 px-5 border-b text-gray-700 dark:text-gray-200 whitespace-nowrap" {...cell.getCellProps()}>
-                      {editingId === row.original.id ? (
-                        cell.column.id === 'amount' ? (
-                          <input
-                            type="number"
-                            value={editForm.amount ?? ''}
-                            onChange={e => handleEditChange('amount', Number(e.target.value))}
-                            className="border px-1 py-0.5 rounded w-20"
-                          />
-                        ) : cell.column.id === 'date' ? (
-                          <input
-                            type="date"
-                            value={editForm.date ?? ''}
-                            onChange={e => handleEditChange('date', e.target.value)}
-                            className="border px-1 py-0.5 rounded w-28"
-                          />
-                        ) : cell.column.id === 'category' ? (
-                          <input
-                            type="text"
-                            value={editForm.category ?? ''}
-                            onChange={e => handleEditChange('category', e.target.value)}
-                            className="border px-1 py-0.5 rounded w-24"
-                          />
-                        ) : cell.column.id === 'type' ? (
-                          <input
-                            type="text"
-                            value={editForm.type ?? ''}
-                            onChange={e => handleEditChange('type', e.target.value)}
-                            className="border px-1 py-0.5 rounded w-20"
-                          />
-                        ) : cell.column.id === 'paymentMethod' ? (
-                          <input
-                            type="text"
-                            value={editForm.paymentMethod ?? ''}
-                            onChange={e => handleEditChange('paymentMethod', e.target.value)}
-                            className="border px-1 py-0.5 rounded w-24"
-                          />
-                        ) : cell.column.id === 'description' ? (
-                          <input
-                            type="text"
-                            value={editForm.description ?? ''}
-                            onChange={e => handleEditChange('description', e.target.value)}
-                            className="border px-1 py-0.5 rounded w-32"
-                          />
-                        ) : null
-                      ) : (
-                        cell.column.id === 'amount' ? (
-                          <span className="inline-flex items-center gap-1">
-                            ₹{typeof cell.value === 'number' ? cell.value.toLocaleString() : (cell.value as string)}
-                            {typeof cell.value === 'number' && isLarge(cell.value) && <span title="Large expense" className="ml-1 text-red-500 font-bold" role="img" aria-label="Large expense">!</span>}
-                          </span>
-                        ) : cell.column.id === 'category' ? (
-                          <span className="inline-flex items-center gap-1">
-                            {cell.value as string}
-                            {cell.value === 'Bills' && <span title="Recurring" className="ml-1 text-green-500" role="img" aria-label="Recurring">♻️</span>}
-                          </span>
-                        ) : cell.column.id === 'description' ? (
-                          <span className="inline-flex items-center gap-1">
-                            {cell.value as string}
-                            {row.original.category === 'Shopping' && <span className="ml-1 px-1 rounded bg-yellow-100 text-yellow-800 text-xs">groceries</span>}
-                          </span>
-                        ) : cell.render('Cell')
-                      )}
-                    </td>
+                    (() => {
+                      const cellProps = cell.getCellProps();
+                      const cellKey = cellProps.key;
+                      const { key, ...restCellProps } = cellProps;
+                      return (
+                        <td
+                          key={cellKey}
+                          {...restCellProps}
+                          className="py-3 px-5 border-b text-gray-700 dark:text-gray-200 whitespace-nowrap"
+                        >
+                          {editingId === row.original.id ? (
+                            cell.column.id === 'amount' ? (
+                              <input
+                                type="number"
+                                value={editForm.amount ?? ''}
+                                onChange={e => handleEditChange('amount', Number(e.target.value))}
+                                className="border px-1 py-0.5 rounded w-20"
+                              />
+                            ) : cell.column.id === 'date' ? (
+                              <input
+                                type="date"
+                                value={editForm.date ?? ''}
+                                onChange={e => handleEditChange('date', e.target.value)}
+                                className="border px-1 py-0.5 rounded w-28"
+                              />
+                            ) : cell.column.id === 'category' ? (
+                              <input
+                                type="text"
+                                value={editForm.category ?? ''}
+                                onChange={e => handleEditChange('category', e.target.value)}
+                                className="border px-1 py-0.5 rounded w-24"
+                              />
+                            ) : cell.column.id === 'type' ? (
+                              <input
+                                type="text"
+                                value={editForm.type ?? ''}
+                                onChange={e => handleEditChange('type', e.target.value)}
+                                className="border px-1 py-0.5 rounded w-20"
+                              />
+                            ) : cell.column.id === 'paymentMethod' ? (
+                              <input
+                                type="text"
+                                value={editForm.paymentMethod ?? ''}
+                                onChange={e => handleEditChange('paymentMethod', e.target.value)}
+                                className="border px-1 py-0.5 rounded w-24"
+                              />
+                            ) : cell.column.id === 'description' ? (
+                              <input
+                                type="text"
+                                value={editForm.description ?? ''}
+                                onChange={e => handleEditChange('description', e.target.value)}
+                                className="border px-1 py-0.5 rounded w-32"
+                              />
+                            ) : null
+                          ) : (
+                            cell.column.id === 'amount' ? (
+                              <span className="inline-flex items-center gap-1">
+                                ₹{typeof cell.value === 'number' ? cell.value.toLocaleString() : (cell.value as string)}
+                                {typeof cell.value === 'number' && isLarge(cell.value) && <span title="Large expense" className="ml-1 text-red-500 font-bold" role="img" aria-label="Large expense">!</span>}
+                              </span>
+                            ) : cell.column.id === 'category' ? (
+                              <span className="inline-flex items-center gap-1">
+                                {cell.value as string}
+                                {cell.value === 'Bills' && <span title="Recurring" className="ml-1 text-green-500" role="img" aria-label="Recurring">♻️</span>}
+                              </span>
+                            ) : cell.column.id === 'description' ? (
+                              <span className="inline-flex items-center gap-1">
+                                {cell.value as string}
+                                {row.original.category === 'Shopping' && <span className="ml-1 px-1 rounded bg-yellow-100 text-yellow-800 text-xs">groceries</span>}
+                              </span>
+                            ) : cell.render('Cell')
+                          )}
+                        </td>
+                      );
+                    })()
                   ))}
                   <td className="py-3 px-2 border-b text-center">
                     <button
@@ -333,7 +387,7 @@ export default function ExpensesTable() {
                     >
                       {loading ? 'Deleting...' : 'Delete'}
                     </button>
-                    <button className="text-green-600 hover:underline text-xs" title="View Receipt"><span role="img" aria-label="View Receipt">📎</span></button>
+                    {/* <button className="text-green-600 hover:underline text-xs" title="View Receipt"><span role="img" aria-label="View Receipt">📎</span></button> */}
                   </td>
                 </tr>
               );
@@ -347,16 +401,19 @@ export default function ExpensesTable() {
           <button className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm">Export Selected</button>
         </div>
       )}
-      <div className="flex justify-between items-center mt-2">
-        <button onClick={() => previousPage()} disabled={!canPreviousPage} className="px-3 py-1 border rounded disabled:opacity-50 dark:text-gray-100">Previous</button>
-        <span className="dark:text-gray-100">
-          Page{' '}
-          <strong className="dark:text-gray-100">
-            {pageIndex + 1} of {pageOptions.length}
-          </strong>
-        </span>
-        <button onClick={() => nextPage()} disabled={!canNextPage} className="px-3 py-1 border rounded disabled:opacity-50 dark:text-gray-100">Next</button>
-      </div>
+      {/* Pagination controls only if paginating */}
+      {usePaginate && (
+        <div className="flex justify-between items-center mt-2">
+          <button onClick={() => previousPage()} disabled={!canPreviousPage} className="px-3 py-1 border rounded disabled:opacity-50 dark:text-gray-100">Previous</button>
+          <span className="dark:text-gray-100">
+            Page{' '}
+            <strong className="dark:text-gray-100">
+              {state.pageIndex + 1} of {pageOptions.length}
+            </strong>
+          </span>
+          <button onClick={() => nextPage()} disabled={!canNextPage} className="px-3 py-1 border rounded disabled:opacity-50 dark:text-gray-100">Next</button>
+        </div>
+      )}
 
       {/* Floating Add Expense Button */}
       <button

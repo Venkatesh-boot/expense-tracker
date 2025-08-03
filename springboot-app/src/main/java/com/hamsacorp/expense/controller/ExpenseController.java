@@ -31,19 +31,18 @@ public class ExpenseController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<Expense>> getAllExpenses(
+    public ResponseEntity<?> getAllExpenses(
             @RequestParam(required = false) String from,
             @RequestParam(required = false) String to,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        Page<Expense> expenses;
         if (from != null && to != null) {
-            expenses = expenseService.getExpensesByDateRange(from, to, pageable);
+            // No pagination if both dates are provided
+            return ResponseEntity.ok(expenseService.getExpensesByDateRange(from, to));
         } else {
-            expenses = expenseService.getAllExpenses(pageable);
+            Pageable pageable = PageRequest.of(page, size);
+            return ResponseEntity.ok(expenseService.getAllExpenses(pageable));
         }
-        return ResponseEntity.ok(expenses);
     }
 
     @GetMapping("/{id}")
