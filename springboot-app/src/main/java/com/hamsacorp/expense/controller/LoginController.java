@@ -34,7 +34,10 @@ public class LoginController {
         boolean authenticated = authService.authenticate(email, password);
         response.put("success", authenticated);
         if (authenticated) {
+            // Generate JWT token
+            String token = authService.generateJwtToken(email);
             response.put("message", "Login successful");
+            response.put("token", token);
             return ResponseEntity.ok(response);
         } else {
             response.put("message", "Invalid email or password");

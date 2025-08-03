@@ -3,30 +3,30 @@ import { loginRequest, loginSuccess, loginFailure } from '../slices/loginSlice';
 import API_CONFIG from '../../config/api-config';
 import { PayloadAction } from '@reduxjs/toolkit';
 
+
+import api from '../../utils/api';
+
 function* handleLogin(action: PayloadAction<{ email?: string; password?: string; countryCode?: string; mobile?: string }>): Generator<unknown, void, unknown> {
   try {
-    let response: Response;
+    let response: any;
     if (action.payload.email && action.payload.password) {
-      response = (yield call(fetch, `${API_CONFIG.BASE_URL}${API_CONFIG.LOGIN}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: action.payload.email, password: action.payload.password }),
-      })) as Response;
+      response = (yield call(api.post, API_CONFIG.LOGIN, { email: action.payload.email, password: action.payload.password })) as any;
     } else {
-      response = (yield call(fetch, `${API_CONFIG.BASE_URL}${API_CONFIG.LOGIN_MOBILE}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ countryCode: action.payload.countryCode, mobile: action.payload.mobile }),
-      })) as Response;
+      response = (yield call(api.post, API_CONFIG.LOGIN_MOBILE, { countryCode: action.payload.countryCode, mobile: action.payload.mobile })) as any;
     }
-    if (!response.ok) {
-      const errorText = (yield call([response, 'text'])) as string;
-      throw new Error(errorText || 'Login failed');
+    // Expect token in response.data.token
+    const token = response?.data?.token;
+    if (token) {
+      sessionStorage.setItem('token', token);
     }
     yield put(loginSuccess());
-  } catch (error: unknown) {
+  } catch (error: any) {
     let message = 'Login failed';
-    if (error instanceof Error) message = error.message;
+    if (error?.response?.data) {
+      message = typeof error.response.data === 'string' ? error.response.data : error.response.data.message || message;
+    } else if (error instanceof Error) {
+      message = error.message;
+    }
     yield put(loginFailure(message));
   }
 }
