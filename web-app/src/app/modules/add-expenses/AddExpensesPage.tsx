@@ -3,6 +3,7 @@ import React from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { categories } from '../../config/categories';
+import { paymentMethods } from '../../config/paymentMethods';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { addExpenseRequest, resetExpenseStatus } from '../../store/slices/expensesSlice';
 import type { ExpensesState } from '../../store/slices/expensesSlice';
@@ -154,11 +155,11 @@ export default function AddExpensesPage() {
               <label className="block text-gray-700 dark:text-gray-200 mb-1">Payment Method</label>
             <select className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base" value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
               <option value="">Select Method</option>
-              <option value="Cash">Cash</option>
-              <option value="Card">Card</option>
-              <option value="UPI">UPI</option>
-              <option value="NetBanking">Net Banking</option>
-              <option value="Other">Other</option>
+              {paymentMethods.map(method => (
+                <option key={method.value} value={method.value}>
+                  {method.icon} {method.label}
+                </option>
+              ))}
             </select>
             </div>
             {/* Optional file attachment */}

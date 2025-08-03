@@ -1,32 +1,64 @@
 pipeline {
   agent any
+
   environment {
-    DOCKERHUB_CREDENTIALS = credentials('dockerhub-creds')
+    DOCKER_REGISTRY = 'your-registry-url'
+    APP_NAME = 'expense-web'
+    BUILD_TAG = "${APP_NAME}-${env.BUILD_ID}"
   }
+
   stages {
     stage('Checkout') {
       steps {
-        git url: 'https://github.com/your-org/expense-tracker.git'
+        git url: 'https://github.com/your-org/your-repo.git', branch: 'main'
       }
     }
-    stage('Build Docker Image') {
+
+    stage('Install Dependencies') {
       steps {
-        sh 'docker build -t your-dockerhub/web-app:latest -f apps/web-app/Dockerfile .'
+        sh 'npm install'  // or yarn install
       }
     }
-    stage('Push to DockerHub') {
+
+    stage('Build App') {
+      steps {
+        sh 'npx nx build expense-web'
+      }
+    }
+
+    stage('Lint & Test') {
+      steps {
+        sh 'npx nx lint expense-web'
+        sh 'npx nx test expense-web'
+      }
+    }
+
+    stage('Docker Build & Push') {
       steps {
         script {
-          docker.withRegistry('https://index.docker.io/v1/', 'dockerhub-creds') {
-            docker.image('your-dockerhub/web-app:latest').push()
-          }
+          dockerImage = docker.build("${DOCKER_REGISTRY}/${APP_NAME}:${BUILD_TAG}")
+          dockerImage.push()
         }
       }
     }
+
     stage('Deploy to Kubernetes') {
       steps {
-        sh 'kubectl apply -f k8s/web-app-deployment.yaml'
+        sh """
+          helm upgrade --install ${APP_NAME} ./helm/${APP_NAME} \
+            --set image.repository=${DOCKER_REGISTRY}/${APP_NAME} \
+            --set image.tag=${BUILD_TAG}
+        """
       }
+    }
+  }
+
+  post {
+    success {
+      echo "✅ Deployment complete: ${APP_NAME} version ${BUILD_TAG}"
+    }
+    failure {
+      echo "❌ Build or deployment failed"
     }
   }
 }
