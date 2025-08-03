@@ -5,7 +5,7 @@ const API_CONFIG = {
   LOGIN_MOBILE: '/login/mobile',
   REGISTER: '/api/auth/register',
   VERIFY_OTP: '/verify-otp',
-  ACCOUNT: '/account',
+  ACCOUNT: '/api/user/me',
   ACCOUNT_CHANGE_PASSWORD: '/account/change-password',
   GROUP_INVITE: '/group/invite',
   GROUP_MEMBERS: '/group/members',

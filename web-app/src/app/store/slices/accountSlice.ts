@@ -1,20 +1,22 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface AccountState {
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   mobile: string;
-  country: string;
+  countryCode: string;
   loading: boolean;
   error: string | null;
   passwordChangeSuccess: boolean;
 }
 
 const initialState: AccountState = {
-  name: '',
+  firstName: '',
+  lastName: '',
   email: '',
   mobile: '',
-  country: '',
+  countryCode: '',
   loading: false,
   error: null,
   passwordChangeSuccess: false,
@@ -28,13 +30,14 @@ const accountSlice = createSlice({
       state.loading = true;
       state.error = null;
     },
-    fetchAccountSuccess(state, action: PayloadAction<{ name: string; email: string; mobile: string; country: string }>) {
+    fetchAccountSuccess(state, action: PayloadAction<{ firstName: string; lastName: string; email: string; mobile: string; countryCode: string }>) {
       state.loading = false;
       state.error = null;
-      state.name = action.payload.name;
+      state.firstName = action.payload.firstName;
+      state.lastName = action.payload.lastName;
       state.email = action.payload.email;
       state.mobile = action.payload.mobile;
-      state.country = action.payload.country;
+      state.countryCode = action.payload.countryCode;
     },
     fetchAccountFailure(state, action: PayloadAction<string>) {
       state.loading = false;

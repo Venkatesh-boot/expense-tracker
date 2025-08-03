@@ -44,7 +44,14 @@ export default function AccountPage() {
           <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 dark:from-blue-300 dark:via-purple-300 dark:to-pink-200">Account Details</h2>
           <div className="mb-3 sm:mb-4">
             <label className="block text-gray-700 dark:text-gray-200 mb-1">Name</label>
-            <input type="text" className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base" value={account.name} disabled />
+            <input
+              type="text"
+              className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
+              value={
+                (account.firstName || '') + (account.lastName ? ' ' + account.lastName : '')
+              }
+              disabled
+            />
           </div>
           <div className="mb-3 sm:mb-4">
             <label className="block text-gray-700 dark:text-gray-200 mb-1">Email</label>
@@ -55,8 +62,8 @@ export default function AccountPage() {
             <input type="text" className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base" value={account.mobile} disabled />
           </div>
           <div className="mb-5 sm:mb-6">
-            <label className="block text-gray-700 dark:text-gray-200 mb-1">Country</label>
-            <input type="text" className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base" value={account.country} disabled />
+            <label className="block text-gray-700 dark:text-gray-200 mb-1">Country Code</label>
+            <input type="text" className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base" value={account.countryCode} disabled />
           </div>
           <h3 className="text-base sm:text-lg font-semibold mb-2 text-blue-600 dark:text-blue-200">Change Password</h3>
           <form className="space-y-2 sm:space-y-3" onSubmit={handlePasswordChange}>
