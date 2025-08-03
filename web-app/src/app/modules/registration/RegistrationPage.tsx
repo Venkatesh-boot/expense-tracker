@@ -6,6 +6,7 @@ import type { RegistrationFormData } from '../../types/formTypes';
 import { useDispatch, useSelector } from 'react-redux';
 import { COUNTRY_CODES } from '../../config/country-codes';
 import { registerRequest, resetRegistration } from '../../store/slices/registrationSlice';
+import { checkUserExistsRequest, resetUserExists } from '../../store/slices/userSlice';
 import type { RootState } from '../../store/store';
 
 const RegistrationPage = () => {
@@ -15,21 +16,40 @@ const RegistrationPage = () => {
     defaultValues: { countryCode: '+91' } as Partial<RegistrationFormData>
   });
   const { loading, error, success } = useSelector((state: RootState) => state.registration);
+  const userExists = useSelector((state: RootState) => state.user.exists);
+  const userLoading = useSelector((state: RootState) => state.user.loading);
 
   React.useEffect(() => {
     if (success) {
       alert('Registration successful!');
       dispatch(resetRegistration());
-      navigate('/otp');
+      navigate('/dashboard');
     }
   }, [success, dispatch, navigate]);
+
+  const [pendingData, setPendingData] = React.useState<RegistrationFormData | null>(null);
+
+  React.useEffect(() => {
+    if (userExists === true && pendingData) {
+      alert('User already exists! Please login.');
+      dispatch(resetUserExists());
+      setPendingData(null);
+      navigate('/login');
+    } else if (userExists === false && pendingData) {
+      dispatch(registerRequest(pendingData));
+      dispatch(resetUserExists());
+      setPendingData(null);
+    }
+    // eslint-disable-next-line
+  }, [userExists]);
 
   const onSubmit = (data: RegistrationFormData) => {
     if (data.password !== data.confirmPassword) {
       alert('Passwords do not match');
       return;
     }
-    dispatch(registerRequest(data));
+    setPendingData(data);
+    dispatch(checkUserExistsRequest(data.email));
   };
 
   return (

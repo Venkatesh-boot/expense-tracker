@@ -2,6 +2,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import createSagaMiddleware from 'redux-saga';
 
 import registrationReducer from './slices/registrationSlice';
+import userReducer from './slices/userSlice';
 import otpReducer from './slices/otpSlice';
 import accountReducer from './slices/accountSlice';
 import rootSaga from './rootSaga';
@@ -19,6 +20,7 @@ const store = configureStore({
     settings: require('./slices/settingsSlice').default,
     expenses: require('./slices/expensesSlice').default,
     expensesTable: require('./slices/expensesTableSlice').default,
+    user: userReducer,
   },
   middleware: (getDefaultMiddleware) => getDefaultMiddleware({ thunk: false }).concat(sagaMiddleware),
 });

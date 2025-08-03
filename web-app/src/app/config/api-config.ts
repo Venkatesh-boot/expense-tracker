@@ -1,9 +1,9 @@
 
 const API_CONFIG = {
-  BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:9001',
-  LOGIN: '/login',
+  BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080',
+  LOGIN: '/api/auth/login',
   LOGIN_MOBILE: '/login/mobile',
-  REGISTER: '/register',
+  REGISTER: '/api/auth/register',
   VERIFY_OTP: '/verify-otp',
   ACCOUNT: '/account',
   ACCOUNT_CHANGE_PASSWORD: '/account/change-password',
@@ -13,6 +13,7 @@ const API_CONFIG = {
   SETTINGS: '/settings',
   EXPENSES: '/expenses',
   STRIPE_SESSION: '/api/create-stripe-session',
+  USER_EXISTS: '/api/user/exists',
 };
 
 export default API_CONFIG;

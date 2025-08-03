@@ -3,6 +3,7 @@ import { all } from 'redux-saga/effects';
 
 
 import registrationSaga from './sagas/registrationSaga';
+import userSaga from './sagas/userSaga';
 import otpSaga from './sagas/otpSaga';
 import accountSaga from './sagas/accountSaga';
 import inviteSaga from './sagas/inviteSaga';
@@ -25,5 +26,6 @@ export default function* rootSaga() {
     settingsSaga(),
     expensesSaga(),
     expensesTableSaga(),
+    userSaga(),
   ]);
 }
