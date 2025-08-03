@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
-import { fetchExpensesTableRequest } from '../../store/slices/expensesTableSlice';
+import { fetchExpensesTableRequest, deleteExpenseRequest } from '../../store/slices/expensesTableSlice';
 import type { ExpensesTableState } from '../../store/slices/expensesTableSlice';
 import { useTable, useSortBy, usePagination, useGlobalFilter } from 'react-table';
 
@@ -16,6 +16,12 @@ const columns = [
 export default function ExpensesTable() {
   const dispatch = useAppDispatch();
   const { rows: expenses, loading, error } = useAppSelector(state => state.expensesTable as ExpensesTableState);
+  // Handle delete expense
+  const handleDelete = (id: string) => {
+    if (window.confirm('Are you sure you want to delete this expense?')) {
+      dispatch(deleteExpenseRequest(id));
+    }
+  };
 
   useEffect(() => {
     dispatch(fetchExpensesTableRequest());
@@ -235,7 +241,13 @@ export default function ExpensesTable() {
                   ))}
                   <td className="py-3 px-2 border-b text-center">
                     <button className="text-blue-600 hover:underline text-xs mr-2">Edit</button>
-                    <button className="text-red-600 hover:underline text-xs mr-2">Delete</button>
+                    <button
+                      className={`text-red-600 hover:underline text-xs mr-2 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={loading}
+                      onClick={() => handleDelete(row.original.id)}
+                    >
+                      {loading ? 'Deleting...' : 'Delete'}
+                    </button>
                     <button className="text-green-600 hover:underline text-xs" title="View Receipt"><span role="img" aria-label="View Receipt">📎</span></button>
                   </td>
                 </tr>
