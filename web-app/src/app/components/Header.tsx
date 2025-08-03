@@ -1,11 +1,25 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const user = {
-  name: 'John Doe',
-  email: 'john@example.com',
-  avatar: 'https://ui-avatars.com/api/?name=John+Doe&background=0D8ABC&color=fff',
-};
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../store/store';
+import { fetchAccountStart } from '../store/slices/accountSlice';
+
+// Get user info from Redux
+function useUserInfo() {
+  const dispatch = useDispatch();
+  const account = useSelector((state: RootState) => state.account);
+  React.useEffect(() => {
+    if (!account.firstName && !account.lastName && !account.email) {
+      dispatch(fetchAccountStart());
+    }
+  }, [dispatch, account.firstName, account.lastName, account.email]);
+  const name = (account.firstName || '') + (account.lastName ? ' ' + account.lastName : '');
+  const email = account.email || '';
+  // Use ui-avatars.com for avatar
+  const avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(name || email || 'User')}&background=0D8ABC&color=fff`;
+  return { name, email, avatar };
+}
 
 // Use SVG flag icons from flagcdn.com (ISO 3166-1 alpha-2 country codes)
 const LANGUAGES = [
@@ -42,6 +56,8 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
     if (langDropdown) document.addEventListener('mousedown', handleClick);
     return () => document.removeEventListener('mousedown', handleClick);
   }, [langDropdown]);
+
+  const { name, email, avatar } = useUserInfo();
   const navigate = useNavigate();
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -127,7 +143,7 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
         </div>
         {/* User Avatar Menu */}
         <img
-          src={user.avatar}
+          src={avatar}
           alt="User Avatar"
           className="h-10 w-10 rounded-full border-2 border-blue-200 cursor-pointer"
           onClick={() => setMenuOpen((v) => !v)}
@@ -135,8 +151,8 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
         {menuOpen && (
           <div className="absolute right-0 top-12 bg-white dark:bg-gray-800 rounded-lg shadow-lg w-48 py-2 z-50 animate-fade-in">
             <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
-              <div className="font-semibold text-gray-800 dark:text-gray-100">{user.name}</div>
-              <div className="text-xs text-gray-500 dark:text-gray-400">{user.email}</div>
+              <div className="font-semibold text-gray-800 dark:text-gray-100">{name}</div>
+              <div className="text-xs text-gray-500 dark:text-gray-400">{email}</div>
             </div>
             {/* Dark Mode Toggle */}
             <div className="flex items-center justify-between px-4 py-2">

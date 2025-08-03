@@ -1,5 +1,6 @@
 import { call, put, takeLatest } from 'redux-saga/effects';
 import { loginRequest, loginSuccess, loginFailure } from '../slices/loginSlice';
+import { fetchAccountStart } from '../slices/accountSlice';
 import API_CONFIG from '../../config/api-config';
 import { PayloadAction } from '@reduxjs/toolkit';
 
@@ -20,6 +21,8 @@ function* handleLogin(action: PayloadAction<{ email?: string; password?: string;
       sessionStorage.setItem('token', token);
     }
     yield put(loginSuccess());
+    // Fetch account info after login
+    yield put(fetchAccountStart());
   } catch (error: any) {
     let message = 'Login failed';
     if (error?.response?.data) {
