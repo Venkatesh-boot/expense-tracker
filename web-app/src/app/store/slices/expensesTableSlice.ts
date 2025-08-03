@@ -50,6 +50,19 @@ const expensesTableSlice = createSlice({
       state.loading = false;
       state.error = action.payload;
     },
+    // Update expense actions
+    updateExpenseRequest(state, _action: PayloadAction<{ id: string; data: Partial<ExpensesTableRow> }>) {
+      state.loading = true;
+      state.error = null;
+    },
+    updateExpenseSuccess(state, action: PayloadAction<ExpensesTableRow>) {
+      state.loading = false;
+      state.rows = state.rows.map(row => row.id === action.payload.id ? action.payload : row);
+    },
+    updateExpenseFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+    },
   },
 });
 
@@ -60,5 +73,8 @@ export const {
   deleteExpenseRequest,
   deleteExpenseSuccess,
   deleteExpenseFailure,
+  updateExpenseRequest,
+  updateExpenseSuccess,
+  updateExpenseFailure,
 } = expensesTableSlice.actions;
 export default expensesTableSlice.reducer;

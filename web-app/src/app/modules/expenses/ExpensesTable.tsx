@@ -1,6 +1,7 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../../store/hooks';
-import { fetchExpensesTableRequest, deleteExpenseRequest } from '../../store/slices/expensesTableSlice';
+import { fetchExpensesTableRequest, deleteExpenseRequest, updateExpenseRequest } from '../../store/slices/expensesTableSlice';
 import type { ExpensesTableState } from '../../store/slices/expensesTableSlice';
 import { useTable, useSortBy, usePagination, useGlobalFilter } from 'react-table';
 
@@ -8,19 +9,58 @@ const columns = [
   { Header: 'Date', accessor: 'date' },
   { Header: 'Category', accessor: 'category' },
   { Header: 'Amount', accessor: 'amount' },
+  { Header: 'Type', accessor: 'type' },
+  { Header: 'Payment Method', accessor: 'paymentMethod' },
   { Header: 'Description', accessor: 'description' },
 ];
 
 
 
 export default function ExpensesTable() {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { rows: expenses, loading, error } = useAppSelector(state => state.expensesTable as ExpensesTableState);
+
+  // Inline edit state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState<Partial<{ date: string; category: string; amount: number; type: string; paymentMethod: string; description: string }>>({});
+
   // Handle delete expense
   const handleDelete = (id: string) => {
     if (window.confirm('Are you sure you want to delete this expense?')) {
       dispatch(deleteExpenseRequest(id));
     }
+  };
+
+  // Handle edit click
+  const handleEdit = (row: any) => {
+    setEditingId(row.id);
+    setEditForm({
+      date: row.date,
+      category: row.category,
+      amount: row.amount,
+      type: row.type,
+      paymentMethod: row.paymentMethod,
+      description: row.description,
+    });
+  };
+
+  // Handle edit form change
+  const handleEditChange = (field: string, value: any) => {
+    setEditForm(f => ({ ...f, [field]: value }));
+  };
+
+  // Handle save
+  const handleSave = (id: string) => {
+    dispatch(updateExpenseRequest({ id, data: editForm }));
+    setEditingId(null);
+    setEditForm({});
+  };
+
+  // Handle cancel
+  const handleCancel = () => {
+    setEditingId(null);
+    setEditForm({});
   };
 
   useEffect(() => {
@@ -40,7 +80,7 @@ export default function ExpensesTable() {
     if (dateTo) filtered = filtered.filter(d => d.date <= dateTo);
     if (searchInput) {
       filtered = filtered.filter(d =>
-        d.category.toLowerCase().includes(searchInput.toLowerCase()) ||
+        d.category?.toLowerCase().includes(searchInput.toLowerCase()) ||
         (d.description || '').toLowerCase().includes(searchInput.toLowerCase())
       );
     }
@@ -115,7 +155,7 @@ export default function ExpensesTable() {
   const isLarge = (amount: number) => amount > 1000;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-2 sm:p-4">
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-2 sm:p-4 relative">
       <h2 className="text-xl font-bold mb-2 text-blue-700 dark:text-blue-200">Recent Expenses</h2>
       {/* Info Bar */}
       <div className="flex flex-col sm:flex-row sm:justify-between gap-2 mb-2">
@@ -221,26 +261,97 @@ export default function ExpensesTable() {
                   </td>
                   {row.cells.map((cell: any, cidx: number) => (
                     <td className="py-3 px-5 border-b text-gray-700 dark:text-gray-200 whitespace-nowrap" {...cell.getCellProps()}>
-                      {cell.column.id === 'amount' ? (
-                        <span className="inline-flex items-center gap-1">
-                          ₹{typeof cell.value === 'number' ? cell.value.toLocaleString() : (cell.value as string)}
-                          {typeof cell.value === 'number' && isLarge(cell.value) && <span title="Large expense" className="ml-1 text-red-500 font-bold" role="img" aria-label="Large expense">!</span>}
-                        </span>
-                      ) : cell.column.id === 'category' ? (
-                        <span className="inline-flex items-center gap-1">
-                          {cell.value as string}
-                          {cell.value === 'Bills' && <span title="Recurring" className="ml-1 text-green-500" role="img" aria-label="Recurring">♻️</span>}
-                        </span>
-                      ) : cell.column.id === 'description' ? (
-                        <span className="inline-flex items-center gap-1">
-                          {cell.value as string}
-                          {row.original.category === 'Shopping' && <span className="ml-1 px-1 rounded bg-yellow-100 text-yellow-800 text-xs">groceries</span>}
-                        </span>
-                      ) : cell.render('Cell')}
+                      {editingId === row.original.id ? (
+                        cell.column.id === 'amount' ? (
+                          <input
+                            type="number"
+                            value={editForm.amount ?? ''}
+                            onChange={e => handleEditChange('amount', Number(e.target.value))}
+                            className="border px-1 py-0.5 rounded w-20"
+                          />
+                        ) : cell.column.id === 'date' ? (
+                          <input
+                            type="date"
+                            value={editForm.date ?? ''}
+                            onChange={e => handleEditChange('date', e.target.value)}
+                            className="border px-1 py-0.5 rounded w-28"
+                          />
+                        ) : cell.column.id === 'category' ? (
+                          <input
+                            type="text"
+                            value={editForm.category ?? ''}
+                            onChange={e => handleEditChange('category', e.target.value)}
+                            className="border px-1 py-0.5 rounded w-24"
+                          />
+                        ) : cell.column.id === 'type' ? (
+                          <input
+                            type="text"
+                            value={editForm.type ?? ''}
+                            onChange={e => handleEditChange('type', e.target.value)}
+                            className="border px-1 py-0.5 rounded w-20"
+                          />
+                        ) : cell.column.id === 'paymentMethod' ? (
+                          <input
+                            type="text"
+                            value={editForm.paymentMethod ?? ''}
+                            onChange={e => handleEditChange('paymentMethod', e.target.value)}
+                            className="border px-1 py-0.5 rounded w-24"
+                          />
+                        ) : cell.column.id === 'description' ? (
+                          <input
+                            type="text"
+                            value={editForm.description ?? ''}
+                            onChange={e => handleEditChange('description', e.target.value)}
+                            className="border px-1 py-0.5 rounded w-32"
+                          />
+                        ) : null
+                      ) : (
+                        cell.column.id === 'amount' ? (
+                          <span className="inline-flex items-center gap-1">
+                            ₹{typeof cell.value === 'number' ? cell.value.toLocaleString() : (cell.value as string)}
+                            {typeof cell.value === 'number' && isLarge(cell.value) && <span title="Large expense" className="ml-1 text-red-500 font-bold" role="img" aria-label="Large expense">!</span>}
+                          </span>
+                        ) : cell.column.id === 'category' ? (
+                          <span className="inline-flex items-center gap-1">
+                            {cell.value as string}
+                            {cell.value === 'Bills' && <span title="Recurring" className="ml-1 text-green-500" role="img" aria-label="Recurring">♻️</span>}
+                          </span>
+                        ) : cell.column.id === 'description' ? (
+                          <span className="inline-flex items-center gap-1">
+                            {cell.value as string}
+                            {row.original.category === 'Shopping' && <span className="ml-1 px-1 rounded bg-yellow-100 text-yellow-800 text-xs">groceries</span>}
+                          </span>
+                        ) : cell.render('Cell')
+                      )}
                     </td>
                   ))}
                   <td className="py-3 px-2 border-b text-center">
-                    <button className="text-blue-600 hover:underline text-xs mr-2">Edit</button>
+                    {editingId === row.original.id ? (
+                      <>
+                        <button
+                          className="text-green-600 hover:underline text-xs mr-2"
+                          onClick={() => handleSave(row.original.id)}
+                          disabled={loading}
+                        >
+                          Save
+                        </button>
+                        <button
+                          className="text-gray-600 hover:underline text-xs mr-2"
+                          onClick={handleCancel}
+                          disabled={loading}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className="text-blue-600 hover:underline text-xs mr-2"
+                        onClick={() => handleEdit(row.original)}
+                        disabled={loading}
+                      >
+                        Edit
+                      </button>
+                    )}
                     <button
                       className={`text-red-600 hover:underline text-xs mr-2 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                       disabled={loading}
@@ -272,6 +383,16 @@ export default function ExpensesTable() {
         </span>
         <button onClick={() => nextPage()} disabled={!canNextPage} className="px-3 py-1 border rounded disabled:opacity-50 dark:text-gray-100">Next</button>
       </div>
+
+      {/* Floating Add Expense Button */}
+      <button
+        onClick={() => navigate('/add-expenses')}
+        className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center text-2xl sm:text-3xl transition duration-200"
+        title="Add Expense"
+        style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}
+      >
+        +
+      </button>
     </div>
   );
 }

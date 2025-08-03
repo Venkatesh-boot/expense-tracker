@@ -3,8 +3,11 @@ package com.hamsacorp.expense.service;
 import com.hamsacorp.expense.model.Expense;
 import com.hamsacorp.expense.repository.ExpenseRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,7 +21,11 @@ public class ExpenseService {
     }
 
     public List<Expense> getAllExpenses() {
-        return expenseRepository.findAll();
+        return expenseRepository.findAllByOrderByDateDesc();
+    }
+
+    public Page<Expense> getAllExpenses(Pageable pageable) {
+        return expenseRepository.findAllByOrderByDateDesc(pageable);
     }
 
     public Optional<Expense> getExpenseById(Long id) {
@@ -27,5 +34,17 @@ public class ExpenseService {
 
     public void deleteExpense(Long id) {
         expenseRepository.deleteById(id);
+    }
+
+    public List<Expense> getExpensesByDateRange(String from, String to) {
+        LocalDate fromDate = LocalDate.parse(from);
+        LocalDate toDate = LocalDate.parse(to);
+        return expenseRepository.findAllByDateBetweenOrderByDateDesc(fromDate, toDate);
+    }
+
+    public Page<Expense> getExpensesByDateRange(String from, String to, Pageable pageable) {
+        LocalDate fromDate = LocalDate.parse(from);
+        LocalDate toDate = LocalDate.parse(to);
+        return expenseRepository.findAllByDateBetweenOrderByDateDesc(fromDate, toDate, pageable);
     }
 }
