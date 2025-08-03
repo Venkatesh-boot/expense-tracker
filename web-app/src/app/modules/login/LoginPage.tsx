@@ -20,34 +20,40 @@ interface MobileLoginFormData {
 }
 
 
-const LoginPage = () => {
 
+const LoginPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const login:any = useAppSelector(state => state.login as LoginState);
+  const login = useAppSelector(state => state.login as LoginState);
   const [loginMode, setLoginMode] = useState<'email' | 'mobile'>('email');
 
-  // Email/password form
-  const { register: registerEmail, handleSubmit: handleEmailSubmit, formState: { errors: emailErrors } } = useForm<LoginFormData>();
-  // Mobile/OTP form
-  const { register: registerMobile, handleSubmit: handleMobileSubmit, formState: { errors: mobileErrors } } = useForm<MobileLoginFormData>({
-    defaultValues: { countryCode: '+91' }
-  });
+  // Forms
+  const emailForm = useForm<LoginFormData>();
+  const mobileForm = useForm<MobileLoginFormData>({ defaultValues: { countryCode: '+91' } });
 
+  // Submit handlers
+  const onEmailSubmit = (data: LoginFormData) => dispatch(loginRequest({ email: data.email, password: data.password }));
+  const onMobileSubmit = (data: MobileLoginFormData) => dispatch(loginRequest({ countryCode: data.countryCode, mobile: data.mobile }));
 
-  const onEmailSubmit = (data: LoginFormData) => {
-    dispatch(loginRequest({ email: data.email, password: data.password }));
-  };
-
-  const onMobileSubmit = (data: MobileLoginFormData) => {
-    dispatch(loginRequest({ countryCode: data.countryCode, mobile: data.mobile }));
-  };
-
+  // Redirect on login
   React.useEffect(() => {
-    if (login.isAuthenticated) {
-      navigate('/dashboard');
-    }
+    if (login.isAuthenticated) navigate('/dashboard');
   }, [login.isAuthenticated, navigate]);
+
+  // Error renderer
+  const renderError = (error: any) => {
+    if (!error) return null;
+    let errorObj = error;
+    if (typeof error === 'string') {
+      try {
+        if (error.trim().startsWith('{') && error.trim().endsWith('}')) errorObj = JSON.parse(error);
+      } catch {}
+    }
+    const msg = typeof errorObj === 'string' ? errorObj : errorObj && errorObj.message ? errorObj.message : 'An error occurred. Please try again.';
+    return (
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-2 text-center font-semibold">{msg}</div>
+    );
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-100 to-blue-300 px-2 sm:px-0">
@@ -70,66 +76,37 @@ const LoginPage = () => {
           </button>
         </div>
         {loginMode === 'email' ? (
-          <form onSubmit={handleEmailSubmit(onEmailSubmit)} className="space-y-4 sm:space-y-6">
-            {login.error && (() => {
-              let errorObj = login.error;
-              if (typeof login.error === 'string') {
-                try {
-                  // Try to parse if it looks like a JSON object
-                  if (login.error.trim().startsWith('{') && login.error.trim().endsWith('}')) {
-                    errorObj = JSON.parse(login.error);
-                  }
-                } catch (e) {
-                  // Not a JSON string, leave as is
-                }
-              }
-              return (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-2 text-center font-semibold">
-                  {typeof errorObj === 'string'
-                    ? errorObj
-                    : errorObj && errorObj.message
-                      ? errorObj.message
-                      : 'An error occurred. Please try again.'}
-                </div>
-              );
-            })()}
+          <form onSubmit={emailForm.handleSubmit(onEmailSubmit)} className="space-y-4 sm:space-y-6">
+            {renderError(login.error)}
             <div>
               <input
                 type="email"
                 placeholder="Email"
                 className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base"
-                {...registerEmail('email', { required: 'Email is required' })}
+                {...emailForm.register('email', { required: 'Email is required' })}
               />
-              {emailErrors.email && <span className="text-red-500 text-sm mt-1 block">{emailErrors.email.message}</span>}
+              {emailForm.formState.errors.email && <span className="text-red-500 text-sm mt-1 block">{emailForm.formState.errors.email.message}</span>}
             </div>
             <div>
               <input
                 type="password"
                 placeholder="Password"
                 className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base"
-                {...registerEmail('password', { required: 'Password is required' })}
+                {...emailForm.register('password', { required: 'Password is required' })}
               />
-              {emailErrors.password && <span className="text-red-500 text-sm mt-1 block">{emailErrors.password.message}</span>}
+              {emailForm.formState.errors.password && <span className="text-red-500 text-sm mt-1 block">{emailForm.formState.errors.password.message}</span>}
             </div>
             <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-lg transition-colors text-sm sm:text-base" disabled={login.loading}>
               {login.loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
         ) : (
-          <form onSubmit={handleMobileSubmit(onMobileSubmit)} className="space-y-4 sm:space-y-6">
-            {login.error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded mb-2 text-center font-semibold">
-                {typeof login.error === 'string'
-                  ? login.error
-                  : login.error && login.error.message
-                    ? login.error.message
-                    : 'An error occurred. Please try again.'}
-              </div>
-            )}
+          <form onSubmit={mobileForm.handleSubmit(onMobileSubmit)} className="space-y-4 sm:space-y-6">
+            {renderError(login.error)}
             <div className="flex gap-2">
               <select
                 className="px-2 sm:px-3 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white text-sm sm:text-base"
-                {...registerMobile('countryCode', { required: true })}
+                {...mobileForm.register('countryCode', { required: true })}
                 style={{ maxWidth: 100 }}
               >
                 {COUNTRY_CODES.map(({ code, label, flag }) => (
@@ -142,10 +119,10 @@ const LoginPage = () => {
                 type="tel"
                 placeholder="Mobile Number"
                 className="flex-1 px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm sm:text-base"
-                {...registerMobile('mobile', { required: 'Mobile number is required', pattern: { value: /^\d{10}$/, message: 'Enter a valid 10-digit mobile number' } })}
+                {...mobileForm.register('mobile', { required: 'Mobile number is required', pattern: { value: /^\d{10}$/, message: 'Enter a valid 10-digit mobile number' } })}
               />
             </div>
-            {mobileErrors.mobile && <span className="text-red-500 text-sm mt-1 block">{mobileErrors.mobile.message}</span>}
+            {mobileForm.formState.errors.mobile && <span className="text-red-500 text-sm mt-1 block">{mobileForm.formState.errors.mobile.message}</span>}
             <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 sm:py-3 rounded-lg transition-colors text-sm sm:text-base" disabled={login.loading}>
               {login.loading ? 'Sending...' : 'Send OTP'}
             </button>
