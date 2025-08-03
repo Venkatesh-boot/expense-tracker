@@ -27,6 +27,8 @@ export const categories: CategoryConfig[] = [
   { label: 'Medical', type: 'expense', icon: '💊' },
   { label: 'Mobile', type: 'expense', icon: '📱' },
   { label: 'Mortgage', type: 'expense', icon: '🏦' },
+  { label: 'Meat Products', type: 'expense', icon: '🍖' },
+  { label: 'Milk', type: 'expense', icon: '🥛' },
   { label: 'Movies', type: 'expense', icon: '🎬' },
   { label: 'Personal Care', type: 'expense', icon: '💅' },
   { label: 'Pets', type: 'expense', icon: '🐾' },
