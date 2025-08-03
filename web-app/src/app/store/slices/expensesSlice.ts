@@ -9,7 +9,7 @@ export interface Expense {
   customCategory?: string;
   description?: string;
   paymentMethod?: string;
-  files?: File[];
+  // files?: File[];
 }
 
 export interface ExpensesState {

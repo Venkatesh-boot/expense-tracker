@@ -11,7 +11,7 @@ const API_CONFIG = {
   GROUP_MEMBERS: '/group/members',
   GROUP_MEMBER: (id: string) => `/group/members/${id}`,
   SETTINGS: '/settings',
-  EXPENSES: '/expenses',
+  EXPENSES: '/api/expenses',
   STRIPE_SESSION: '/api/create-stripe-session',
   USER_EXISTS: '/api/user/exists',
 };

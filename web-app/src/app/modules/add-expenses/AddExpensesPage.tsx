@@ -4,6 +4,7 @@ import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { categories } from '../../config/categories';
 import { paymentMethods } from '../../config/paymentMethods';
+import { expenseTypes } from '../../config/expenseTypes';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { addExpenseRequest, resetExpenseStatus } from '../../store/slices/expensesSlice';
 import type { ExpensesState } from '../../store/slices/expensesSlice';
@@ -14,19 +15,21 @@ export default function AddExpensesPage() {
   const currencySymbols: Record<string, string> = { INR: '₹', USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
   const [category, setCategory] = React.useState('');
   const [customCategory, setCustomCategory] = React.useState('');
-  const [type, setType] = React.useState('expense');
+  const [type, setType] = React.useState('EXPENSE');
   const [categorySearch, setCategorySearch] = React.useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = React.useState(false);
   const [date, setDate] = React.useState('');
   const [amount, setAmount] = React.useState('');
   const [description, setDescription] = React.useState('');
-  const [paymentMethod, setPaymentMethod] = React.useState('');
-  const [files, setFiles] = React.useState<File[]>([]);
+  const [paymentMethod, setPaymentMethod] = React.useState('UPI');
+  // const [files, setFiles] = React.useState<File[]>([]);
   const dispatch = useAppDispatch();
   const expenses = useAppSelector(state => state.expenses as ExpensesState);
+  // Get logged-in user's email (for display or future use if needed)
+  // const userEmail = useAppSelector(state => state.login.email);
 
   const filteredCategories = categories.filter(cat =>
-    (cat.type === type || cat.label === 'Other') &&
+    (cat.type.toUpperCase() === type.toUpperCase() || cat.label === 'Other') &&
     cat.label.toLowerCase().includes(categorySearch.toLowerCase())
   );
 
@@ -45,14 +48,14 @@ export default function AddExpensesPage() {
       setCustomCategory('');
       setDescription('');
       setPaymentMethod('');
-      setFiles([]);
+      // setFiles([]);
       dispatch(resetExpenseStatus());
     }
   }, [expenses.success, dispatch]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!date || !amount || !type || !category || (category === 'Other' && !customCategory)) return;
+    if (!date || !amount || !type || !category || !paymentMethod || (category === 'Other' && !customCategory)) return;
     dispatch(addExpenseRequest({
       date,
       amount: Number(amount),
@@ -61,7 +64,8 @@ export default function AddExpensesPage() {
       customCategory: category === 'Other' ? customCategory : undefined,
       description,
       paymentMethod,
-      files,
+      // files,
+      // createdBy will be added in saga, not here
     }));
   };
 
@@ -88,12 +92,16 @@ export default function AddExpensesPage() {
               <select
                 className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
                 value={type}
-                onChange={e => setType(e.target.value)}
+                onChange={e => {
+                  setType(e.target.value);
+                  setCategory('');
+                  setCustomCategory('');
+                }}
                 required
               >
-                <option value="expense">Expense</option>
-                <option value="savings">Savings</option>
-                <option value="income">Income</option>
+                {expenseTypes.map(t => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
               </select>
             </div>
             <div>
@@ -153,7 +161,7 @@ export default function AddExpensesPage() {
             </div>
             <div>
               <label className="block text-gray-700 dark:text-gray-200 mb-1">Payment Method</label>
-            <select className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base" value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)}>
+            <select className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base" value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} required>
               <option value="">Select Method</option>
               {paymentMethods.map(method => (
                 <option key={method.value} value={method.value}>
@@ -162,7 +170,8 @@ export default function AddExpensesPage() {
               ))}
             </select>
             </div>
-            {/* Optional file attachment */}
+            {/* File upload temporarily hidden */}
+            {/*
             <div>
               <label className="block text-gray-700 dark:text-gray-200 mb-1">Attach Bills / Files (optional, multiple allowed)</label>
               <input
@@ -173,6 +182,7 @@ export default function AddExpensesPage() {
                 onChange={e => setFiles(Array.from(e.target.files || []))}
               />
             </div>
+            */}
             <div className="flex gap-2">
               <button
                 type="submit"
@@ -191,7 +201,7 @@ export default function AddExpensesPage() {
                   setCustomCategory('');
                   setDescription('');
                   setPaymentMethod('');
-                  setFiles([]);
+                  // setFiles([]);
                   dispatch(resetExpenseStatus());
                 }}
               >
@@ -216,7 +226,7 @@ export default function AddExpensesPage() {
                     setCustomCategory('');
                     setDescription('');
                     setPaymentMethod('');
-                    setFiles([]);
+                    // setFiles([]);
                     dispatch(resetExpenseStatus());
                   }}
                 >
