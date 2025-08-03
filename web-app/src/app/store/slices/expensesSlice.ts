@@ -14,6 +14,7 @@ export interface Expense {
 
 export interface ExpensesState {
   expenses: Expense[];
+  expenseById: Expense | null;
   loading: boolean;
   error: string | null;
   success: boolean;
@@ -21,6 +22,7 @@ export interface ExpensesState {
 
 const initialState: ExpensesState = {
   expenses: [],
+  expenseById: null,
   loading: false,
   error: null,
   success: false,
@@ -45,6 +47,21 @@ const expensesSlice = createSlice({
       state.error = action.payload;
       state.success = false;
     },
+    // Fetch single expense by id
+    getExpenseByIdRequest(state, _action: PayloadAction<string>) {
+      state.loading = true;
+      state.error = null;
+      state.expenseById = null;
+    },
+    getExpenseByIdSuccess(state, action: PayloadAction<Expense>) {
+      state.loading = false;
+      state.expenseById = action.payload;
+    },
+    getExpenseByIdFailure(state, action: PayloadAction<string>) {
+      state.loading = false;
+      state.error = action.payload;
+      state.expenseById = null;
+    },
     resetExpenseStatus(state) {
       state.success = false;
       state.error = null;
@@ -52,5 +69,5 @@ const expensesSlice = createSlice({
   },
 });
 
-export const { addExpenseRequest, addExpenseSuccess, addExpenseFailure, resetExpenseStatus } = expensesSlice.actions;
+export const { addExpenseRequest, addExpenseSuccess, addExpenseFailure, getExpenseByIdRequest, getExpenseByIdSuccess, getExpenseByIdFailure, resetExpenseStatus } = expensesSlice.actions;
 export default expensesSlice.reducer;

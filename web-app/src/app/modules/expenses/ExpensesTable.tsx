@@ -34,15 +34,8 @@ export default function ExpensesTable() {
 
   // Handle edit click
   const handleEdit = (row: any) => {
-    setEditingId(row.id);
-    setEditForm({
-      date: row.date,
-      category: row.category,
-      amount: row.amount,
-      type: row.type,
-      paymentMethod: row.paymentMethod,
-      description: row.description,
-    });
+    // Navigate to add-expenses page with only id as query param
+    navigate(`/add-expenses?id=${row.id}`);
   };
 
   // Handle edit form change
@@ -326,32 +319,13 @@ export default function ExpensesTable() {
                     </td>
                   ))}
                   <td className="py-3 px-2 border-b text-center">
-                    {editingId === row.original.id ? (
-                      <>
-                        <button
-                          className="text-green-600 hover:underline text-xs mr-2"
-                          onClick={() => handleSave(row.original.id)}
-                          disabled={loading}
-                        >
-                          Save
-                        </button>
-                        <button
-                          className="text-gray-600 hover:underline text-xs mr-2"
-                          onClick={handleCancel}
-                          disabled={loading}
-                        >
-                          Cancel
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        className="text-blue-600 hover:underline text-xs mr-2"
-                        onClick={() => handleEdit(row.original)}
-                        disabled={loading}
-                      >
-                        Edit
-                      </button>
-                    )}
+                    <button
+                      className="text-blue-600 hover:underline text-xs mr-2"
+                      onClick={() => handleEdit(row.original)}
+                      disabled={loading}
+                    >
+                      Edit
+                    </button>
                     <button
                       className={`text-red-600 hover:underline text-xs mr-2 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                       disabled={loading}

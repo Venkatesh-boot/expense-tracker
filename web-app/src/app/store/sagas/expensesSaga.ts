@@ -1,9 +1,22 @@
+
 import { call, put, takeLatest, select } from 'redux-saga/effects';
-import { addExpenseRequest, addExpenseSuccess, addExpenseFailure } from '../slices/expensesSlice';
+import { addExpenseRequest, addExpenseSuccess, addExpenseFailure, getExpenseByIdRequest, getExpenseByIdSuccess, getExpenseByIdFailure } from '../slices/expensesSlice';
 import API_CONFIG from '../../config/api-config';
 import api from '../../utils/api';
 import { PayloadAction } from '@reduxjs/toolkit';
 import { v4 as uuidv4 } from 'uuid';
+
+function* handleGetExpenseById(action: PayloadAction<string>): Generator<unknown, void, unknown> {
+  try {
+    const id = action.payload;
+    const response: any = yield call(api.get as any, `${API_CONFIG.EXPENSES}/${id}`);
+    yield put(getExpenseByIdSuccess((response as any).data));
+  } catch (error: any) {
+    let message = 'Failed to fetch expense';
+    if (error instanceof Error) message = error.message;
+    yield put(getExpenseByIdFailure(message));
+  }
+}
 
 function* handleAddExpense(action: PayloadAction<any>): Generator<unknown, void, unknown> {
   try {
@@ -23,4 +36,5 @@ function* handleAddExpense(action: PayloadAction<any>): Generator<unknown, void,
 
 export default function* expensesSaga() {
   yield takeLatest(addExpenseRequest.type, handleAddExpense);
+  yield takeLatest(getExpenseByIdRequest.type, handleGetExpenseById);
 }

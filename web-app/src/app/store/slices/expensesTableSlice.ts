@@ -6,6 +6,9 @@ export interface ExpensesTableRow {
   category: string;
   amount: number;
   description: string;
+  paymentMethod?: string;
+  type?: string;
+  customCategory?: string;
 }
 
 export interface ExpensesTableState {

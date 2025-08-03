@@ -1,16 +1,24 @@
 
 import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchExpensesTableRequest } from '../../store/slices/expensesTableSlice';
+import type { ExpensesTableState } from '../../store/slices/expensesTableSlice';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { categories } from '../../config/categories';
 import { paymentMethods } from '../../config/paymentMethods';
 import { expenseTypes } from '../../config/expenseTypes';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { addExpenseRequest, resetExpenseStatus } from '../../store/slices/expensesSlice';
-import type { ExpensesState } from '../../store/slices/expensesSlice';
 
+import { addExpenseRequest, resetExpenseStatus, getExpenseByIdRequest } from '../../store/slices/expensesSlice';
+import { updateExpenseRequest } from '../../store/slices/expensesTableSlice';
+import type { ExpensesState, Expense } from '../../store/slices/expensesSlice';
 
-export default function AddExpensesPage() {
+const AddExpensesPage = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const editId = searchParams.get('id');
   const currency = localStorage.getItem('currency') || 'INR';
   const currencySymbols: Record<string, string> = { INR: '₹', USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
   const [category, setCategory] = React.useState('');
@@ -22,9 +30,50 @@ export default function AddExpensesPage() {
   const [amount, setAmount] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [paymentMethod, setPaymentMethod] = React.useState('UPI');
-  // const [files, setFiles] = React.useState<File[]>([]);
+  const [loadingExpense, setLoadingExpense] = React.useState(false);
   const dispatch = useAppDispatch();
+  const expensesTable = useAppSelector(state => state.expensesTable as ExpensesTableState);
+  // Redirect to add expense page after successful update (only after update, not on initial load)
+  const [wasUpdating, setWasUpdating] = React.useState(false);
+  React.useEffect(() => {
+    if (editId && expensesTable.loading) {
+      setWasUpdating(true);
+    }
+    if (
+      editId &&
+      wasUpdating &&
+      !expensesTable.loading &&
+      !expensesTable.error
+    ) {
+      setWasUpdating(false);
+      navigate('/expenses');
+    }
+  }, [editId, expensesTable.loading, expensesTable.error, navigate, wasUpdating]);
   const expenses = useAppSelector(state => state.expenses as ExpensesState);
+  const expenseById = expenses.expenseById;
+  // Fetch expense by id and prefill if editing
+  React.useEffect(() => {
+    if (editId) {
+      setLoadingExpense(true);
+      dispatch(getExpenseByIdRequest(editId));
+    }
+  }, [editId, dispatch]);
+
+  // Prefill form when expenseById is loaded
+  React.useEffect(() => {
+    if (editId && expenseById) {
+      setDate(expenseById.date || '');
+      setAmount(expenseById.amount ? expenseById.amount.toString() : '');
+      setType(expenseById.type || 'EXPENSE');
+      setCategory(expenseById.category || '');
+      setCustomCategory(expenseById.customCategory || '');
+      setDescription(expenseById.description || '');
+      setPaymentMethod(expenseById.paymentMethod || 'UPI');
+      setLoadingExpense(false);
+    }
+  }, [editId, expenseById]);
+  // const [files, setFiles] = React.useState<File[]>([]);
+  // dispatch and expenses already declared above
   // Get logged-in user's email (for display or future use if needed)
   // const userEmail = useAppSelector(state => state.login.email);
 
@@ -56,17 +105,32 @@ export default function AddExpensesPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!date || !amount || !type || !category || !paymentMethod || (category === 'Other' && !customCategory)) return;
-    dispatch(addExpenseRequest({
-      date,
-      amount: Number(amount),
-      type,
-      category,
-      customCategory: category === 'Other' ? customCategory : undefined,
-      description,
-      paymentMethod,
-      // files,
-      // createdBy will be added in saga, not here
-    }));
+    if (editId) {
+      dispatch(updateExpenseRequest({
+        id: editId,
+        data: {
+          date,
+          amount: Number(amount),
+          type,
+          category,
+          customCategory: category === 'Other' ? customCategory : undefined,
+          description,
+          paymentMethod,
+        },
+      }));
+    } else {
+      dispatch(addExpenseRequest({
+        date,
+        amount: Number(amount),
+        type,
+        category,
+        customCategory: category === 'Other' ? customCategory : undefined,
+        description,
+        paymentMethod,
+        // files,
+        // createdBy will be added in saga, not here
+      }));
+    }
   };
 
   return (
@@ -76,6 +140,9 @@ export default function AddExpensesPage() {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-8 w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl border border-blue-100 dark:border-gray-700">
           <h2 className="text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-500 dark:from-blue-300 dark:via-purple-300 dark:to-pink-200">Add Daily Expense</h2>
           <form className="space-y-4 sm:space-y-6" onSubmit={handleSubmit}>
+            {loadingExpense && (
+              <div className="text-blue-600 text-sm mb-2">Loading expense details...</div>
+            )}
             <div>
               <label className="block text-gray-700 dark:text-gray-200 mb-1">Date</label>
               <input type="date" className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base" value={date} onChange={e => setDate(e.target.value)} required />
@@ -189,7 +256,9 @@ export default function AddExpensesPage() {
                 className="flex-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 hover:from-blue-600 hover:via-purple-600 hover:to-pink-600 text-white font-semibold py-2 rounded-lg shadow transition text-sm sm:text-base border-0"
                 disabled={expenses.loading}
               >
-                {expenses.loading ? 'Adding...' : 'Add Expense'}
+                {expenses.loading
+                  ? (editId ? 'Updating...' : 'Adding...')
+                  : (editId ? 'Update Expense' : 'Add Expense')}
               </button>
               <button
                 type="button"
@@ -240,4 +309,6 @@ export default function AddExpensesPage() {
       <Footer />
     </div>
   );
-}
+};
+
+export default AddExpensesPage;
