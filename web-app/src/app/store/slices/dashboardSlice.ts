@@ -27,6 +27,9 @@ export interface MonthlyDetails {
   year: number;
   month: number;
   monthName: string;
+  monthlyBudget: number;
+  budgetUsed: number;
+  budgetRemaining: number;
 }
 
 export interface YearlyDetails {
@@ -58,6 +61,9 @@ export interface YearlyDetails {
     monthNumber: number;
     amount: number;
   } | null;
+  yearlyBudget: number;
+  budgetUsed: number;
+  budgetRemaining: number;
 }
 
 export interface DashboardState {

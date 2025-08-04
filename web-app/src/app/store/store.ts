@@ -6,6 +6,7 @@ import userReducer from './slices/userSlice';
 import otpReducer from './slices/otpSlice';
 import accountReducer from './slices/accountSlice';
 import dashboardReducer from './slices/dashboardSlice';
+import settingsReducer from './slices/settingsSlice';
 import rootSaga from './rootSaga';
 
 const sagaMiddleware = createSagaMiddleware();
@@ -18,7 +19,7 @@ const store = configureStore({
     invite: require('./slices/inviteSlice').default,
     groupMembers: require('./slices/groupMembersSlice').default,
     login: require('./slices/loginSlice').default,
-    settings: require('./slices/settingsSlice').default,
+    settings: settingsReducer,
     expenses: require('./slices/expensesSlice').default,
     expensesTable: require('./slices/expensesTableSlice').default,
     user: userReducer,

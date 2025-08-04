@@ -1,4 +1,3 @@
-
 const API_CONFIG = {
   BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080',
   LOGIN: '/api/auth/login',
@@ -10,7 +9,7 @@ const API_CONFIG = {
   GROUP_INVITE: '/group/invite',
   GROUP_MEMBERS: '/group/members',
   GROUP_MEMBER: (id: string) => `/group/members/${id}`,
-  SETTINGS: '/settings',
+  SETTINGS: '/api/settings',
   EXPENSES: '/api/expenses',
   STRIPE_SESSION: '/api/create-stripe-session',
   USER_EXISTS: '/api/user/exists',

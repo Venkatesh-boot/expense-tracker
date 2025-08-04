@@ -75,12 +75,11 @@ export default function YearlyCharts() {
     previousYearTotal, 
     percentChange,
     highestMonth,
-    lowestMonth
+    lowestMonth,
+    yearlyBudget,
+    budgetUsed,
+    budgetRemaining
   } = yearlyDetails;
-
-  // Budget (example - this could come from user settings)
-  const yearlyBudget = 120000;
-  const budgetUsed = Math.min(100, Math.round((totalAmount / yearlyBudget) * 100));
 
   // Recurring expenses (simulated - this could be enhanced with actual data)
   const recurring = [
@@ -184,6 +183,9 @@ export default function YearlyCharts() {
           <div className="flex justify-between text-xs">
             <span>₹{totalAmount} / ₹{yearlyBudget}</span>
             <span>{budgetUsed}% used</span>
+          </div>
+          <div className="text-xs text-gray-600 mt-1">
+            Remaining: ₹{budgetRemaining}
           </div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2">

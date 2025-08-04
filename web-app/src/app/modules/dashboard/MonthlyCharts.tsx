@@ -82,7 +82,10 @@ export default function MonthlyCharts() {
     categoryBreakdown, 
     dailyExpenses, 
     previousMonthTotal, 
-    percentChange 
+    percentChange,
+    monthlyBudget,
+    budgetUsed,
+    budgetRemaining
   } = monthlyDetails;
 
   // Find highest and lowest spending days
@@ -100,10 +103,6 @@ export default function MonthlyCharts() {
     cumulative += d.amount;
     return { day: d.day, cumulative };
   });
-
-  // Budget (example - this could come from user settings)
-  const budget = 12000;
-  const budgetUsed = Math.min(100, Math.round((totalAmount / budget) * 100));
 
   // Recurring expenses (simulated - this could be enhanced with actual data)
   const recurring = [
@@ -204,8 +203,11 @@ export default function MonthlyCharts() {
             <div className="bg-blue-500 h-4 rounded-full transition-all" style={{ width: `${budgetUsed}%` }}></div>
           </div>
           <div className="flex justify-between text-xs">
-            <span>₹{totalAmount} / ₹{budget}</span>
+            <span>₹{totalAmount} / ₹{monthlyBudget}</span>
             <span>{budgetUsed}% used</span>
+          </div>
+          <div className="text-xs text-gray-600 mt-1">
+            Remaining: ₹{budgetRemaining}
           </div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2">
@@ -312,7 +314,7 @@ export default function MonthlyCharts() {
               <Tooltip />
               <Legend />
               <Line type="monotone" dataKey="cumulative" stroke="#00C49F" strokeWidth={2} dot={false} />
-              <ReferenceLine y={budget} label="Budget" stroke="#FF8042" strokeDasharray="3 3" />
+              <ReferenceLine y={monthlyBudget} label="Budget" stroke="#FF8042" strokeDasharray="3 3" />
             </LineChart>
           </ResponsiveContainer>
         ) : (

@@ -1,17 +1,20 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-export interface SettingsState {
+export interface UserSettings {
+  userEmail: string;
   currency: string;
   dateFormat: string;
-  monthlyBudget: string;
+  monthlyBudget: number;
+}
+
+interface SettingsState {
+  settings: UserSettings | null;
   loading: boolean;
   error: string | null;
 }
 
 const initialState: SettingsState = {
-  currency: 'INR',
-  dateFormat: 'DD/MM/YYYY',
-  monthlyBudget: '12000',
+  settings: null,
   loading: false,
   error: null,
 };
@@ -20,27 +23,51 @@ const settingsSlice = createSlice({
   name: 'settings',
   initialState,
   reducers: {
-    updateSettingsRequest(state, _action: PayloadAction<{ currency: string; dateFormat: string; monthlyBudget: string }>) {
+    // Fetch user settings
+    fetchSettingsStart: (state) => {
       state.loading = true;
       state.error = null;
     },
-    updateSettingsSuccess(state, action: PayloadAction<{ currency: string; dateFormat: string; monthlyBudget: string }>) {
+    fetchSettingsSuccess: (state, action: PayloadAction<UserSettings>) => {
       state.loading = false;
-      state.currency = action.payload.currency;
-      state.dateFormat = action.payload.dateFormat;
-      state.monthlyBudget = action.payload.monthlyBudget;
+      state.settings = action.payload;
+      state.error = null;
     },
-    updateSettingsFailure(state, action: PayloadAction<string>) {
+    fetchSettingsFailure: (state, action: PayloadAction<string>) => {
       state.loading = false;
       state.error = action.payload;
     },
-    loadSettings(state, action: PayloadAction<{ currency: string; dateFormat: string; monthlyBudget: string }>) {
-      state.currency = action.payload.currency;
-      state.dateFormat = action.payload.dateFormat;
-      state.monthlyBudget = action.payload.monthlyBudget;
+
+    // Update user settings
+    updateSettingsStart: (state, action: PayloadAction<Partial<UserSettings>>) => {
+      state.loading = true;
+      state.error = null;
+    },
+    updateSettingsSuccess: (state, action: PayloadAction<UserSettings>) => {
+      state.loading = false;
+      state.settings = action.payload;
+      state.error = null;
+    },
+    updateSettingsFailure: (state, action: PayloadAction<string>) => {
+      state.loading = false;
+      state.error = action.payload;
+    },
+
+    // Clear error
+    clearError: (state) => {
+      state.error = null;
     },
   },
 });
 
-export const { updateSettingsRequest, updateSettingsSuccess, updateSettingsFailure, loadSettings } = settingsSlice.actions;
+export const {
+  fetchSettingsStart,
+  fetchSettingsSuccess,
+  fetchSettingsFailure,
+  updateSettingsStart,
+  updateSettingsSuccess,
+  updateSettingsFailure,
+  clearError,
+} = settingsSlice.actions;
+
 export default settingsSlice.reducer;

@@ -15,6 +15,9 @@ import java.util.Optional;
 public class ExpenseService {
     @Autowired
     private ExpenseRepository expenseRepository;
+    
+    @Autowired
+    private UserSettingsService userSettingsService;
 
     public Expense saveExpense(Expense expense) {
         return expenseRepository.save(expense);
@@ -160,6 +163,12 @@ public class ExpenseService {
             dailyData.add(dayData);
         }
         
+        // Get user's monthly budget from settings
+        var userSettings = userSettingsService.getUserSettings(email);
+        double monthlyBudget = userSettings.getMonthlyBudget();
+        double budgetUsed = (monthlyBudget > 0) ? (totalAmount / monthlyBudget) * 100 : 0;
+        double budgetRemaining = Math.max(0, monthlyBudget - totalAmount);
+        
         // Build response
         java.util.Map<String, Object> result = new java.util.HashMap<>();
         result.put("totalAmount", totalAmount);
@@ -174,6 +183,9 @@ public class ExpenseService {
         result.put("year", year);
         result.put("month", month);
         result.put("monthName", targetMonth.getMonth().toString());
+        result.put("monthlyBudget", monthlyBudget);
+        result.put("budgetUsed", Math.round(budgetUsed * 100.0) / 100.0);
+        result.put("budgetRemaining", budgetRemaining);
         
         return result;
     }
@@ -263,6 +275,13 @@ public class ExpenseService {
             .min((m1, m2) -> Double.compare((Double)m1.get("amount"), (Double)m2.get("amount")))
             .orElse(null);
         
+        // Get user's yearly budget from settings (monthly budget * 12)
+        var userSettings = userSettingsService.getUserSettings(email);
+        double monthlyBudget = userSettings.getMonthlyBudget();
+        double yearlyBudget = monthlyBudget * 12;
+        double budgetUsed = (yearlyBudget > 0) ? (totalAmount / yearlyBudget) * 100 : 0;
+        double budgetRemaining = Math.max(0, yearlyBudget - totalAmount);
+        
         // Build response
         java.util.Map<String, Object> result = new java.util.HashMap<>();
         result.put("totalAmount", totalAmount);
@@ -277,6 +296,9 @@ public class ExpenseService {
         result.put("year", year);
         result.put("highestMonth", highestMonth);
         result.put("lowestMonth", lowestMonth);
+        result.put("yearlyBudget", yearlyBudget);
+        result.put("budgetUsed", Math.round(budgetUsed * 100.0) / 100.0);
+        result.put("budgetRemaining", budgetRemaining);
         
         return result;
     }
