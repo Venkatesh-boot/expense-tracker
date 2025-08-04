@@ -21,13 +21,23 @@ public class ExpenseController {
     private ExpenseService expenseService;
 
     @PostMapping
-    public ResponseEntity<Expense> addExpense(@RequestBody Expense expense) {
+    public ResponseEntity<Expense> addExpense(@RequestBody Expense expense, @RequestAttribute("userEmail") String email) {
+        expense.setCreatedBy(email);
         return ResponseEntity.ok(expenseService.saveExpense(expense));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Expense> updateExpense(@PathVariable Long id, @RequestBody Expense expense) {
+    public ResponseEntity<Expense> updateExpense(@PathVariable Long id, @RequestBody Expense expense, @RequestAttribute("userEmail") String email) {
+        Optional<Expense> existingExpenseOpt = expenseService.getExpenseById(id);
+        if (existingExpenseOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        Expense existingExpense = existingExpenseOpt.get();
+        if (!email.equals(existingExpense.getCreatedBy())) {
+            return ResponseEntity.status(403).build(); // Forbidden
+        }
         expense.setId(id);
+        expense.setCreatedBy(email); // Ensure the updated expense is still associated with the authenticated user
         return ResponseEntity.ok(expenseService.saveExpense(expense));
     }
 

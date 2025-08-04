@@ -4,15 +4,16 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchExpensesTableRequest } from '../../store/slices/expensesTableSlice';
 import type { ExpensesTableState } from '../../store/slices/expensesTableSlice';
+
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { categories } from '../../config/categories';
 import { paymentMethods } from '../../config/paymentMethods';
 import { expenseTypes } from '../../config/expenseTypes';
-
 import { addExpenseRequest, resetExpenseStatus, getExpenseByIdRequest } from '../../store/slices/expensesSlice';
 import { updateExpenseRequest } from '../../store/slices/expensesTableSlice';
 import type { ExpensesState, Expense } from '../../store/slices/expensesSlice';
+import { ToastContainer, showSuccessToast, showErrorToast } from './toastConfig';
 
 const AddExpensesPage = () => {
   const navigate = useNavigate();
@@ -91,6 +92,7 @@ const AddExpensesPage = () => {
 
   React.useEffect(() => {
     if (expenses.success) {
+      showSuccessToast('Expense added successfully!');
       setDate('');
       setAmount('');
       setCategory('');
@@ -101,6 +103,12 @@ const AddExpensesPage = () => {
       dispatch(resetExpenseStatus());
     }
   }, [expenses.success, dispatch]);
+
+  React.useEffect(() => {
+    if (expenses.error) {
+      showErrorToast(expenses.error);
+    }
+  }, [expenses.error]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,6 +143,7 @@ const AddExpensesPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex flex-col">
+      <ToastContainer />
       <Header />
       <div className="flex-1 flex flex-col items-center justify-center px-2 py-4 sm:px-4 md:px-8">
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-4 sm:p-8 w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl border border-blue-100 dark:border-gray-700">
@@ -277,32 +286,7 @@ const AddExpensesPage = () => {
                 Clear All
               </button>
             </div>
-            {expenses.error && (
-              <div className="text-red-500 text-sm mt-2 transition-opacity duration-500 ease-in-out animate-fade-in">
-                {expenses.error}
-              </div>
-            )}
-            {expenses.success && (
-              <div className="flex flex-col items-center gap-2 mt-2 transition-opacity duration-500 ease-in-out animate-fade-in">
-                <div className="text-green-600 text-sm">Expense added successfully!</div>
-                <button
-                  type="button"
-                  className="bg-green-100 hover:bg-green-200 text-green-800 font-semibold px-4 py-1 rounded transition text-xs border border-green-300"
-                  onClick={() => {
-                    setDate('');
-                    setAmount('');
-                    setCategory('');
-                    setCustomCategory('');
-                    setDescription('');
-                    setPaymentMethod('');
-                    // setFiles([]);
-                    dispatch(resetExpenseStatus());
-                  }}
-                >
-                  Add Another
-                </button>
-              </div>
-            )}
+            {/* Toast notifications handle success and error messages */}
           </form>
         </div>
       </div>
