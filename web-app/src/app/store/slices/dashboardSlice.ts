@@ -29,19 +29,54 @@ export interface MonthlyDetails {
   monthName: string;
 }
 
+export interface YearlyDetails {
+  totalAmount: number;
+  avgMonthly: number;
+  maxMonthly: number;
+  minMonthly: number;
+  transactionCount: number;
+  categoryBreakdown: Array<{
+    name: string;
+    value: number;
+    percentage: number;
+  }>;
+  monthlyExpenses: Array<{
+    month: string;
+    monthNumber: number;
+    amount: number;
+  }>;
+  previousYearTotal: number;
+  percentChange: number;
+  year: number;
+  highestMonth: {
+    month: string;
+    monthNumber: number;
+    amount: number;
+  } | null;
+  lowestMonth: {
+    month: string;
+    monthNumber: number;
+    amount: number;
+  } | null;
+}
+
 export interface DashboardState {
   summary: DashboardSummary | null;
   monthlyDetails: MonthlyDetails | null;
+  yearlyDetails: YearlyDetails | null;
   loading: boolean;
   loadingMonthlyDetails: boolean;
+  loadingYearlyDetails: boolean;
   error: string | null;
 }
 
 const initialState: DashboardState = {
   summary: null,
   monthlyDetails: null,
+  yearlyDetails: null,
   loading: false,
   loadingMonthlyDetails: false,
+  loadingYearlyDetails: false,
   error: null,
 };
 
@@ -75,6 +110,19 @@ const dashboardSlice = createSlice({
       state.loadingMonthlyDetails = false;
       state.error = action.payload;
     },
+    fetchYearlyDetailsStart(state, action: PayloadAction<{ year?: number }>) {
+      state.loadingYearlyDetails = true;
+      state.error = null;
+    },
+    fetchYearlyDetailsSuccess(state, action: PayloadAction<YearlyDetails>) {
+      state.loadingYearlyDetails = false;
+      state.yearlyDetails = action.payload;
+      state.error = null;
+    },
+    fetchYearlyDetailsFailure(state, action: PayloadAction<string>) {
+      state.loadingYearlyDetails = false;
+      state.error = action.payload;
+    },
   },
 });
 
@@ -85,5 +133,8 @@ export const {
   fetchMonthlyDetailsStart,
   fetchMonthlyDetailsSuccess,
   fetchMonthlyDetailsFailure,
+  fetchYearlyDetailsStart,
+  fetchYearlyDetailsSuccess,
+  fetchYearlyDetailsFailure,
 } = dashboardSlice.actions;
 export default dashboardSlice.reducer;

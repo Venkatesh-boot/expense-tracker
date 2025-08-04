@@ -90,10 +90,24 @@ public class ExpenseController {
                 year = year == 0 ? now.getYear() : year;
                 month = month == 0 ? now.getMonthValue() : month;
             }
-            
             return ResponseEntity.ok(expenseService.getMonthlyExpensesDetail(email, year, month));
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error fetching monthly expenses detail: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/yearly-details")
+    public ResponseEntity<?> getYearlyExpensesDetail(
+            @RequestParam(defaultValue = "0") int year,
+            @RequestAttribute("userEmail") String email) {
+        try {
+            // If year is not provided, use current year
+            if (year == 0) {
+                year = java.time.LocalDate.now().getYear();
+            }
+            return ResponseEntity.ok(expenseService.getYearlyExpensesDetail(email, year));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error fetching yearly expenses detail: " + e.getMessage());
         }
     }
 }

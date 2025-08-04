@@ -5,7 +5,7 @@ import Footer from '../../components/Footer';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
-import { fetchDashboardSummaryStart, fetchMonthlyDetailsStart } from '../../store/slices/dashboardSlice';
+import { fetchDashboardSummaryStart, fetchMonthlyDetailsStart, fetchYearlyDetailsStart } from '../../store/slices/dashboardSlice';
 // import ExpenseTable from './ExpenseTable';
 import MonthlyCharts from './MonthlyCharts';
 import YearlyCharts from './YearlyCharts';
@@ -19,7 +19,7 @@ const DashboardPage = () => {
   const currencySymbols: Record<string, string> = { INR: '₹', USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
 
   const dispatch = useDispatch();
-  const { summary, loading, error } = useSelector((state: RootState) => state.dashboard);
+  const { summary } = useSelector((state: RootState) => state.dashboard);
 
   useEffect(() => {
     dispatch(fetchDashboardSummaryStart());
@@ -30,6 +30,11 @@ const DashboardPage = () => {
       dispatch(fetchMonthlyDetailsStart({ 
         year: now.getFullYear(), 
         month: now.getMonth() + 1 
+      }));
+    } else if (activeTab === 'yearly') {
+      const now = new Date();
+      dispatch(fetchYearlyDetailsStart({ 
+        year: now.getFullYear()
       }));
     }
   }, [dispatch, activeTab]);
@@ -42,6 +47,11 @@ const DashboardPage = () => {
       dispatch(fetchMonthlyDetailsStart({ 
         year: now.getFullYear(), 
         month: now.getMonth() + 1 
+      }));
+    } else if (tab === 'yearly') {
+      const now = new Date();
+      dispatch(fetchYearlyDetailsStart({ 
+        year: now.getFullYear()
       }));
     }
   };
