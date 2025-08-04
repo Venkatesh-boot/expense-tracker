@@ -57,4 +57,34 @@ public class ExpenseService {
         LocalDate toDate = LocalDate.parse(to);
         return expenseRepository.findAllByDateBetweenAndCreatedByOrderByDateDesc(fromDate, toDate, createdBy);
     }
+
+    public java.util.Map<String, Object> getSummaryForUser(String email) {
+        java.time.LocalDate now = java.time.LocalDate.now();
+        java.time.YearMonth currentMonth = java.time.YearMonth.from(now);
+        java.time.Year currentYear = java.time.Year.from(now);
+        // Fetch all expenses for this user
+        var allExpenses = expenseRepository.findAllByCreatedByOrderByDateDesc(email, org.springframework.data.domain.Pageable.unpaged()).getContent();
+        double monthlyExpenses = allExpenses.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.EXPENSE &&
+                         java.time.YearMonth.from(e.getDate()).equals(currentMonth))
+            .mapToDouble(Expense::getAmount).sum();
+        double yearlyExpenses = allExpenses.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.EXPENSE &&
+                         java.time.Year.from(e.getDate()).equals(currentYear))
+            .mapToDouble(Expense::getAmount).sum();
+        double monthlyIncome = allExpenses.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.INCOME &&
+                         java.time.YearMonth.from(e.getDate()).equals(currentMonth))
+            .mapToDouble(Expense::getAmount).sum();
+        double monthlySavings = allExpenses.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.SAVINGS &&
+                         java.time.YearMonth.from(e.getDate()).equals(currentMonth))
+            .mapToDouble(Expense::getAmount).sum();
+        java.util.Map<String, Object> summary = new java.util.HashMap<>();
+        summary.put("monthlyExpenses", monthlyExpenses);
+        summary.put("yearlyExpenses", yearlyExpenses);
+        summary.put("monthlyIncome", monthlyIncome);
+        summary.put("monthlySavings", monthlySavings);
+        return summary;
+    }
 }

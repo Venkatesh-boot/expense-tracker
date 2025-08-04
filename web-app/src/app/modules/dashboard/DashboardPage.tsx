@@ -1,8 +1,11 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '../../store/store';
+import { fetchDashboardSummaryStart } from '../../store/slices/dashboardSlice';
 // import ExpenseTable from './ExpenseTable';
 import MonthlyCharts from './MonthlyCharts';
 import YearlyCharts from './YearlyCharts';
@@ -14,11 +17,18 @@ const DashboardPage = () => {
   // Currency from settings
   const currency = localStorage.getItem('currency') || 'INR';
   const currencySymbols: Record<string, string> = { INR: '₹', USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
-  // Placeholder data
-  const monthlyExpenses = 12345;
-  const yearlyExpenses = 98765;
-  const monthlyIncome = 20000;
-  const monthlySavings = 3000;
+
+  const dispatch = useDispatch();
+  const { summary, loading, error } = useSelector((state: RootState) => state.dashboard);
+
+  useEffect(() => {
+    dispatch(fetchDashboardSummaryStart());
+  }, [dispatch]);
+
+  const monthlyExpenses = summary?.monthlyExpenses ?? 0;
+  const yearlyExpenses = summary?.yearlyExpenses ?? 0;
+  const monthlyIncome = summary?.monthlyIncome ?? 0;
+  const monthlySavings = summary?.monthlySavings ?? 0;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">

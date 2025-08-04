@@ -62,4 +62,9 @@ public class ExpenseController {
         expenseService.deleteExpense(id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/summary")
+    public ResponseEntity<?> getSummary(@RequestAttribute("userEmail") String email) {
+        return ResponseEntity.ok(expenseService.getSummaryForUser(email));
+    }
 }
