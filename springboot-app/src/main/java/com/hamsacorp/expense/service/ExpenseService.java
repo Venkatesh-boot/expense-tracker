@@ -169,6 +169,9 @@ public class ExpenseService {
         double budgetUsed = (monthlyBudget > 0) ? (totalAmount / monthlyBudget) * 100 : 0;
         double budgetRemaining = Math.max(0, monthlyBudget - totalAmount);
         
+        // Get recurring expenses for this user
+        var recurringExpenses = getRecurringExpensesForUser(email);
+        
         // Build response
         java.util.Map<String, Object> result = new java.util.HashMap<>();
         result.put("totalAmount", totalAmount);
@@ -186,6 +189,7 @@ public class ExpenseService {
         result.put("monthlyBudget", monthlyBudget);
         result.put("budgetUsed", Math.round(budgetUsed * 100.0) / 100.0);
         result.put("budgetRemaining", budgetRemaining);
+        result.put("recurringExpenses", recurringExpenses);
         
         return result;
     }
@@ -282,6 +286,9 @@ public class ExpenseService {
         double budgetUsed = (yearlyBudget > 0) ? (totalAmount / yearlyBudget) * 100 : 0;
         double budgetRemaining = Math.max(0, yearlyBudget - totalAmount);
         
+        // Get recurring expenses for this user
+        var recurringExpenses = getRecurringExpensesForUser(email);
+        
         // Build response
         java.util.Map<String, Object> result = new java.util.HashMap<>();
         result.put("totalAmount", totalAmount);
@@ -299,7 +306,135 @@ public class ExpenseService {
         result.put("yearlyBudget", yearlyBudget);
         result.put("budgetUsed", Math.round(budgetUsed * 100.0) / 100.0);
         result.put("budgetRemaining", budgetRemaining);
+        result.put("recurringExpenses", recurringExpenses);
         
         return result;
+    }
+
+    public java.util.List<java.util.Map<String, Object>> getRecurringExpensesForUser(String email) {
+        try {
+            // Get expenses from the last 6 months to analyze patterns
+            java.time.LocalDate endDate = java.time.LocalDate.now();
+            java.time.LocalDate startDate = endDate.minusMonths(6);
+            
+            // Fetch and filter expense transactions
+            List<Expense> expenseTransactions = expenseRepository
+                .findAllByCreatedByAndDateBetweenOrderByDateDesc(email, startDate, endDate)
+                .stream()
+                .filter(e -> e.getType() == Expense.ExpenseType.EXPENSE)
+                .collect(java.util.stream.Collectors.toList());
+            
+            if (expenseTransactions.isEmpty()) {
+                return new java.util.ArrayList<>();
+            }
+            
+            // Group by normalized description and category to find recurring patterns
+            java.util.Map<String, java.util.List<Expense>> groupedExpenses = expenseTransactions.stream()
+                .collect(java.util.stream.Collectors.groupingBy(this::createExpenseKey));
+            
+            return groupedExpenses.entrySet().stream()
+                .filter(entry -> isRecurringPattern(entry.getValue()))
+                .map(entry -> createRecurringExpenseResponse(entry))
+                .sorted((a, b) -> Double.compare((Double) b.get("amount"), (Double) a.get("amount")))
+                .collect(java.util.stream.Collectors.toList());
+                
+        } catch (Exception e) {
+            // Log error and return empty list instead of throwing
+            System.err.println("Error analyzing recurring expenses for user " + email + ": " + e.getMessage());
+            return new java.util.ArrayList<>();
+        }
+    }
+    
+    private String createExpenseKey(Expense expense) {
+        return normalizeDescription(expense.getDescription()) + "|" + expense.getCategory();
+    }
+    
+    private String normalizeDescription(String description) {
+        if (description == null) return "";
+        return description.toLowerCase().trim().replaceAll("\\s+", " ");
+    }
+    
+    private boolean isRecurringPattern(java.util.List<Expense> expenses) {
+        // Consider it recurring if it appears at least 3 times in 6 months
+        // and amounts are relatively consistent (within 20% variance)
+        if (expenses.size() < 3) return false;
+        
+        double avgAmount = expenses.stream().mapToDouble(Expense::getAmount).average().orElse(0.0);
+        double variance = expenses.stream()
+            .mapToDouble(e -> Math.abs(e.getAmount() - avgAmount) / avgAmount)
+            .average()
+            .orElse(0.0);
+            
+        return variance <= 0.2; // Allow 20% variance in amount
+    }
+    
+    private java.util.Map<String, Object> createRecurringExpenseResponse(java.util.Map.Entry<String, java.util.List<Expense>> entry) {
+        java.util.List<Expense> expenses = entry.getValue();
+        Expense latestExpense = expenses.get(0); // Already sorted by date desc
+        
+        double avgAmount = expenses.stream()
+            .mapToDouble(Expense::getAmount)
+            .average()
+            .orElse(0.0);
+        
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        response.put("name", latestExpense.getDescription());
+        response.put("description", latestExpense.getDescription());
+        response.put("category", latestExpense.getCategory());
+        response.put("amount", Math.round(avgAmount * 100.0) / 100.0);
+        response.put("frequency", calculateFrequency(expenses));
+        response.put("lastDate", latestExpense.getDate());
+        response.put("transactionCount", expenses.size());
+        response.put("variance", Math.round(calculateAmountVariance(expenses, avgAmount) * 100.0) / 100.0);
+        
+        return response;
+    }
+    
+    private double calculateAmountVariance(java.util.List<Expense> expenses, double avgAmount) {
+        if (expenses.isEmpty() || avgAmount == 0) return 0.0;
+        
+        return expenses.stream()
+            .mapToDouble(e -> Math.abs(e.getAmount() - avgAmount) / avgAmount)
+            .average()
+            .orElse(0.0);
+    }
+    
+    private String calculateFrequency(java.util.List<Expense> expenses) {
+        if (expenses.size() < 2) return "monthly";
+        
+        // Sort by date to calculate intervals
+        java.util.List<Expense> sortedExpenses = expenses.stream()
+            .sorted((a, b) -> a.getDate().compareTo(b.getDate()))
+            .collect(java.util.stream.Collectors.toList());
+            
+        // Calculate average days between transactions
+        long totalDays = 0;
+        int intervals = 0;
+        
+        for (int i = 1; i < sortedExpenses.size(); i++) {
+            long daysBetween = java.time.temporal.ChronoUnit.DAYS.between(
+                sortedExpenses.get(i - 1).getDate(),
+                sortedExpenses.get(i).getDate()
+            );
+            if (daysBetween > 0) { // Avoid same-day duplicates
+                totalDays += daysBetween;
+                intervals++;
+            }
+        }
+        
+        if (intervals == 0) return "monthly";
+        
+        double avgDaysBetween = (double) totalDays / intervals;
+        
+        // Classify frequency based on average interval
+        if (avgDaysBetween <= 10) {
+            return "weekly";
+        } else if (avgDaysBetween <= 45) {
+            return "monthly";
+        } else if (avgDaysBetween <= 120) {
+            return "quarterly";
+        } else {
+            return "yearly";
+        }
     }
 }

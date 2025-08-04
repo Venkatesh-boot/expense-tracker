@@ -7,6 +7,13 @@ export interface DashboardSummary {
   monthlySavings: number;
 }
 
+export interface RecurringExpense {
+  name: string;
+  amount: number;
+  category?: string;
+  frequency?: string;
+}
+
 export interface MonthlyDetails {
   totalAmount: number;
   avgDaily: number;
@@ -30,6 +37,7 @@ export interface MonthlyDetails {
   monthlyBudget: number;
   budgetUsed: number;
   budgetRemaining: number;
+  recurringExpenses: RecurringExpense[];
 }
 
 export interface YearlyDetails {
@@ -64,6 +72,7 @@ export interface YearlyDetails {
   yearlyBudget: number;
   budgetUsed: number;
   budgetRemaining: number;
+  recurringExpenses: RecurringExpense[];
 }
 
 export interface DashboardState {

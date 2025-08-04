@@ -78,14 +78,9 @@ export default function YearlyCharts() {
     lowestMonth,
     yearlyBudget,
     budgetUsed,
-    budgetRemaining
+    budgetRemaining,
+    recurringExpenses = []
   } = yearlyDetails;
-
-  // Recurring expenses (simulated - this could be enhanced with actual data)
-  const recurring = [
-    { name: 'Netflix', amount: 499 * 12 },
-    { name: 'Gym', amount: 1200 * 12 },
-  ];
 
   // Savings suggestion
   const topCategory = categoryBreakdown.length > 0 ? categoryBreakdown[0] : null;
@@ -221,12 +216,14 @@ export default function YearlyCharts() {
         <div className="bg-white rounded-xl shadow p-4">
           <div className="font-semibold text-green-700 mb-2">Recurring Expenses</div>
           <ul className="text-sm">
-            {recurring.map(r => (
-              <li key={r.name} className="flex justify-between py-1">
-                <span>{r.name}</span>
-                <span className="font-semibold">₹{r.amount}</span>
+            {recurringExpenses.length > 0 ? recurringExpenses.map(r => (
+              <li key={r.category} className="flex justify-between py-1">
+                <span>{r.category}</span>
+                <span className="font-semibold">₹{r.amount * 12}</span>
               </li>
-            ))}
+            )) : (
+              <li className="text-gray-500">No recurring expenses found</li>
+            )}
           </ul>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2">
