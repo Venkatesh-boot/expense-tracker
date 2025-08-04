@@ -1,9 +1,12 @@
-import React, { useMemo, useState, useEffect } from 'react';
+
+
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAppSelector, useAppDispatch } from '../../store/hooks';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchExpensesTableRequest, deleteExpenseRequest, updateExpenseRequest } from '../../store/slices/expensesTableSlice';
 import type { ExpensesTableState } from '../../store/slices/expensesTableSlice';
 import { useTable, useSortBy, usePagination, useGlobalFilter } from 'react-table';
+import ExpenseDetailsModal from './ExpenseDetailsModal';
 
 const columns = [
   { Header: 'Date', accessor: 'date' },
@@ -11,7 +14,6 @@ const columns = [
   { Header: 'Amount', accessor: 'amount' },
   { Header: 'Type', accessor: 'type' },
   { Header: 'Payment Method', accessor: 'paymentMethod' },
-  { Header: 'Description', accessor: 'description' },
 ];
 
 
@@ -19,11 +21,15 @@ const columns = [
 export default function ExpensesTable() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { rows: expenses, loading, error } = useAppSelector(state => state.expensesTable as ExpensesTableState);
+  const { rows: expenses } = useAppSelector(state => state.expensesTable as ExpensesTableState);
 
   // Inline edit state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<{ date: string; category: string; amount: number; type: string; paymentMethod: string; description: string }>>({});
+
+  // Modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalExpense, setModalExpense] = useState<any | null>(null);
 
   // Handle delete expense
   const handleDelete = (id: string) => {
@@ -36,6 +42,12 @@ export default function ExpensesTable() {
   const handleEdit = (row: any) => {
     // Navigate to add-expenses page with only id as query param
     navigate(`/add-expenses?id=${row.id}`);
+  };
+
+  // Handle view click
+  const handleView = (row: any) => {
+    setModalExpense(row);
+    setModalOpen(true);
   };
 
   // Handle edit form change
@@ -138,7 +150,7 @@ export default function ExpensesTable() {
   const handleExportCSV = () => {
     const rows = [
       ['Date', 'Category', 'Amount', 'Description'],
-      ...filteredData.map(d => [d.date, d.category, d.amount, d.description])
+      ...filteredData.map(d => [d.date, d.category, d.amount])
     ];
     const csv = rows.map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -224,7 +236,7 @@ export default function ExpensesTable() {
             />
             {searchSuggestions.length > 0 && (
               <ul className="absolute left-0 top-9 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow z-10 w-full">
-                {searchSuggestions.map(s => (
+                {searchSuggestions.map((s: string) => (
                   <li key={s} className="px-3 py-1 cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700" onClick={() => setSearchInput(s)}>{s}</li>
                 ))}
               </ul>
@@ -258,22 +270,24 @@ export default function ExpensesTable() {
                     <input type="checkbox" checked={allSelected} onChange={toggleAll} />
                   </th>
                   <th className="py-3 px-2 border-b text-center">#</th>
-                  {headerGroup.headers.map((column: any) => {
-                    const { key, ...thProps } = column.getHeaderProps(column.getSortByToggleProps());
-                    return (
-                      <th
-                        key={key}
-                        {...thProps}
-                        className={`py-3 px-5 border-b font-semibold text-blue-700 dark:text-blue-200 text-base cursor-pointer select-none whitespace-nowrap ${column.isSorted ? 'bg-blue-200 dark:bg-gray-700' : ''}`}
-                      >
-                        {column.render('Header')}
-                        <span>
-                          {column.isSorted ? (column.isSortedDesc ? <span role="img" aria-label="sorted descending"> 🔽</span> : <span role="img" aria-label="sorted ascending"> 🔼</span>) : ''}
-                        </span>
-                      </th>
-                    );
-                  })}
-                  <th className="py-3 px-2 border-b text-center">Actions</th>
+          {/* Insert View column before Actions */}
+          {headerGroup.headers.map((column: any, idx: number) => {
+            const { key, ...thProps } = column.getHeaderProps(column.getSortByToggleProps());
+            return (
+              <th
+                key={key}
+                {...thProps}
+                className={`py-3 px-5 border-b font-semibold text-blue-700 dark:text-blue-200 text-base cursor-pointer select-none whitespace-nowrap ${column.isSorted ? 'bg-blue-200 dark:bg-gray-700' : ''}`}
+              >
+                {column.render('Header')}
+                <span>
+                  {column.isSorted ? (column.isSortedDesc ? <span role="img" aria-label="sorted descending"> 🔽</span> : <span role="img" aria-label="sorted ascending"> 🔼</span>) : ''}
+                </span>
+              </th>
+            );
+          })}
+          <th className="py-3 px-2 border-b text-center">View</th>
+          <th className="py-3 px-2 border-b text-center">Actions</th>
                 </tr>
               );
             })}
@@ -295,99 +309,93 @@ export default function ExpensesTable() {
                     <input type="checkbox" checked={isSelected} onChange={() => toggleRow(row.index)} />
                   </td>
                   <td className="py-3 px-2 border-b text-center">{idx + 1}</td>
-                  {row.cells.map((cell: any, cidx: number) => (
-                    (() => {
-                      const cellProps = cell.getCellProps();
-                      const cellKey = cellProps.key;
-                      const { key, ...restCellProps } = cellProps;
-                      return (
-                        <td
-                          key={cellKey}
-                          {...restCellProps}
-                          className="py-3 px-5 border-b text-gray-700 dark:text-gray-200 whitespace-nowrap"
-                        >
-                          {editingId === row.original.id ? (
-                            cell.column.id === 'amount' ? (
-                              <input
-                                type="number"
-                                value={editForm.amount ?? ''}
-                                onChange={e => handleEditChange('amount', Number(e.target.value))}
-                                className="border px-1 py-0.5 rounded w-20"
-                              />
-                            ) : cell.column.id === 'date' ? (
-                              <input
-                                type="date"
-                                value={editForm.date ?? ''}
-                                onChange={e => handleEditChange('date', e.target.value)}
-                                className="border px-1 py-0.5 rounded w-28"
-                              />
-                            ) : cell.column.id === 'category' ? (
-                              <input
-                                type="text"
-                                value={editForm.category ?? ''}
-                                onChange={e => handleEditChange('category', e.target.value)}
-                                className="border px-1 py-0.5 rounded w-24"
-                              />
-                            ) : cell.column.id === 'type' ? (
-                              <input
-                                type="text"
-                                value={editForm.type ?? ''}
-                                onChange={e => handleEditChange('type', e.target.value)}
-                                className="border px-1 py-0.5 rounded w-20"
-                              />
-                            ) : cell.column.id === 'paymentMethod' ? (
-                              <input
-                                type="text"
-                                value={editForm.paymentMethod ?? ''}
-                                onChange={e => handleEditChange('paymentMethod', e.target.value)}
-                                className="border px-1 py-0.5 rounded w-24"
-                              />
-                            ) : cell.column.id === 'description' ? (
-                              <input
-                                type="text"
-                                value={editForm.description ?? ''}
-                                onChange={e => handleEditChange('description', e.target.value)}
-                                className="border px-1 py-0.5 rounded w-32"
-                              />
-                            ) : null
-                          ) : (
-                            cell.column.id === 'amount' ? (
-                              <span className="inline-flex items-center gap-1">
-                                ₹{typeof cell.value === 'number' ? cell.value.toLocaleString() : (cell.value as string)}
-                                {typeof cell.value === 'number' && isLarge(cell.value) && <span title="Large expense" className="ml-1 text-red-500 font-bold" role="img" aria-label="Large expense">!</span>}
-                              </span>
-                            ) : cell.column.id === 'category' ? (
-                              <span className="inline-flex items-center gap-1">
-                                {cell.value as string}
-                                {cell.value === 'Bills' && <span title="Recurring" className="ml-1 text-green-500" role="img" aria-label="Recurring">♻️</span>}
-                              </span>
-                            ) : cell.column.id === 'description' ? (
-                              <span className="inline-flex items-center gap-1">
-                                {cell.value as string}
-                                {row.original.category === 'Shopping' && <span className="ml-1 px-1 rounded bg-yellow-100 text-yellow-800 text-xs">groceries</span>}
-                              </span>
-                            ) : cell.render('Cell')
-                          )}
-                        </td>
-                      );
-                    })()
-                  ))}
+            {row.cells.map((cell: any, cidx: number) => {
+              const cellProps = cell.getCellProps();
+              const cellKey = cellProps.key;
+              const { key, ...restCellProps } = cellProps;
+              return (
+                <td
+                  key={cellKey}
+                  {...restCellProps}
+                  className="py-3 px-5 border-b text-gray-700 dark:text-gray-200 whitespace-nowrap"
+                >
+                  {editingId === row.original.id ? (
+                    cell.column.id === 'amount' ? (
+                      <input
+                        type="number"
+                        value={editForm.amount ?? ''}
+                        onChange={e => handleEditChange('amount', Number(e.target.value))}
+                        className="border px-1 py-0.5 rounded w-20"
+                      />
+                    ) : cell.column.id === 'date' ? (
+                      <input
+                        type="date"
+                        value={editForm.date ?? ''}
+                        onChange={e => handleEditChange('date', e.target.value)}
+                        className="border px-1 py-0.5 rounded w-28"
+                      />
+                    ) : cell.column.id === 'category' ? (
+                      <input
+                        type="text"
+                        value={editForm.category ?? ''}
+                        onChange={e => handleEditChange('category', e.target.value)}
+                        className="border px-1 py-0.5 rounded w-24"
+                      />
+                    ) : cell.column.id === 'type' ? (
+                      <input
+                        type="text"
+                        value={editForm.type ?? ''}
+                        onChange={e => handleEditChange('type', e.target.value)}
+                        className="border px-1 py-0.5 rounded w-20"
+                      />
+                    ) : cell.column.id === 'paymentMethod' ? (
+                      <input
+                        type="text"
+                        value={editForm.paymentMethod ?? ''}
+                        onChange={e => handleEditChange('paymentMethod', e.target.value)}
+                        className="border px-1 py-0.5 rounded w-24"
+                      />
+                    ) : null
+                  ) : (
+                    cell.column.id === 'amount' ? (
+                      <span className="inline-flex items-center gap-1">
+                        ₹{typeof cell.value === 'number' ? cell.value.toLocaleString() : (cell.value as string)}
+                        {typeof cell.value === 'number' && isLarge(cell.value) && <span title="Large expense" className="ml-1 text-red-500 font-bold" role="img" aria-label="Large expense">!</span>}
+                      </span>
+                    ) : cell.column.id === 'category' ? (
+                      <span className="inline-flex items-center gap-1">
+                        {cell.value as string}
+                        {cell.value === 'Bills' && <span title="Recurring" className="ml-1 text-green-500" role="img" aria-label="Recurring">♻️</span>}
+                      </span>
+                    ) : cell.render('Cell')
+                  )}
+                </td>
+              );
+            })}
+                  {/* View column */}
+                  <td className="py-3 px-2 border-b text-center">
+                    <button
+                      className="text-green-600 hover:underline text-xs"
+                      onClick={() => handleView(row.original)}
+                      title="View Details"
+                    >
+                      View
+                    </button>
+                  </td>
+                  {/* Actions column */}
                   <td className="py-3 px-2 border-b text-center">
                     <button
                       className="text-blue-600 hover:underline text-xs mr-2"
                       onClick={() => handleEdit(row.original)}
-                      disabled={loading}
                     >
                       Edit
                     </button>
                     <button
-                      className={`text-red-600 hover:underline text-xs mr-2 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      disabled={loading}
+                      className="text-red-600 hover:underline text-xs mr-2"
                       onClick={() => handleDelete(row.original.id)}
                     >
-                      {loading ? 'Deleting...' : 'Delete'}
+                      Delete
                     </button>
-                    {/* <button className="text-green-600 hover:underline text-xs" title="View Receipt"><span role="img" aria-label="View Receipt">📎</span></button> */}
                   </td>
                 </tr>
               );
@@ -415,6 +423,8 @@ export default function ExpensesTable() {
         </div>
       )}
 
+      {/* Expense Details Modal */}
+      <ExpenseDetailsModal open={modalOpen} onClose={() => setModalOpen(false)} expense={modalExpense} />
       {/* Floating Add Expense Button */}
       <button
         onClick={() => navigate('/add-expenses')}
