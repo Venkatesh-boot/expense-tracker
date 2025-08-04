@@ -5,7 +5,7 @@ import Footer from '../../components/Footer';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
-import { fetchDashboardSummaryStart } from '../../store/slices/dashboardSlice';
+import { fetchDashboardSummaryStart, fetchMonthlyDetailsStart } from '../../store/slices/dashboardSlice';
 // import ExpenseTable from './ExpenseTable';
 import MonthlyCharts from './MonthlyCharts';
 import YearlyCharts from './YearlyCharts';
@@ -23,7 +23,28 @@ const DashboardPage = () => {
 
   useEffect(() => {
     dispatch(fetchDashboardSummaryStart());
-  }, [dispatch]);
+    
+    // If monthly tab is active, fetch monthly details for current month
+    if (activeTab === 'monthly') {
+      const now = new Date();
+      dispatch(fetchMonthlyDetailsStart({ 
+        year: now.getFullYear(), 
+        month: now.getMonth() + 1 
+      }));
+    }
+  }, [dispatch, activeTab]);
+
+  const handleTabChange = (tab: 'monthly' | 'yearly' | 'recent-expenses') => {
+    setActiveTab(tab);
+    
+    if (tab === 'monthly') {
+      const now = new Date();
+      dispatch(fetchMonthlyDetailsStart({ 
+        year: now.getFullYear(), 
+        month: now.getMonth() + 1 
+      }));
+    }
+  };
 
   const monthlyExpenses = summary?.monthlyExpenses ?? 0;
   const yearlyExpenses = summary?.yearlyExpenses ?? 0;
@@ -59,13 +80,13 @@ const DashboardPage = () => {
             <div className="flex border-b mb-3 sm:mb-4">
               <button
                 className={`px-2 sm:px-4 py-2 font-semibold focus:outline-none ${activeTab === 'monthly' ? 'border-b-2 border-blue-600 text-blue-700 dark:text-blue-200' : 'text-gray-500 dark:text-gray-300'}`}
-                onClick={() => setActiveTab('monthly')}
+                onClick={() => handleTabChange('monthly')}
               >
                 Monthly
               </button>
               <button
                 className={`px-2 sm:px-4 py-2 font-semibold focus:outline-none ${activeTab === 'yearly' ? 'border-b-2 border-green-600 text-green-700 dark:text-green-200' : 'text-gray-500 dark:text-gray-300'}`}
-                onClick={() => setActiveTab('yearly')}
+                onClick={() => handleTabChange('yearly')}
               >
                 Yearly
               </button>

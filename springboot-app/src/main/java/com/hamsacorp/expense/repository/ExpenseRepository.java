@@ -17,4 +17,5 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     Page<Expense> findAllByDateBetweenOrderByDateDesc(LocalDate from, LocalDate to, Pageable pageable);
     Page<Expense> findAllByCreatedByOrderByDateDesc(String createdBy, Pageable pageable);
     List<Expense> findAllByDateBetweenAndCreatedByOrderByDateDesc(LocalDate from, LocalDate to, String createdBy);
+    List<Expense> findAllByCreatedByAndDateBetweenOrderByDateDesc(String createdBy, LocalDate from, LocalDate to);
 }

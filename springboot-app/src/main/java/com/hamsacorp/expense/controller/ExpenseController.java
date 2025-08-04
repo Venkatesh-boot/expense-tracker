@@ -77,4 +77,23 @@ public class ExpenseController {
     public ResponseEntity<?> getSummary(@RequestAttribute("userEmail") String email) {
         return ResponseEntity.ok(expenseService.getSummaryForUser(email));
     }
+
+    @GetMapping("/monthly-details")
+    public ResponseEntity<?> getMonthlyExpensesDetail(
+            @RequestParam(defaultValue = "0") int year,
+            @RequestParam(defaultValue = "0") int month,
+            @RequestAttribute("userEmail") String email) {
+        try {
+            // If year and month are not provided, use current month
+            if (year == 0 || month == 0) {
+                java.time.LocalDate now = java.time.LocalDate.now();
+                year = year == 0 ? now.getYear() : year;
+                month = month == 0 ? now.getMonthValue() : month;
+            }
+            
+            return ResponseEntity.ok(expenseService.getMonthlyExpensesDetail(email, year, month));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error fetching monthly expenses detail: " + e.getMessage());
+        }
+    }
 }
