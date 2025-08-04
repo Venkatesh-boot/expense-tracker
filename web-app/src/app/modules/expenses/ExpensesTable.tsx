@@ -187,41 +187,41 @@ export default function ExpensesTable() {
   const isLarge = (amount: number) => amount > 1000;
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-2 sm:p-4 relative">
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-0 sm:p-4 relative min-h-screen w-full overflow-x-hidden max-w-full">
       <h2 className="text-xl font-bold mb-2 text-blue-700 dark:text-blue-200">Recent Expenses</h2>
       {/* Info Bar */}
-      <div className="flex flex-col sm:flex-row sm:justify-between gap-2 mb-2">
-        <div className="flex flex-wrap gap-2 items-center">
+      <div className="flex flex-col gap-2 mb-2 sm:flex-row sm:justify-between">
+        <div className="flex flex-wrap gap-2 items-center text-xs sm:text-base">
           <span className="font-semibold text-gray-700 dark:text-gray-100">Total (filtered): <span className="text-blue-700 dark:text-green-200">₹{totalFiltered.toLocaleString()}</span></span>
           <span className="font-semibold text-gray-700 dark:text-gray-100">This page: <span className="text-blue-700 dark:text-green-200">₹{totalPage.toLocaleString()}</span></span>
           <span className="font-semibold text-gray-700 dark:text-gray-100">Showing {page.length} of {filteredData.length} expenses</span>
         </div>
-        <div className="flex gap-2 items-center">
-          <button onClick={handleExportCSV} className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm">Export CSV</button>
-          {csvUrl && <a href={csvUrl} download="expenses.csv" className="text-blue-600 underline text-sm">Download</a>}
+        <div className="flex gap-2 items-center w-full sm:w-auto justify-end">
+          <button onClick={handleExportCSV} className="px-2 py-1 sm:px-3 sm:py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-xs sm:text-sm">Export CSV</button>
+          {csvUrl && <a href={csvUrl} download="expenses.csv" className="text-blue-600 underline text-xs sm:text-sm">Download</a>}
         </div>
       </div>
       {/* Category Breakdown */}
-      <div className="flex flex-wrap gap-2 mb-2">
+      <div className="flex flex-wrap gap-2 mb-2 text-xs sm:text-sm">
         {Object.entries(categoryBreakdown).map(([cat, amt]) => (
-          <span key={cat} className="px-2 py-1 rounded bg-blue-100 dark:bg-gray-900 text-blue-700 dark:text-green-200 text-xs font-semibold">{cat}: ₹{amt.toLocaleString()}</span>
+          <span key={cat} className="px-2 py-1 rounded bg-blue-100 dark:bg-gray-900 text-blue-700 dark:text-green-200 font-semibold">{cat}: ₹{amt.toLocaleString()}</span>
         ))}
       </div>
       {/* Filters */}
-      <div className="mb-2 flex flex-col sm:flex-row sm:justify-between gap-2 items-center">
+      <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:justify-between items-center">
         <div className="flex gap-2 items-center w-full sm:w-auto">
           <input
             type="date"
             value={dateFrom}
             onChange={e => setDateFrom(e.target.value)}
-            className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
+            className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 w-1/2 sm:w-auto"
             placeholder="From"
           />
           <input
             type="date"
             value={dateTo}
             onChange={e => setDateTo(e.target.value)}
-            className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
+            className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 w-1/2 sm:w-auto"
             placeholder="To"
           />
         </div>
@@ -235,7 +235,7 @@ export default function ExpensesTable() {
               onFocus={() => setSearchSuggestions([])}
             />
             {searchSuggestions.length > 0 && (
-              <ul className="absolute left-0 top-9 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow z-10 w-full">
+              <ul className="absolute left-0 top-9 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow z-10 w-full max-h-40 overflow-y-auto text-xs sm:text-sm">
                 {searchSuggestions.map((s: string) => (
                   <li key={s} className="px-3 py-1 cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700" onClick={() => setSearchInput(s)}>{s}</li>
                 ))}
@@ -245,7 +245,7 @@ export default function ExpensesTable() {
           <select
             value={usePaginate ? state.pageSize : 5}
             onChange={e => setPageSize(Number(e.target.value))}
-            className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200"
+            className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 text-xs sm:text-sm"
             disabled={!usePaginate}
           >
             {[5, 10, 20].map(size => (
@@ -257,8 +257,8 @@ export default function ExpensesTable() {
         </div>
       </div>
       {/* Table */}
-      <div className="overflow-x-auto rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
-        <table {...getTableProps()} className="min-w-full text-left bg-white dark:bg-gray-800">
+      <div className="overflow-x-auto w-full max-w-full rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
+        <table {...getTableProps()} className="min-w-full w-full max-w-full text-left bg-white dark:bg-gray-800 text-xs sm:text-sm" style={{ tableLayout: 'auto' }}>
           <thead className="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-gray-900 dark:to-gray-800 sticky top-0 z-10">
             {headerGroups.map((headerGroup: any) => {
               const headerGroupProps = headerGroup.getHeaderGroupProps();
@@ -430,7 +430,7 @@ export default function ExpensesTable() {
         onClick={() => navigate('/add-expenses')}
         className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center text-2xl sm:text-3xl transition duration-200"
         title="Add Expense"
-        style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.15)' }}
+        style={{ boxShadow: '0 4px 24px rgba(0,0,0,0.15)', right: '1rem', left: 'auto', bottom: '1rem', maxWidth: '100vw', maxHeight: '100vh' }}
       >
         +
       </button>

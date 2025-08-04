@@ -32,6 +32,7 @@ const LANGUAGES = [
 
 export default function Header({ showLogout = true }: { showLogout?: boolean }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');
   const [langDropdown, setLangDropdown] = useState(false);
   const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
@@ -72,75 +73,59 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
         <img src="/favicon.ico" alt="Company Logo" className="h-8 w-8" />
         <span className="font-bold text-xl text-blue-700 dark:text-green-200">ExpenseTracker</span>
       </div>
-      {/* User Avatar, Language, Account & Menu */}
+      {/* Desktop Menu */}
       <div className="relative flex items-center gap-4">
-        {/* Expenses Menu */}
-        <button
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 dark:bg-gray-800 shadow-sm hover:shadow-md transition text-sm font-medium"
-          onClick={() => navigate('/expenses')}
-        >
-          <svg className="w-5 h-5 text-purple-600 dark:text-purple-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" /></svg>
-          <span>Expenses</span>
-        </button>
-        {/* Group Menu */}
-        <button
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-green-200 bg-green-50 dark:bg-gray-800 shadow-sm hover:shadow-md transition text-sm font-medium"
-          onClick={() => navigate('/group')}
-        >
-          <svg className="w-5 h-5 text-green-600 dark:text-green-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m9-5a4 4 0 11-8 0 4 4 0 018 0zm6 6v2a2 2 0 01-2 2h-4a2 2 0 01-2-2v-2a2 2 0 012-2h4a2 2 0 012 2z" /></svg>
-          <span>Group</span>
-        </button>
-        {/* Subscription Menu */}
-        <button
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 dark:bg-gray-800 shadow-sm hover:shadow-md transition text-sm font-medium"
-          onClick={() => navigate('/subscription')}
-        >
-          <svg className="w-5 h-5 text-blue-600 dark:text-green-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 10c-4.418 0-8-1.79-8-4V6a2 2 0 012-2h12a2 2 0 012 2v8c0 2.21-3.582 4-8 4z" /></svg>
-          <span>Subscription</span>
-        </button>
-        {/* Custom Language Dropdown */}
-        <div className="relative" ref={langRef}>
+        {/* Desktop Nav Buttons - hidden on mobile */}
+        <div className="hidden md:flex items-center gap-4">
           <button
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-gray-200 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition text-sm font-medium min-w-[110px]"
-            onClick={() => setLangDropdown(v => !v)}
-            aria-haspopup="listbox"
-            aria-expanded={langDropdown}
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 dark:bg-gray-800 shadow-sm hover:shadow-md transition text-sm font-medium"
+            onClick={() => navigate('/expenses')}
           >
-            <img
-              src={`https://flagcdn.com/24x18/${LANGUAGES.find(l => l.code === language)?.country}.png`}
-              alt={LANGUAGES.find(l => l.code === language)?.label + ' flag'}
-              className="w-5 h-4 rounded-sm border border-gray-200 shadow-sm"
-              style={{ objectFit: 'cover' }}
-            />
-            <span>{LANGUAGES.find(l => l.code === language)?.label}</span>
-            <svg className="w-4 h-4 ml-1 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+            <svg className="w-5 h-5 text-purple-600 dark:text-purple-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" /></svg>
+            <span>Expenses</span>
           </button>
-          {langDropdown && (
-            <ul className="absolute right-0 mt-2 w-44 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 animate-fade-in" role="listbox">
-              {LANGUAGES.map(lang => (
-                <li
-                  key={lang.code}
-                  className={`flex items-center gap-3 px-4 py-2 cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-700 ${language === lang.code ? 'bg-blue-100 dark:bg-gray-900 font-semibold' : ''}`}
-                  onClick={() => {
-                    setLanguage(lang.code);
-                    localStorage.setItem('language', lang.code);
-                    setLangDropdown(false);
-                  }}
-                  role="option"
-                  aria-selected={language === lang.code}
-                >
-                  <img
-                    src={`https://flagcdn.com/24x18/${lang.country}.png`}
-                    alt={lang.label + ' flag'}
-                    className="w-5 h-4 rounded-sm border border-gray-200 shadow-sm"
-                    style={{ objectFit: 'cover' }}
-                  />
-                  <span>{lang.label}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+          <button
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-green-200 bg-green-50 dark:bg-gray-800 shadow-sm hover:shadow-md transition text-sm font-medium"
+            onClick={() => navigate('/group')}
+          >
+            <svg className="w-5 h-5 text-green-600 dark:text-green-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m9-5a4 4 0 11-8 0 4 4 0 018 0zm6 6v2a2 2 0 01-2 2h-4a2 2 0 01-2-2v-2a2 2 0 012-2h4a2 2 0 012 2z" /></svg>
+            <span>Group</span>
+          </button>
+          <button
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 dark:bg-gray-800 shadow-sm hover:shadow-md transition text-sm font-medium"
+            onClick={() => navigate('/subscription')}
+          >
+            <svg className="w-5 h-5 text-blue-600 dark:text-green-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 10c-4.418 0-8-1.79-8-4V6a2 2 0 012-2h12a2 2 0 012 2v8c0 2.21-3.582 4-8 4z" /></svg>
+            <span>Subscription</span>
+          </button>
         </div>
+        {/* Hamburger for mobile */}
+        <button
+          className="block md:hidden p-2 rounded-lg border border-gray-200 bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition"
+          aria-label="Open menu"
+          onClick={() => setMobileMenuOpen((v) => !v)}
+        >
+          <svg className="w-7 h-7 text-gray-700 dark:text-gray-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" /></svg>
+        </button>
+        {/* Mobile Dropdown Menu */}
+        {mobileMenuOpen && (
+          <div className="absolute right-0 top-14 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-2 z-50 animate-fade-in flex flex-col md:hidden">
+            <button className="flex items-center gap-2 px-4 py-2 hover:bg-blue-50 dark:hover:bg-gray-700 text-purple-700 dark:text-purple-200" onClick={() => { setMobileMenuOpen(false); navigate('/expenses'); }}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" /></svg>
+              Expenses
+            </button>
+            <button className="flex items-center gap-2 px-4 py-2 hover:bg-green-50 dark:hover:bg-gray-700 text-green-700 dark:text-green-200" onClick={() => { setMobileMenuOpen(false); navigate('/group'); }}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m9-5a4 4 0 11-8 0 4 4 0 018 0zm6 6v2a2 2 0 01-2 2h-4a2 2 0 01-2-2v-2a2 2 0 012-2h4a2 2 0 012 2z" /></svg>
+              Group
+            </button>
+            <button className="flex items-center gap-2 px-4 py-2 hover:bg-blue-50 dark:hover:bg-gray-700 text-blue-700 dark:text-blue-200" onClick={() => { setMobileMenuOpen(false); navigate('/subscription'); }}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 10c-4.418 0-8-1.79-8-4V6a2 2 0 012-2h12a2 2 0 012 2v8c0 2.21-3.582 4-8 4z" /></svg>
+              Subscription
+            </button>
+          </div>
+        )}
+        {/* Custom Language Dropdown (temporarily hidden) */}
+        {/* <div className="relative" ref={langRef}> ...language selector code... </div> */}
         {/* User Avatar Menu */}
         <img
           src={avatar}
