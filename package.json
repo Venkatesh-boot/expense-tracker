@@ -2,7 +2,11 @@
   "name": "@expense-tracker/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "build:web-app": "nx build web-app",
+    "predeploy:web-app": "npm run build:web-app",
+    "deploy:web-app": "gh-pages -d dist/web-app"
+  },
   "private": true,
   "devDependencies": {
     "@babel/core": "^7.14.5",
@@ -44,6 +48,7 @@
     "eslint-plugin-jsx-a11y": "6.10.1",
     "eslint-plugin-react": "7.35.0",
     "eslint-plugin-react-hooks": "5.0.0",
+    "gh-pages": "^6.3.0",
     "jest-react-native": "18.0.0",
     "jsonc-eslint-parser": "^2.1.0",
     "msw": "^2.10.4",

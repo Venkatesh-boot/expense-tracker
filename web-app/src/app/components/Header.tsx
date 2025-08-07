@@ -66,6 +66,15 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
     localStorage.setItem('language', e.target.value);
   };
 
+  // Logout handler function
+  const handleLogout = () => {
+    setMenuOpen(false);
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    sessionStorage.clear();
+    navigate('/login');
+  };
+
   return (
     <header className="w-full bg-white dark:bg-gray-900 shadow flex items-center justify-between px-6 py-3 mb-6 relative z-40">
       {/* Logo */}
@@ -166,7 +175,7 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
               Settings
             </button>
             {showLogout && (
-              <button className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 flex items-center gap-2" onClick={() => { setMenuOpen(false); /* TODO: Add logout logic */ navigate('/login'); }}>
+              <button className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 flex items-center gap-2" onClick={handleLogout}>
                 <span className="inline-block w-5 h-5 text-red-500">{/* Logout icon */}
                   <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" /></svg>
                 </span>

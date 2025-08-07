@@ -4,6 +4,7 @@ const { join } = require('path');
 const webpack = require('webpack');
 
 module.exports = {
+  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
   ignoreWarnings: [
     {
       module: /tough-cookie/,
@@ -30,7 +31,7 @@ module.exports = {
       compiler: 'babel',
       main: './src/main.tsx',
       index: './src/index.html',
-      baseHref: '/',
+      baseHref: process.env.NODE_ENV === 'production' ? '/expense-tracker/' : '/',
       assets: ['./src/favicon.ico', './src/assets'],
       styles: ['./src/styles.css'],
       outputHashing: process.env['NODE_ENV'] === 'production' ? 'all' : 'none',
