@@ -5,13 +5,14 @@ import Footer from '../../components/Footer';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
-import { fetchDashboardSummaryStart, fetchMonthlyDetailsStart, fetchYearlyDetailsStart } from '../../store/slices/dashboardSlice';
+import { fetchDashboardSummaryStart, fetchMonthlyDetailsStart, fetchYearlyDetailsStart, fetchDailyDetailsStart } from '../../store/slices/dashboardSlice';
 // import ExpenseTable from './ExpenseTable';
 import MonthlyCharts from './MonthlyCharts';
 import YearlyCharts from './YearlyCharts';
+import DailyCharts from './DailyCharts';
 
 const DashboardPage = () => {
-  const [activeTab, setActiveTab] = useState<'monthly' | 'yearly' | 'recent-expenses'>('monthly');
+  const [activeTab, setActiveTab] = useState<'daily' | 'monthly' | 'yearly' | 'recent-expenses'>('daily');
   const navigate = useNavigate();
 
   // Currency from settings
@@ -24,8 +25,11 @@ const DashboardPage = () => {
   useEffect(() => {
     dispatch(fetchDashboardSummaryStart());
     
-    // If monthly tab is active, fetch monthly details for current month
-    if (activeTab === 'monthly') {
+    // If daily tab is active, fetch daily details for today
+    if (activeTab === 'daily') {
+      const today = new Date().toISOString().split('T')[0];
+      dispatch(fetchDailyDetailsStart({ date: today }));
+    } else if (activeTab === 'monthly') {
       const now = new Date();
       dispatch(fetchMonthlyDetailsStart({ 
         year: now.getFullYear(), 
@@ -39,10 +43,13 @@ const DashboardPage = () => {
     }
   }, [dispatch, activeTab]);
 
-  const handleTabChange = (tab: 'monthly' | 'yearly' | 'recent-expenses') => {
+  const handleTabChange = (tab: 'daily' | 'monthly' | 'yearly' | 'recent-expenses') => {
     setActiveTab(tab);
     
-    if (tab === 'monthly') {
+    if (tab === 'daily') {
+      const today = new Date().toISOString().split('T')[0];
+      dispatch(fetchDailyDetailsStart({ date: today }));
+    } else if (tab === 'monthly') {
       const now = new Date();
       dispatch(fetchMonthlyDetailsStart({ 
         year: now.getFullYear(), 
@@ -60,6 +67,7 @@ const DashboardPage = () => {
   const yearlyExpenses = summary?.yearlyExpenses ?? 0;
   const monthlyIncome = summary?.monthlyIncome ?? 0;
   const monthlySavings = summary?.monthlySavings ?? 0;
+  const dailyExpenses = Math.round(monthlyExpenses / 30); // Estimate daily from monthly
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
@@ -68,26 +76,36 @@ const DashboardPage = () => {
         <div className="w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-4xl">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-blue-700 dark:text-green-200">Expense Dashboard</h1>
           {/* Colorful summary cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+            <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-purple-400 to-purple-600 text-white flex flex-col items-start">
+              <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="daily expenses">📊</span><span className="font-semibold">Daily Expenses</span></div>
+              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {dailyExpenses}</div>
+            </div>
             <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-blue-400 to-blue-600 text-white flex flex-col items-start">
-              <div className="flex items-center gap-2 mb-2"><span className="text-2xl">💸</span><span className="font-semibold">Monthly Expenses</span></div>
+              <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="monthly expenses">💸</span><span className="font-semibold">Monthly Expenses</span></div>
               <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlyExpenses}</div>
             </div>
             <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-green-400 to-green-600 text-white flex flex-col items-start">
-              <div className="flex items-center gap-2 mb-2"><span className="text-2xl">📅</span><span className="font-semibold">Yearly Expenses</span></div>
+              <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="yearly expenses">📅</span><span className="font-semibold">Yearly Expenses</span></div>
               <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {yearlyExpenses}</div>
             </div>
             <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-pink-400 to-pink-600 text-white flex flex-col items-start">
-              <div className="flex items-center gap-2 mb-2"><span className="text-2xl">💰</span><span className="font-semibold">Monthly Income</span></div>
+              <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="monthly income">💰</span><span className="font-semibold">Monthly Income</span></div>
               <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlyIncome}</div>
             </div>
-            <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-purple-400 to-purple-600 text-white flex flex-col items-start">
-              <div className="flex items-center gap-2 mb-2"><span className="text-2xl">🏦</span><span className="font-semibold">Monthly Savings</span></div>
+            <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-indigo-400 to-indigo-600 text-white flex flex-col items-start">
+              <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="monthly savings">🏦</span><span className="font-semibold">Monthly Savings</span></div>
               <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlySavings}</div>
             </div>
           </div>
           <div className="mb-6 sm:mb-8">
             <div className="flex border-b mb-3 sm:mb-4">
+              <button
+                className={`px-2 sm:px-4 py-2 font-semibold focus:outline-none ${activeTab === 'daily' ? 'border-b-2 border-purple-600 text-purple-700 dark:text-purple-200' : 'text-gray-500 dark:text-gray-300'}`}
+                onClick={() => handleTabChange('daily')}
+              >
+                Daily
+              </button>
               <button
                 className={`px-2 sm:px-4 py-2 font-semibold focus:outline-none ${activeTab === 'monthly' ? 'border-b-2 border-blue-600 text-blue-700 dark:text-blue-200' : 'text-gray-500 dark:text-gray-300'}`}
                 onClick={() => handleTabChange('monthly')}
@@ -102,6 +120,15 @@ const DashboardPage = () => {
               </button>
               {/* Recent Expenses tab removed, now in ExpensesPage */}
             </div>
+            {activeTab === 'daily' && (
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-3 sm:p-6 w-full overflow-x-auto">
+                <h2 className="text-lg sm:text-xl font-semibold mb-2 dark:text-purple-200">Daily Expenses</h2>
+                <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-300 mb-3 sm:mb-4">{currencySymbols[currency] || currency} {dailyExpenses}</div>
+                <div className="w-full mb-4">
+                  <DailyCharts />
+                </div>
+              </div>
+            )}
             {activeTab === 'monthly' && (
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-3 sm:p-6 w-full overflow-x-auto">
                 <h2 className="text-lg sm:text-xl font-semibold mb-2 dark:text-blue-200">Monthly Expenses</h2>

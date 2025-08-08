@@ -437,4 +437,132 @@ public class ExpenseService {
             return "yearly";
         }
     }
+
+    public java.util.Map<String, Object> getDailyExpensesDetail(String email, String dateStr) {
+        java.time.LocalDate targetDate = java.time.LocalDate.parse(dateStr);
+        
+        // Fetch all expenses for the specified date
+        var dailyExpenses = expenseRepository.findAllByCreatedByAndDateOrderByIdDesc(email, targetDate);
+        
+        // Filter only expense type transactions
+        var expenseTransactions = dailyExpenses.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.EXPENSE)
+            .collect(java.util.stream.Collectors.toList());
+        
+        // Calculate total amount
+        double totalAmount = expenseTransactions.stream()
+            .mapToDouble(Expense::getAmount).sum();
+        
+        // Group by category
+        java.util.Map<String, Double> categoryBreakdown = expenseTransactions.stream()
+            .collect(java.util.stream.Collectors.groupingBy(
+                Expense::getCategory,
+                java.util.stream.Collectors.summingDouble(Expense::getAmount)
+            ));
+        
+        // Group by hour for hourly expenses (using createdAt timestamp)
+        java.util.Map<Integer, Double> hourlyExpenses = expenseTransactions.stream()
+            .filter(e -> e.getCreatedAt() != null)
+            .collect(java.util.stream.Collectors.groupingBy(
+                e -> e.getCreatedAt().getHour(),
+                java.util.stream.Collectors.summingDouble(Expense::getAmount)
+            ));
+        
+        // If no createdAt timestamps, distribute evenly across business hours (9-18)
+        if (hourlyExpenses.isEmpty() && !expenseTransactions.isEmpty()) {
+            // Fallback: distribute expenses across typical business hours
+            int businessHours = 10; // 9 AM to 6 PM
+            double avgPerHour = totalAmount / expenseTransactions.size();
+            for (int i = 0; i < expenseTransactions.size() && i < businessHours; i++) {
+                hourlyExpenses.put(9 + i, avgPerHour);
+            }
+        }
+        
+        // Calculate statistics
+        double avgHourly = hourlyExpenses.isEmpty() ? 0 : totalAmount / 24; // Average over 24 hours
+        
+        java.util.OptionalDouble maxHourlyOpt = hourlyExpenses.values().stream().mapToDouble(Double::doubleValue).max();
+        java.util.OptionalDouble minHourlyOpt = hourlyExpenses.values().stream().mapToDouble(Double::doubleValue).min();
+        
+        // Previous day comparison
+        java.time.LocalDate previousDay = targetDate.minusDays(1);
+        var previousDayExpenses = expenseRepository.findAllByCreatedByAndDateOrderByIdDesc(email, previousDay);
+        double previousDayTotal = previousDayExpenses.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.EXPENSE)
+            .mapToDouble(Expense::getAmount).sum();
+        
+        // Calculate percentage change
+        double percentChange = previousDayTotal > 0 ? ((totalAmount - previousDayTotal) / previousDayTotal) * 100 : 0;
+        
+        // Get top categories (limit to top 5)
+        java.util.List<java.util.Map<String, Object>> topCategories = categoryBreakdown.entrySet().stream()
+            .sorted(java.util.Map.Entry.<String, Double>comparingByValue().reversed())
+            .limit(5)
+            .map(entry -> {
+                java.util.Map<String, Object> categoryMap = new java.util.HashMap<>();
+                categoryMap.put("name", entry.getKey());
+                categoryMap.put("value", entry.getValue());
+                categoryMap.put("percentage", totalAmount > 0 ? Math.round((entry.getValue() / totalAmount) * 100) : 0);
+                return categoryMap;
+            })
+            .collect(java.util.stream.Collectors.toList());
+        
+        // Convert hourly expenses to list format for charts (0-23 hours)
+        java.util.List<java.util.Map<String, Object>> hourlyData = new java.util.ArrayList<>();
+        for (int hour = 0; hour < 24; hour++) {
+            java.util.Map<String, Object> hourData = new java.util.HashMap<>();
+            hourData.put("hour", hour);
+            hourData.put("amount", hourlyExpenses.getOrDefault(hour, 0.0));
+            hourlyData.add(hourData);
+        }
+        
+        // Calculate expenses by time of day
+        java.util.Map<String, Double> expensesByTimeOfDay = new java.util.HashMap<>();
+        expensesByTimeOfDay.put("morning", hourlyExpenses.entrySet().stream()
+            .filter(entry -> entry.getKey() >= 6 && entry.getKey() < 12)
+            .mapToDouble(java.util.Map.Entry::getValue).sum());
+        expensesByTimeOfDay.put("afternoon", hourlyExpenses.entrySet().stream()
+            .filter(entry -> entry.getKey() >= 12 && entry.getKey() < 18)
+            .mapToDouble(java.util.Map.Entry::getValue).sum());
+        expensesByTimeOfDay.put("evening", hourlyExpenses.entrySet().stream()
+            .filter(entry -> entry.getKey() >= 18 && entry.getKey() < 22)
+            .mapToDouble(java.util.Map.Entry::getValue).sum());
+        expensesByTimeOfDay.put("night", hourlyExpenses.entrySet().stream()
+            .filter(entry -> entry.getKey() >= 22 || entry.getKey() < 6)
+            .mapToDouble(java.util.Map.Entry::getValue).sum());
+        
+        // Get user's daily budget from settings (monthly budget / 30)
+        var userSettings = userSettingsService.getUserSettings(email);
+        double monthlyBudget = userSettings.getMonthlyBudget();
+        double dailyBudget = monthlyBudget / 30.0;
+        double budgetUsed = (dailyBudget > 0) ? (totalAmount / dailyBudget) * 100 : 0;
+        double budgetRemaining = Math.max(0, dailyBudget - totalAmount);
+        
+        // Find top expense category
+        String topExpenseCategory = topCategories.isEmpty() ? "" : (String) topCategories.get(0).get("name");
+        
+        // Get day name
+        String dayName = targetDate.getDayOfWeek().toString();
+        
+        // Build response
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("totalAmount", Math.round(totalAmount * 100.0) / 100.0);
+        result.put("avgHourly", Math.round(avgHourly * 100.0) / 100.0);
+        result.put("maxHourly", maxHourlyOpt.orElse(0.0));
+        result.put("minHourly", minHourlyOpt.orElse(0.0));
+        result.put("transactionCount", expenseTransactions.size());
+        result.put("categoryBreakdown", topCategories);
+        result.put("hourlyExpenses", hourlyData);
+        result.put("previousDayTotal", Math.round(previousDayTotal * 100.0) / 100.0);
+        result.put("percentChange", Math.round(percentChange * 100.0) / 100.0);
+        result.put("date", dateStr);
+        result.put("dayName", dayName);
+        result.put("dailyBudget", Math.round(dailyBudget * 100.0) / 100.0);
+        result.put("budgetUsed", Math.round(budgetUsed * 100.0) / 100.0);
+        result.put("budgetRemaining", Math.round(budgetRemaining * 100.0) / 100.0);
+        result.put("topExpenseCategory", topExpenseCategory);
+        result.put("expensesByTimeOfDay", expensesByTimeOfDay);
+        
+        return result;
+    }
 }

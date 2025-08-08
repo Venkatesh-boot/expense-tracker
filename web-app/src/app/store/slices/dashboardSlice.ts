@@ -75,13 +75,46 @@ export interface YearlyDetails {
   recurringExpenses: RecurringExpense[];
 }
 
+export interface DailyDetails {
+  totalAmount: number;
+  avgHourly: number;
+  maxHourly: number;
+  minHourly: number;
+  transactionCount: number;
+  categoryBreakdown: Array<{
+    name: string;
+    value: number;
+    percentage: number;
+  }>;
+  hourlyExpenses: Array<{
+    hour: number;
+    amount: number;
+  }>;
+  previousDayTotal: number;
+  percentChange: number;
+  date: string;
+  dayName: string;
+  dailyBudget: number;
+  budgetUsed: number;
+  budgetRemaining: number;
+  topExpenseCategory: string;
+  expensesByTimeOfDay: {
+    morning: number; // 6-12
+    afternoon: number; // 12-18
+    evening: number; // 18-22
+    night: number; // 22-6
+  };
+}
+
 export interface DashboardState {
   summary: DashboardSummary | null;
   monthlyDetails: MonthlyDetails | null;
   yearlyDetails: YearlyDetails | null;
+  dailyDetails: DailyDetails | null;
   loading: boolean;
   loadingMonthlyDetails: boolean;
   loadingYearlyDetails: boolean;
+  loadingDailyDetails: boolean;
   error: string | null;
 }
 
@@ -89,9 +122,11 @@ const initialState: DashboardState = {
   summary: null,
   monthlyDetails: null,
   yearlyDetails: null,
+  dailyDetails: null,
   loading: false,
   loadingMonthlyDetails: false,
   loadingYearlyDetails: false,
+  loadingDailyDetails: false,
   error: null,
 };
 
@@ -138,6 +173,19 @@ const dashboardSlice = createSlice({
       state.loadingYearlyDetails = false;
       state.error = action.payload;
     },
+    fetchDailyDetailsStart(state, action: PayloadAction<{ date?: string }>) {
+      state.loadingDailyDetails = true;
+      state.error = null;
+    },
+    fetchDailyDetailsSuccess(state, action: PayloadAction<DailyDetails>) {
+      state.loadingDailyDetails = false;
+      state.dailyDetails = action.payload;
+      state.error = null;
+    },
+    fetchDailyDetailsFailure(state, action: PayloadAction<string>) {
+      state.loadingDailyDetails = false;
+      state.error = action.payload;
+    },
   },
 });
 
@@ -151,5 +199,8 @@ export const {
   fetchYearlyDetailsStart,
   fetchYearlyDetailsSuccess,
   fetchYearlyDetailsFailure,
+  fetchDailyDetailsStart,
+  fetchDailyDetailsSuccess,
+  fetchDailyDetailsFailure,
 } = dashboardSlice.actions;
 export default dashboardSlice.reducer;

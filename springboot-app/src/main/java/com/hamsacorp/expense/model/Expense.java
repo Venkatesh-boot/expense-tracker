@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "expenses")
@@ -34,6 +35,9 @@ public class Expense {
     @Column(nullable = false)
     private LocalDate date;
 
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
     @Column(nullable = false)
     private String category;
 
@@ -42,4 +46,11 @@ public class Expense {
 
     @Column(nullable = false)
     private String createdBy;
+    
+    @PrePersist
+    protected void onCreate() {
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+    }
 }

@@ -108,4 +108,19 @@ public class ExpenseController {
             return ResponseEntity.status(500).body("Error fetching yearly expenses detail: " + e.getMessage());
         }
     }
+
+    @GetMapping("/daily-details")
+    public ResponseEntity<?> getDailyExpensesDetail(
+            @RequestParam(required = false) String date,
+            @RequestAttribute("userEmail") String email) {
+        try {
+            // If date is not provided, use current date
+            if (date == null || date.isEmpty()) {
+                date = java.time.LocalDate.now().toString();
+            }
+            return ResponseEntity.ok(expenseService.getDailyExpensesDetail(email, date));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error fetching daily expenses detail: " + e.getMessage());
+        }
+    }
 }

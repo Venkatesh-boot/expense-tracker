@@ -12,6 +12,9 @@ import {
   fetchYearlyDetailsStart,
   fetchYearlyDetailsSuccess,
   fetchYearlyDetailsFailure,
+  fetchDailyDetailsStart,
+  fetchDailyDetailsSuccess,
+  fetchDailyDetailsFailure,
 } from '../slices/dashboardSlice';
 
 function* handleFetchDashboardSummary(): Generator<any, void, any> {
@@ -52,8 +55,23 @@ function* handleFetchYearlyDetails(action: PayloadAction<{ year?: number }>): Ge
   }
 }
 
+function* handleFetchDailyDetails(action: PayloadAction<{ date?: string }>): Generator<any, void, any> {
+  try {
+    const { date } = action.payload || {};
+    const params = new URLSearchParams();
+    if (date) params.append('date', date);
+    
+    const url = `${API_CONFIG.EXPENSES}/daily-details${params.toString() ? '?' + params.toString() : ''}`;
+    const response = yield call(api.get, url);
+    yield put(fetchDailyDetailsSuccess(response.data));
+  } catch (error: any) {
+    yield put(fetchDailyDetailsFailure(error?.message || 'Failed to fetch daily details'));
+  }
+}
+
 export default function* dashboardSaga() {
   yield takeLatest(fetchDashboardSummaryStart.type, handleFetchDashboardSummary);
   yield takeLatest(fetchMonthlyDetailsStart.type, handleFetchMonthlyDetails);
   yield takeLatest(fetchYearlyDetailsStart.type, handleFetchYearlyDetails);
+  yield takeLatest(fetchDailyDetailsStart.type, handleFetchDailyDetails);
 }
