@@ -516,19 +516,21 @@ public class ExpenseService {
             hourlyData.add(hourData);
         }
         
-        // Calculate expenses by time of day
+        // Calculate expenses by time of day using dynamic ranges
+        java.util.Map<String, java.util.List<Integer>> timeRanges = getTimeOfDayRanges();
         java.util.Map<String, Double> expensesByTimeOfDay = new java.util.HashMap<>();
+        
         expensesByTimeOfDay.put("morning", hourlyExpenses.entrySet().stream()
-            .filter(entry -> entry.getKey() >= 6 && entry.getKey() < 12)
+            .filter(entry -> isHourInRange(entry.getKey(), timeRanges.get("morning")))
             .mapToDouble(java.util.Map.Entry::getValue).sum());
         expensesByTimeOfDay.put("afternoon", hourlyExpenses.entrySet().stream()
-            .filter(entry -> entry.getKey() >= 12 && entry.getKey() < 18)
+            .filter(entry -> isHourInRange(entry.getKey(), timeRanges.get("afternoon")))
             .mapToDouble(java.util.Map.Entry::getValue).sum());
         expensesByTimeOfDay.put("evening", hourlyExpenses.entrySet().stream()
-            .filter(entry -> entry.getKey() >= 18 && entry.getKey() < 22)
+            .filter(entry -> isHourInRange(entry.getKey(), timeRanges.get("evening")))
             .mapToDouble(java.util.Map.Entry::getValue).sum());
         expensesByTimeOfDay.put("night", hourlyExpenses.entrySet().stream()
-            .filter(entry -> entry.getKey() >= 22 || entry.getKey() < 6)
+            .filter(entry -> isHourInRange(entry.getKey(), timeRanges.get("night")))
             .mapToDouble(java.util.Map.Entry::getValue).sum());
         
         // Get user's daily budget from settings (monthly budget / 30)
@@ -564,5 +566,34 @@ public class ExpenseService {
         result.put("expensesByTimeOfDay", expensesByTimeOfDay);
         
         return result;
+    }
+    
+    /**
+     * Get configurable time ranges for different parts of the day
+     * This can be easily modified or made configurable per user in the future
+     */
+    private java.util.Map<String, java.util.List<Integer>> getTimeOfDayRanges() {
+        java.util.Map<String, java.util.List<Integer>> timeRanges = new java.util.HashMap<>();
+        
+        // Morning: 6 AM to 11:59 AM
+        timeRanges.put("morning", java.util.Arrays.asList(6, 7, 8, 9, 10, 11));
+        
+        // Afternoon: 12 PM to 5:59 PM  
+        timeRanges.put("afternoon", java.util.Arrays.asList(12, 13, 14, 15, 16, 17));
+        
+        // Evening: 6 PM to 9:59 PM
+        timeRanges.put("evening", java.util.Arrays.asList(18, 19, 20, 21));
+        
+        // Night: 10 PM to 5:59 AM (next day)
+        timeRanges.put("night", java.util.Arrays.asList(22, 23, 0, 1, 2, 3, 4, 5));
+        
+        return timeRanges;
+    }
+    
+    /**
+     * Check if an hour falls within a given time range
+     */
+    private boolean isHourInRange(Integer hour, java.util.List<Integer> range) {
+        return range != null && range.contains(hour);
     }
 }
