@@ -11,10 +11,13 @@ export interface LoginState {
   email?: string | null;
 }
 
+// Check for existing token on initialization
+const token = sessionStorage.getItem('token');
+
 const initialState: LoginState = {
   loading: false,
   error: null,
-  isAuthenticated: false,
+  isAuthenticated: !!token, // Set to true if token exists
   email: null,
 };
 
@@ -46,6 +49,8 @@ const loginSlice = createSlice({
       state.error = null;
       state.loading = false;
       state.email = null;
+      // Clear token from sessionStorage
+      sessionStorage.removeItem('token');
     },
   },
 });

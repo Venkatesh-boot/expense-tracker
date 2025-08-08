@@ -35,9 +35,11 @@ const LoginPage = () => {
   const onEmailSubmit = (data: LoginFormData) => dispatch(loginRequest({ email: data.email, password: data.password }));
   const onMobileSubmit = (data: MobileLoginFormData) => dispatch(loginRequest({ countryCode: data.countryCode, mobile: data.mobile }));
 
-  // Redirect on login
+  // Redirect on login success
   React.useEffect(() => {
-    if (login.isAuthenticated) navigate('/dashboard');
+    if (login.isAuthenticated) {
+      navigate('/dashboard');
+    }
   }, [login.isAuthenticated, navigate]);
 
   // Error renderer

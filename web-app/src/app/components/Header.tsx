@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store/store';
 import { fetchAccountStart } from '../store/slices/accountSlice';
+import { logout } from '../store/slices/loginSlice';
 
 // Get user info from Redux
 function useUserInfo() {
@@ -60,6 +61,7 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
 
   const { name, email, avatar } = useUserInfo();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value);
@@ -69,9 +71,11 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
   // Logout handler function
   const handleLogout = () => {
     setMenuOpen(false);
+    // Dispatch Redux logout action to clear authentication state
+    dispatch(logout());
+    // Clear any remaining storage (logout action already clears sessionStorage)
     localStorage.removeItem('authToken');
     localStorage.removeItem('user');
-    sessionStorage.clear();
     navigate('/login');
   };
 
