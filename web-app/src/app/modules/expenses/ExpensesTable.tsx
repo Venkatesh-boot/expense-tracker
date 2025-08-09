@@ -186,6 +186,91 @@ export default function ExpensesTable() {
   // Highlight large expenses (demo: >1000)
   const isLarge = (amount: number) => amount > 1000;
 
+  // Mobile card component
+  const MobileExpenseCard = ({ expense, index }: { expense: any, index: number }) => {
+    const isSelected = selectedRows.includes(index);
+    return (
+      <div 
+        className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-3 shadow-sm ${
+          isLarge(expense.amount) ? 'border-l-4 border-l-red-500' : ''
+        } ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+      >
+        {/* Header with checkbox and amount */}
+        <div className="flex justify-between items-start mb-2">
+          <div className="flex items-center gap-2">
+            <input 
+              type="checkbox" 
+              checked={isSelected} 
+              onChange={() => toggleRow(index)}
+              className="rounded"
+            />
+            <span className="text-xs text-gray-500 dark:text-gray-400">#{index + 1}</span>
+          </div>
+          <div className="text-right">
+            <div className={`text-lg font-bold ${expense.type === 'INCOME' ? 'text-green-600' : expense.type === 'SAVINGS' ? 'text-blue-600' : 'text-red-600'}`}>
+              ₹{expense.amount.toLocaleString()}
+              {isLarge(expense.amount) && <span className="ml-1 text-red-500" title="Large expense">!</span>}
+            </div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">{expense.date}</div>
+          </div>
+        </div>
+
+        {/* Category and Type */}
+        <div className="flex justify-between items-center mb-2">
+          <div className="flex items-center gap-1">
+            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-xs font-medium">
+              {expense.category}
+              {expense.category === 'Bills' && <span className="ml-1" title="Recurring">♻️</span>}
+            </span>
+          </div>
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+            expense.type === 'INCOME' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+            expense.type === 'SAVINGS' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+            'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+          }`}>
+            {expense.type}
+          </span>
+        </div>
+
+        {/* Description */}
+        {expense.description && (
+          <div className="mb-2">
+            <p className="text-sm text-gray-600 dark:text-gray-300">{expense.description}</p>
+          </div>
+        )}
+
+        {/* Payment Method */}
+        <div className="flex justify-between items-center mb-3">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            Payment: <span className="font-medium">{expense.paymentMethod}</span>
+          </span>
+        </div>
+
+        {/* Actions */}
+        <div className="flex justify-end gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+          <button
+            onClick={() => handleView(expense)}
+            className="px-3 py-1 text-xs bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-200 dark:hover:bg-green-800 rounded-md transition-colors"
+          >
+            View
+          </button>
+          <button
+            onClick={() => handleEdit(expense)}
+            className="px-3 py-1 text-xs bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800 rounded-md transition-colors"
+          >
+            Edit
+          </button>
+          <button
+            onClick={() => handleDelete(expense.id)}
+            className="px-3 py-1 text-xs bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-200 dark:hover:bg-red-800 rounded-md transition-colors"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg p-0 sm:p-4 relative min-h-screen w-full overflow-x-hidden max-w-full">
       <h2 className="text-xl font-bold mb-2 text-blue-700 dark:text-blue-200">Recent Expenses</h2>
@@ -256,8 +341,8 @@ export default function ExpensesTable() {
           </select>
         </div>
       </div>
-      {/* Table */}
-      <div className="overflow-x-auto w-full max-w-full rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
+      {/* Table - Hidden on mobile, shown on md and up */}
+      <div className="hidden md:block overflow-x-auto w-full max-w-full rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
         <table {...getTableProps()} className="min-w-full w-full max-w-full text-left bg-white dark:bg-gray-800 text-xs sm:text-sm" style={{ tableLayout: 'auto' }}>
           <thead className="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-gray-900 dark:to-gray-800 sticky top-0 z-10">
             {headerGroups.map((headerGroup: any) => {
@@ -403,8 +488,60 @@ export default function ExpensesTable() {
           </tbody>
         </table>
       </div>
+
+      {/* Mobile Card Layout - Shown on mobile, hidden on md and up */}
+      <div className="md:hidden">
+        {/* Mobile bulk actions header */}
+        {selectedRows.length > 0 && (
+          <div className="bg-blue-50 dark:bg-blue-900 p-3 rounded-lg mb-3 flex justify-between items-center">
+            <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+              {selectedRows.length} selected
+            </span>
+            <div className="flex gap-2">
+              <button className="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">
+                Delete
+              </button>
+              <button className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700">
+                Export
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Select all toggle for mobile */}
+        <div className="flex justify-between items-center mb-3 p-2 bg-gray-50 dark:bg-gray-800 rounded">
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={allSelected} onChange={toggleAll} />
+            Select all visible
+          </label>
+          <span className="text-xs text-gray-600 dark:text-gray-400">
+            {displayRows.length} expenses
+          </span>
+        </div>
+
+        {/* Mobile expense cards */}
+        <div className="space-y-3">
+          {displayRows.map((row: any, idx: number) => {
+            prepareRow(row);
+            return (
+              <MobileExpenseCard 
+                key={row.original.id} 
+                expense={row.original} 
+                index={row.index} 
+              />
+            );
+          })}
+        </div>
+
+        {displayRows.length === 0 && (
+          <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+            <p>No expenses found</p>
+            <p className="text-sm">Try adjusting your filters or date range</p>
+          </div>
+        )}
+      </div>
       {selectedRows.length > 0 && (
-        <div className="flex gap-2 mt-2">
+        <div className="hidden md:flex gap-2 mt-2">
           <button className="px-3 py-1 rounded bg-red-600 text-white hover:bg-red-700 text-sm">Delete Selected</button>
           <button className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-sm">Export Selected</button>
         </div>
