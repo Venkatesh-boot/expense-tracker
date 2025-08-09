@@ -3,10 +3,12 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-  "build:web-app": "nx build web-app",
-  "predeploy:web-app": "npm run build:web-app",
-  "deploy:web-app": "gh-pages -d dist/web-app",
-  "start:web-app": "nx serve web-app"
+    "build:web-app": "cross-env NODE_ENV=production nx build web-app",
+    "build:web-app:prod": "cross-env NODE_ENV=production --env-file=web-app/env/.env.production nx build web-app",
+    "predeploy:web-app": "npm run build:web-app:prod",
+    "deploy:web-app": "gh-pages -d dist/web-app",
+    "start:web-app": "nx serve web-app",
+    "start:web-app:dev": "cross-env --env-file=web-app/env/.env.development nx serve web-app"
   },
   "private": true,
   "devDependencies": {
@@ -43,6 +45,7 @@
     "@types/uuid": "^10.0.0",
     "autoprefixer": "10.4.13",
     "core-js": "^3.36.1",
+    "cross-env": "^10.0.0",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^10.0.0",
     "eslint-plugin-import": "2.31.0",

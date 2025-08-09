@@ -13,7 +13,7 @@ public class WebConfig {
       @Override
       public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-          .allowedOrigins("*")
+          .allowedOrigins("http://mybucket-monkey.s3-website-us-east-1.amazonaws.com", "http://localhost:4200")
           .allowedMethods("*")
           .allowedHeaders("*")
           .allowCredentials(false);
