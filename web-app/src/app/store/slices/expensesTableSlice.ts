@@ -9,6 +9,7 @@ export interface ExpensesTableRow {
   paymentMethod?: string;
   type?: string;
   customCategory?: string;
+  createdAt?: string;
 }
 
 export interface ExpensesTableState {

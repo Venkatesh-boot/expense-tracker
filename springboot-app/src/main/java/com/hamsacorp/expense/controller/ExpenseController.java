@@ -36,6 +36,10 @@ public class ExpenseController {
         }
         expense.setId(id);
         expense.setCreatedBy(email); // Ensure the updated expense is still associated with the authenticated user
+        // Preserve createdAt if not present in update payload
+        if (expense.getCreatedAt() == null && existingExpense.getCreatedAt() != null) {
+            expense.setCreatedAt(existingExpense.getCreatedAt());
+        }
         return ResponseEntity.ok(expenseService.saveExpense(expense));
     }
 

@@ -66,8 +66,20 @@ const AddExpensesPage = () => {
       setDate(expenseById.date || '');
       setAmount(expenseById.amount ? expenseById.amount.toString() : '');
       setType(expenseById.type || 'EXPENSE');
-      setCategory(expenseById.category || '');
-      setCustomCategory(expenseById.customCategory || '');
+      
+      // Check if the category exists in predefined categories
+      const categoryExists = categories.some(cat => cat.label === expenseById.category);
+      
+      if (categoryExists) {
+        // Predefined category
+        setCategory(expenseById.category || '');
+        setCustomCategory('');
+      } else {
+        // Custom category
+        setCategory('Other');
+        setCustomCategory(expenseById.category || '');
+      }
+      
       setDescription(expenseById.description || '');
       setPaymentMethod(expenseById.paymentMethod || 'UPI');
       setLoadingExpense(false);
@@ -79,7 +91,7 @@ const AddExpensesPage = () => {
   // const userEmail = useAppSelector(state => state.login.email);
 
   const filteredCategories = categories.filter(cat =>
-    (cat.type.toUpperCase() === type.toUpperCase() || cat.label === 'Other') &&
+    cat.type.toUpperCase() === type.toUpperCase() &&
     cat.label.toLowerCase().includes(categorySearch.toLowerCase())
   );
 
@@ -113,6 +125,10 @@ const AddExpensesPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!date || !amount || !type || !category || !paymentMethod || (category === 'Other' && !customCategory)) return;
+    
+    // Use customCategory as the main category when "Other" is selected
+    const finalCategory = category === 'Other' ? customCategory : category;
+    
     if (editId) {
       dispatch(updateExpenseRequest({
         id: editId,
@@ -120,10 +136,10 @@ const AddExpensesPage = () => {
           date,
           amount: Number(amount),
           type,
-          category,
-          customCategory: category === 'Other' ? customCategory : undefined,
+          category: finalCategory,
           description,
           paymentMethod,
+          createdAt: expenseById?.createdAt || undefined,
         },
       }));
     } else {
@@ -131,8 +147,7 @@ const AddExpensesPage = () => {
         date,
         amount: Number(amount),
         type,
-        category,
-        customCategory: category === 'Other' ? customCategory : undefined,
+        category: finalCategory,
         description,
         paymentMethod,
         // files,
@@ -187,7 +202,7 @@ const AddExpensesPage = () => {
                   type="text"
                   className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
                   placeholder="Search or select category"
-                  value={category ? (categories.find(c => c.label === category)?.icon + ' ' + category) : categorySearch}
+                  value={category ? (category === 'Other' ? '➕ Other' : (categories.find(c => c.label === category)?.icon + ' ' + category)) : categorySearch}
                   onChange={e => {
                     setCategory('');
                     setCategorySearch(e.target.value);
@@ -199,7 +214,7 @@ const AddExpensesPage = () => {
                 />
                 {showCategoryDropdown && (
                   <ul className="absolute left-0 right-0 max-h-48 overflow-y-auto bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded shadow z-20 mt-1">
-                    {filteredCategories.length === 0 && (
+                    {filteredCategories.length === 0 && categorySearch && (
                       <li className="px-3 py-2 text-gray-400">No categories found</li>
                     )}
                     {filteredCategories.map(cat => (
