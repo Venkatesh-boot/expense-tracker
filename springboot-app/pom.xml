@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.hamsacorp</groupId>
 	<artifactId>expense</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>expense</name>
 	<description>Expense Tracker API</description>
 	<url/>

@@ -13,8 +13,7 @@
     "react-toastify": "^11.0.5"
   },
   "scripts": {
-    "build": "nx build",
-    "serve": "nx serve",
-    "test": "nx test"
+  "build": "nx build",
+  "test": "nx test"
   }
 }

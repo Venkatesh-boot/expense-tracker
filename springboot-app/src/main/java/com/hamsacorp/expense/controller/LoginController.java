@@ -49,4 +49,12 @@ public class LoginController {
     public String test() {
         return "Login API is working!";
     }
+
+    @GetMapping("/exists")
+    public ResponseEntity<?> checkUserExists(@RequestParam String email) {
+        boolean exists = authService.findByEmail(email) != null;
+        Map<String, Object> response = new HashMap<>();
+        response.put("exists", exists);
+        return ResponseEntity.ok(response);
+    }
 }

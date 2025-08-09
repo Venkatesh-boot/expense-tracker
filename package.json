@@ -3,9 +3,10 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "build:web-app": "nx build web-app",
-    "predeploy:web-app": "npm run build:web-app",
-    "deploy:web-app": "gh-pages -d dist/web-app"
+  "build:web-app": "nx build web-app",
+  "predeploy:web-app": "npm run build:web-app",
+  "deploy:web-app": "gh-pages -d dist/web-app",
+  "start:web-app": "nx serve web-app"
   },
   "private": true,
   "devDependencies": {

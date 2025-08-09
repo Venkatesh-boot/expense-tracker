@@ -12,7 +12,7 @@ const API_CONFIG = {
   SETTINGS: '/api/settings',
   EXPENSES: '/api/expenses',
   STRIPE_SESSION: '/api/create-stripe-session',
-  USER_EXISTS: '/api/user/exists',
+  USER_EXISTS: '/api/auth/exists',
 };
 
 export default API_CONFIG;

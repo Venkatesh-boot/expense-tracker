@@ -22,8 +22,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String path = request.getRequestURI();
-        // Allow login, register, otp endpoints without JWT
-        if (path.contains("/api/auth/login") || path.contains("/api/auth/register") || path.contains("/api/auth/otp")) {
+        // Allow login, register, otp, and exists endpoints without JWT
+        if (path.contains("/api/auth/login") || path.contains("/api/auth/register") || path.contains("/api/auth/otp") || path.contains("/api/auth/exists") || path.contains("/api/user/exists")) {
             filterChain.doFilter(request, response);
             return;
         }
