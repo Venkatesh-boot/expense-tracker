@@ -75,31 +75,31 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
       {/* Logo */}
       <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/dashboard')}>
         <img src="/favicon.ico" alt="Company Logo" className="h-8 w-8" />
-        <span className="font-bold text-xl text-blue-700 dark:text-green-200">ExpenseTracker</span>
+        <span className="font-bold text-xl text-blue-700 dark:text-blue-200">ExpenseTracker</span>
       </div>
-      {/* Desktop Menu */}
-      <div className="relative flex items-center gap-4">
+  {/* Desktop Menu */}
+  <div className="relative flex items-center gap-4">
         {/* Desktop Nav Buttons - hidden on mobile */}
         <div className="hidden md:flex items-center gap-4">
           <button
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 dark:bg-gray-800 shadow-sm hover:shadow-md transition text-sm font-medium"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-purple-200 bg-purple-50 dark:bg-gray-800 shadow-sm hover:shadow-md transition text-sm font-medium dark:text-purple-200"
             onClick={() => navigate('/expenses')}
           >
             <svg className="w-5 h-5 text-purple-600 dark:text-purple-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" /></svg>
             <span>Expenses</span>
           </button>
           <button
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-green-200 bg-green-50 dark:bg-gray-800 shadow-sm hover:shadow-md transition text-sm font-medium"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-green-200 bg-green-50 dark:bg-gray-800 shadow-sm hover:shadow-md transition text-sm font-medium dark:text-green-200"
             onClick={() => navigate('/group')}
           >
             <svg className="w-5 h-5 text-green-600 dark:text-green-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m9-5a4 4 0 11-8 0 4 4 0 018 0zm6 6v2a2 2 0 01-2 2h-4a2 2 0 01-2-2v-2a2 2 0 012-2h4a2 2 0 012 2z" /></svg>
             <span>Group</span>
           </button>
           <button
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 dark:bg-gray-800 shadow-sm hover:shadow-md transition text-sm font-medium"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-blue-200 bg-blue-50 dark:bg-gray-800 shadow-sm hover:shadow-md transition text-sm font-medium dark:text-blue-200"
             onClick={() => navigate('/subscription')}
           >
-            <svg className="w-5 h-5 text-blue-600 dark:text-green-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 10c-4.418 0-8-1.79-8-4V6a2 2 0 012-2h12a2 2 0 012 2v8c0 2.21-3.582 4-8 4z" /></svg>
+            <svg className="w-5 h-5 text-blue-600 dark:text-blue-200" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm0 10c-4.418 0-8-1.79-8-4V6a2 2 0 012-2h12a2 2 0 012 2v8c0 2.21-3.582 4-8 4z" /></svg>
             <span>Subscription</span>
           </button>
         </div>
@@ -138,7 +138,7 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
         <img
           src={avatar}
           alt="User Avatar"
-          className="h-10 w-10 rounded-full border-2 border-blue-200 cursor-pointer"
+          className="h-10 w-10 rounded-full border-2 border-blue-200 dark:border-gray-600 cursor-pointer"
           onClick={() => setMenuOpen((v) => !v)}
         />
         {menuOpen && (
