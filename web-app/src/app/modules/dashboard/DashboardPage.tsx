@@ -11,9 +11,10 @@ import MonthlyCharts from './MonthlyCharts';
 import YearlyCharts from './YearlyCharts';
 import DailyCharts from './DailyCharts';
 import CustomRangeCharts from './CustomRangeCharts';
+import ForecastCharts from './ForecastCharts';
 
 const DashboardPage = () => {
-  const [activeTab, setActiveTab] = useState<'daily' | 'monthly' | 'yearly' | 'custom-range'>('daily');
+  const [activeTab, setActiveTab] = useState<'daily' | 'monthly' | 'yearly' | 'custom-range' | 'forecast'>('daily');
   const navigate = useNavigate();
 
   // Currency from settings
@@ -44,7 +45,7 @@ const DashboardPage = () => {
     }
   }, [dispatch, activeTab]);
 
-  const handleTabChange = (tab: 'daily' | 'monthly' | 'yearly' | 'custom-range') => {
+  const handleTabChange = (tab: 'daily' | 'monthly' | 'yearly' | 'custom-range' | 'forecast') => {
     setActiveTab(tab);
     
     if (tab === 'daily') {
@@ -126,6 +127,12 @@ const DashboardPage = () => {
               >
                 Custom Range
               </button>
+              <button
+                className={`px-2 sm:px-4 py-2 font-semibold focus:outline-none whitespace-nowrap ${activeTab === 'forecast' ? 'border-b-2 border-purple-600 text-purple-700 dark:text-purple-200' : 'text-gray-500 dark:text-gray-300'}`}
+                onClick={() => handleTabChange('forecast')}
+              >
+                🔮 Forecast
+              </button>
             </div>
             {activeTab === 'daily' && (
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-3 sm:p-6 w-full overflow-x-auto">
@@ -157,6 +164,17 @@ const DashboardPage = () => {
                 <h2 className="text-lg sm:text-xl font-semibold mb-2 dark:text-orange-200">Custom Date Range Analysis</h2>
                 <div className="w-full mb-4">
                   <CustomRangeCharts />
+                </div>
+              </div>
+            )}
+            {activeTab === 'forecast' && (
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-3 sm:p-6 w-full overflow-x-auto">
+                <h2 className="text-lg sm:text-xl font-semibold mb-2 dark:text-purple-200">Expense Forecasting</h2>
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Predict future expenses based on historical data patterns
+                </div>
+                <div className="w-full mb-4">
+                  <ForecastCharts />
                 </div>
               </div>
             )}

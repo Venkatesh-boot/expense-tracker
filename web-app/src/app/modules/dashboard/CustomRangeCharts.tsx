@@ -30,6 +30,8 @@ interface DrillDownState {
   selectedCategory: string | null;
   selectedDateRange: { start: string; end: string } | null;
   chartView: 'overview' | 'category' | 'daily';
+  categoryTransactions: any[];
+  dateTransactions: any[];
 }
 
 interface CustomTooltipProps {
@@ -65,7 +67,9 @@ const CustomRangeCharts: React.FC = () => {
   const [drillDown, setDrillDown] = useState<DrillDownState>({
     selectedCategory: null,
     selectedDateRange: null,
-    chartView: 'overview'
+    chartView: 'overview',
+    categoryTransactions: [],
+    dateTransactions: []
   });
 
   // Chart view state
@@ -88,7 +92,9 @@ const CustomRangeCharts: React.FC = () => {
     setDrillDown({
       selectedCategory: null,
       selectedDateRange: null,
-      chartView: 'overview'
+      chartView: 'overview',
+      categoryTransactions: [],
+      dateTransactions: []
     });
   };
 
@@ -113,7 +119,9 @@ const CustomRangeCharts: React.FC = () => {
     setDrillDown({
       selectedCategory: null,
       selectedDateRange: null,
-      chartView: 'overview'
+      chartView: 'overview',
+      categoryTransactions: [],
+      dateTransactions: []
     });
   }, []);
 
@@ -548,6 +556,7 @@ const CustomRangeCharts: React.FC = () => {
           </div>
         </div>
       )}
+
     </div>
   );
 };
