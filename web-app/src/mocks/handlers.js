@@ -1,7 +1,7 @@
-import { http } from 'msw';
 
+import { http, passthrough } from 'msw';
 
-export const handlers = [
+const handlers = [
   http.get('http://localhost:9001/expenses', (req, res, ctx) => {
     return res(
       ctx.status(200),
@@ -15,4 +15,12 @@ export const handlers = [
     );
   }),
   // Add more handlers for POST, PUT, DELETE as needed
+
+// Catch-all handler to suppress MSW warnings for unhandled requests (including WebSocket)
+export const handlersWithCatchAll = [
+  ...handlers,
+  passthrough(),
+];
+
+export const handlers = handlers;
 ];
