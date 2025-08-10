@@ -127,4 +127,16 @@ public class ExpenseController {
             return ResponseEntity.status(500).body("Error fetching daily expenses detail: " + e.getMessage());
         }
     }
+
+    @GetMapping("/custom-range-details")
+    public ResponseEntity<?> getCustomRangeExpensesDetail(
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            @RequestAttribute("userEmail") String email) {
+        try {
+            return ResponseEntity.ok(expenseService.getCustomRangeExpensesDetail(email, startDate, endDate));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error fetching custom range expenses detail: " + e.getMessage());
+        }
+    }
 }

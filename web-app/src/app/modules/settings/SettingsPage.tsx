@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
+import { ThemeToggle } from '../../components/ThemeToggle';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {
   fetchSettingsStart,
@@ -139,6 +140,12 @@ export default function SettingsPage() {
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
               ))}
             </select>
+          </div>
+
+          {/* Theme Settings */}
+          <div className="mb-4 sm:mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+            <label className="block text-gray-700 dark:text-gray-200 mb-3 font-medium">Theme Preference</label>
+            <ThemeToggle variant="dropdown" size="md" showLabel={false} className="w-full" />
           </div>
 
           <div className="mb-3 sm:mb-4">

@@ -1,4 +1,86 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-/* You can add global styles to this file, and also import other style files */
+
+/* Theme transition animations */
+* {
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out, color 0.2s ease-in-out;
+}
+
+/* Smooth fade animation for dropdowns */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+/* Custom scrollbar styles for dark mode */
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+.scrollbar-thumb-blue-200 {
+  scrollbar-color: #bfdbfe #f1f5f9;
+}
+
+.scrollbar-track-blue-50 {
+  scrollbar-color: #bfdbfe #eff6ff;
+}
+
+.dark .scrollbar-thumb-blue-200 {
+  scrollbar-color: #374151 #1f2937;
+}
+
+.dark .scrollbar-track-blue-50 {
+  scrollbar-color: #374151 #111827;
+}
+
+/* Enhanced theme toggle styles */
+.theme-toggle-container {
+  @apply relative;
+}
+
+.theme-toggle-button {
+  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200;
+}
+
+/* Loading spinner for theme transitions */
+.theme-loading {
+  @apply animate-spin inline-block w-4 h-4 border-2 border-current border-t-transparent rounded-full;
+}
+
+/* Custom select styles for better dark mode support */
+select {
+  @apply dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100;
+}
+
+input {
+  @apply dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100;
+}
+
+/* Enhanced button styles for theme consistency */
+button:not(.no-theme-styles) {
+  @apply transition-colors duration-200;
+}
+
+/* Custom styles for theme preference cards */
+.theme-card {
+  @apply p-3 border-2 rounded-lg cursor-pointer transition-all duration-200;
+}
+
+.theme-card.selected {
+  @apply border-blue-500 bg-blue-50 dark:bg-blue-900/20;
+}
+
+.theme-card:not(.selected) {
+  @apply border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600;
+}

@@ -132,15 +132,61 @@ export interface DailyDetails {
   };
 }
 
+export interface CustomRangeDetails {
+  totalAmount: number;
+  totalExpenses: number;
+  totalIncome: number;
+  totalSavings: number;
+  netIncome: number;
+  avgDaily: number;
+  maxDaily: number;
+  minDaily: number;
+  transactionCount: number;
+  incomeTransactionCount: number;
+  savingsTransactionCount: number;
+  categoryBreakdown: Array<{
+    name: string;
+    value: number;
+    percentage: number;
+  }>;
+  dailyExpenses: Array<{
+    date: string;
+    amount: number;
+    dayName: string;
+  }>;
+  startDate: string;
+  endDate: string;
+  dayCount: number;
+  topExpenseDay: {
+    date: string;
+    amount: number;
+    dayName: string;
+  } | null;
+  lowestExpenseDay: {
+    date: string;
+    amount: number;
+    dayName: string;
+  } | null;
+  mostActiveCategory: string;
+  averagePerCategory: Array<{
+    category: string;
+    avgAmount: number;
+    totalAmount: number;
+    transactionCount: number;
+  }>;
+}
+
 export interface DashboardState {
   summary: DashboardSummary | null;
   monthlyDetails: MonthlyDetails | null;
   yearlyDetails: YearlyDetails | null;
   dailyDetails: DailyDetails | null;
+  customRangeDetails: CustomRangeDetails | null;
   loading: boolean;
   loadingMonthlyDetails: boolean;
   loadingYearlyDetails: boolean;
   loadingDailyDetails: boolean;
+  loadingCustomRangeDetails: boolean;
   error: string | null;
 }
 
@@ -149,10 +195,12 @@ const initialState: DashboardState = {
   monthlyDetails: null,
   yearlyDetails: null,
   dailyDetails: null,
+  customRangeDetails: null,
   loading: false,
   loadingMonthlyDetails: false,
   loadingYearlyDetails: false,
   loadingDailyDetails: false,
+  loadingCustomRangeDetails: false,
   error: null,
 };
 
@@ -212,6 +260,19 @@ const dashboardSlice = createSlice({
       state.loadingDailyDetails = false;
       state.error = action.payload;
     },
+    fetchCustomRangeDetailsStart(state, action: PayloadAction<{ startDate: string; endDate: string }>) {
+      state.loadingCustomRangeDetails = true;
+      state.error = null;
+    },
+    fetchCustomRangeDetailsSuccess(state, action: PayloadAction<CustomRangeDetails>) {
+      state.loadingCustomRangeDetails = false;
+      state.customRangeDetails = action.payload;
+      state.error = null;
+    },
+    fetchCustomRangeDetailsFailure(state, action: PayloadAction<string>) {
+      state.loadingCustomRangeDetails = false;
+      state.error = action.payload;
+    },
   },
 });
 
@@ -228,5 +289,8 @@ export const {
   fetchDailyDetailsStart,
   fetchDailyDetailsSuccess,
   fetchDailyDetailsFailure,
+  fetchCustomRangeDetailsStart,
+  fetchCustomRangeDetailsSuccess,
+  fetchCustomRangeDetailsFailure,
 } = dashboardSlice.actions;
 export default dashboardSlice.reducer;

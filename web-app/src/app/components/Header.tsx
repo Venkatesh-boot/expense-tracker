@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ThemeToggle } from './ThemeToggle';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store/store';
@@ -36,17 +37,7 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');
   const [langDropdown, setLangDropdown] = useState(false);
-  const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
   const langRef = useRef<HTMLDivElement>(null);
-  // Sync dark mode on mount and when changed
-  React.useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('darkMode', darkMode.toString());
-  }, [darkMode]);
 
   // Close dropdown on outside click
   React.useEffect(() => {
@@ -122,7 +113,11 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
         </button>
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="absolute right-0 top-14 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-2 z-50 animate-fade-in flex flex-col md:hidden">
+          <div className="absolute right-0 top-14 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg py-2 z-50 animate-fade-in flex flex-col md:hidden">
+            {/* Theme Toggle for Mobile */}
+            <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+              <ThemeToggle variant="buttons" size="sm" showLabel={true} />
+            </div>
             <button className="flex items-center gap-2 px-4 py-2 hover:bg-blue-50 dark:hover:bg-gray-700 text-purple-700 dark:text-purple-200" onClick={() => { setMobileMenuOpen(false); navigate('/expenses'); }}>
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7h18M3 12h18M3 17h18" /></svg>
               Expenses
@@ -152,35 +147,25 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
               <div className="font-semibold text-gray-800 dark:text-gray-100">{name}</div>
               <div className="text-xs text-gray-500 dark:text-gray-400">{email}</div>
             </div>
-            {/* Dark Mode Toggle */}
-            <div className="flex items-center justify-between px-4 py-2">
-              <span className="text-gray-700 dark:text-gray-200 font-medium">Dark Mode</span>
-              <button
-                type="button"
-                aria-pressed={darkMode}
-                onClick={() => setDarkMode((v) => !v)}
-                className={`relative inline-flex h-6 w-12 items-center rounded-full transition-colors focus:outline-none ${darkMode ? 'bg-green-500' : 'bg-gray-300'}`}
-              >
-                <span
-                  className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${darkMode ? 'translate-x-6' : 'translate-x-1'}`}
-                />
-              </button>
+            {/* Theme Toggle with proper alignment */}
+            <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+              <ThemeToggle variant="dropdown" size="sm" />
             </div>
             <button className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold flex items-center gap-2" onClick={() => { setMenuOpen(false); navigate('/account'); }}>
-              <span className="inline-block w-5 h-5 text-blue-500">{/* User icon */}
+              <span className="inline-block w-5 h-5 text-blue-500 flex-shrink-0">{/* User icon */}
                 <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A9 9 0 1112 21a9 9 0 01-6.879-3.196z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               </span>
               Account
             </button>
             <button className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2" onClick={() => { setMenuOpen(false); navigate('/settings'); }}>
-              <span className="inline-block w-5 h-5 text-green-500">{/* Settings icon */}
-                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0a1.724 1.724 0 002.573.982c.797-.46 1.8.149 1.637 1.047a1.724 1.724 0 001.516 2.36c.958.11 1.32 1.36.527 1.82a1.724 1.724 0 00-.002 2.978c.793.46.431 1.71-.527 1.82a1.724 1.724 0 00-1.516 2.36c.163.898-.84 1.507-1.637 1.047a1.724 1.724 0 00-2.573.982c-.3.921-1.603.921-1.902 0a1.724 1.724 0 00-2.573-.982c-.797.46-1.8-.149-1.637-1.047a1.724 1.724 0 00-1.516-2.36c-.958-.11-1.32-1.36-.527-1.82a1.724 1.724 0 00.002-2.978c-.793-.46-.431-1.71.527-1.82a1.724 1.724 0 001.516-2.36c-.163-.898.84-1.507 1.637-1.047.97.56 2.273-.06 2.573-.982z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+              <span className="inline-block w-5 h-5 text-green-500 flex-shrink-0">{/* Settings icon */}
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
               </span>
               Settings
             </button>
             {showLogout && (
               <button className="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-red-600 flex items-center gap-2" onClick={handleLogout}>
-                <span className="inline-block w-5 h-5 text-red-500">{/* Logout icon */}
+                <span className="inline-block w-5 h-5 text-red-500 flex-shrink-0">{/* Logout icon */}
                   <svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H7a2 2 0 01-2-2V7a2 2 0 012-2h4a2 2 0 012 2v1" /></svg>
                 </span>
                 Logout

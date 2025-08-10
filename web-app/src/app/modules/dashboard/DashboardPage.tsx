@@ -10,9 +10,10 @@ import { fetchDashboardSummaryStart, fetchMonthlyDetailsStart, fetchYearlyDetail
 import MonthlyCharts from './MonthlyCharts';
 import YearlyCharts from './YearlyCharts';
 import DailyCharts from './DailyCharts';
+import CustomRangeCharts from './CustomRangeCharts';
 
 const DashboardPage = () => {
-  const [activeTab, setActiveTab] = useState<'daily' | 'monthly' | 'yearly' | 'recent-expenses'>('daily');
+  const [activeTab, setActiveTab] = useState<'daily' | 'monthly' | 'yearly' | 'custom-range'>('daily');
   const navigate = useNavigate();
 
   // Currency from settings
@@ -43,7 +44,7 @@ const DashboardPage = () => {
     }
   }, [dispatch, activeTab]);
 
-  const handleTabChange = (tab: 'daily' | 'monthly' | 'yearly' | 'recent-expenses') => {
+  const handleTabChange = (tab: 'daily' | 'monthly' | 'yearly' | 'custom-range') => {
     setActiveTab(tab);
     
     if (tab === 'daily') {
@@ -61,6 +62,7 @@ const DashboardPage = () => {
         year: now.getFullYear()
       }));
     }
+    // Custom range will be handled by the CustomRangeCharts component
   };
 
   const monthlyExpenses = summary?.monthlyExpenses ?? 0;
@@ -99,26 +101,31 @@ const DashboardPage = () => {
             </div>
           </div>
           <div className="mb-6 sm:mb-8">
-            <div className="flex border-b mb-3 sm:mb-4">
+            <div className="flex border-b mb-3 sm:mb-4 overflow-x-auto">
               <button
-                className={`px-2 sm:px-4 py-2 font-semibold focus:outline-none ${activeTab === 'daily' ? 'border-b-2 border-purple-600 text-purple-700 dark:text-purple-200' : 'text-gray-500 dark:text-gray-300'}`}
+                className={`px-2 sm:px-4 py-2 font-semibold focus:outline-none whitespace-nowrap ${activeTab === 'daily' ? 'border-b-2 border-purple-600 text-purple-700 dark:text-purple-200' : 'text-gray-500 dark:text-gray-300'}`}
                 onClick={() => handleTabChange('daily')}
               >
                 Daily
               </button>
               <button
-                className={`px-2 sm:px-4 py-2 font-semibold focus:outline-none ${activeTab === 'monthly' ? 'border-b-2 border-blue-600 text-blue-700 dark:text-blue-200' : 'text-gray-500 dark:text-gray-300'}`}
+                className={`px-2 sm:px-4 py-2 font-semibold focus:outline-none whitespace-nowrap ${activeTab === 'monthly' ? 'border-b-2 border-blue-600 text-blue-700 dark:text-blue-200' : 'text-gray-500 dark:text-gray-300'}`}
                 onClick={() => handleTabChange('monthly')}
               >
                 Monthly
               </button>
               <button
-                className={`px-2 sm:px-4 py-2 font-semibold focus:outline-none ${activeTab === 'yearly' ? 'border-b-2 border-green-600 text-green-700 dark:text-green-200' : 'text-gray-500 dark:text-gray-300'}`}
+                className={`px-2 sm:px-4 py-2 font-semibold focus:outline-none whitespace-nowrap ${activeTab === 'yearly' ? 'border-b-2 border-green-600 text-green-700 dark:text-green-200' : 'text-gray-500 dark:text-gray-300'}`}
                 onClick={() => handleTabChange('yearly')}
               >
                 Yearly
               </button>
-              {/* Recent Expenses tab removed, now in ExpensesPage */}
+              <button
+                className={`px-2 sm:px-4 py-2 font-semibold focus:outline-none whitespace-nowrap ${activeTab === 'custom-range' ? 'border-b-2 border-orange-600 text-orange-700 dark:text-orange-200' : 'text-gray-500 dark:text-gray-300'}`}
+                onClick={() => handleTabChange('custom-range')}
+              >
+                Custom Range
+              </button>
             </div>
             {activeTab === 'daily' && (
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-3 sm:p-6 w-full overflow-x-auto">
@@ -143,6 +150,14 @@ const DashboardPage = () => {
                 <h2 className="text-lg sm:text-xl font-semibold mb-2 dark:text-green-200">Yearly Expenses</h2>
                 <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-300 mb-3 sm:mb-4">{currencySymbols[currency] || currency} {yearlyExpenses}</div>
                 <YearlyCharts />
+              </div>
+            )}
+            {activeTab === 'custom-range' && (
+              <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-3 sm:p-6 w-full overflow-x-auto">
+                <h2 className="text-lg sm:text-xl font-semibold mb-2 dark:text-orange-200">Custom Date Range Analysis</h2>
+                <div className="w-full mb-4">
+                  <CustomRangeCharts />
+                </div>
               </div>
             )}
             {/* Recent Expenses tab content moved to ExpensesPage */}

@@ -666,4 +666,171 @@ public class ExpenseService {
     private boolean isHourInRange(Integer hour, java.util.List<Integer> range) {
         return range != null && range.contains(hour);
     }
+
+    public java.util.Map<String, Object> getCustomRangeExpensesDetail(String email, String startDateStr, String endDateStr) {
+        java.time.LocalDate startDate = java.time.LocalDate.parse(startDateStr);
+        java.time.LocalDate endDate = java.time.LocalDate.parse(endDateStr);
+        
+        // Validate date range
+        if (startDate.isAfter(endDate)) {
+            throw new IllegalArgumentException("Start date cannot be after end date");
+        }
+        
+        // Fetch all transactions for the specified date range
+        var rangeTransactions = expenseRepository.findAllByCreatedByAndDateBetweenOrderByDateDesc(email, startDate, endDate);
+        
+        // Filter transactions by type
+        var expenseTransactions = rangeTransactions.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.EXPENSE)
+            .collect(java.util.stream.Collectors.toList());
+        
+        var incomeTransactions = rangeTransactions.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.INCOME)
+            .collect(java.util.stream.Collectors.toList());
+        
+        var savingsTransactions = rangeTransactions.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.SAVINGS)
+            .collect(java.util.stream.Collectors.toList());
+        
+        // Calculate totals for each type
+        double totalExpenses = expenseTransactions.stream().mapToDouble(Expense::getAmount).sum();
+        double totalIncome = incomeTransactions.stream().mapToDouble(Expense::getAmount).sum();
+        double totalSavings = savingsTransactions.stream().mapToDouble(Expense::getAmount).sum();
+        double netIncome = totalIncome - totalExpenses - totalSavings;
+        
+        // Calculate total amount (expenses only for backward compatibility)
+        double totalAmount = totalExpenses;
+        
+        // Calculate day count
+        long dayCount = java.time.temporal.ChronoUnit.DAYS.between(startDate, endDate) + 1;
+        
+        // Group by category
+        java.util.Map<String, Double> categoryBreakdown = expenseTransactions.stream()
+            .collect(java.util.stream.Collectors.groupingBy(
+                Expense::getCategory,
+                java.util.stream.Collectors.summingDouble(Expense::getAmount)
+            ));
+        
+        // Group by date for daily expenses
+        java.util.Map<java.time.LocalDate, Double> dailyExpensesMap = expenseTransactions.stream()
+            .collect(java.util.stream.Collectors.groupingBy(
+                Expense::getDate,
+                java.util.stream.Collectors.summingDouble(Expense::getAmount)
+            ));
+        
+        // Calculate statistics
+        double avgDaily = dayCount > 0 ? totalAmount / dayCount : 0;
+        
+        java.util.OptionalDouble maxDailyOpt = dailyExpensesMap.values().stream().mapToDouble(Double::doubleValue).max();
+        java.util.OptionalDouble minDailyOpt = dailyExpensesMap.values().stream().mapToDouble(Double::doubleValue).min();
+        
+        // Find highest and lowest expense days
+        java.util.Map<String, Object> topExpenseDay = null;
+        java.util.Map<String, Object> lowestExpenseDay = null;
+        
+        if (!dailyExpensesMap.isEmpty()) {
+            // Find day with highest expenses
+            var maxEntry = dailyExpensesMap.entrySet().stream()
+                .max(java.util.Map.Entry.comparingByValue())
+                .orElse(null);
+            
+            if (maxEntry != null) {
+                topExpenseDay = new java.util.HashMap<>();
+                topExpenseDay.put("date", maxEntry.getKey().toString());
+                topExpenseDay.put("amount", maxEntry.getValue());
+                topExpenseDay.put("dayName", maxEntry.getKey().getDayOfWeek().toString());
+            }
+            
+            // Find day with lowest expenses (excluding zero days)
+            var minEntry = dailyExpensesMap.entrySet().stream()
+                .filter(entry -> entry.getValue() > 0)
+                .min(java.util.Map.Entry.comparingByValue())
+                .orElse(null);
+            
+            if (minEntry != null) {
+                lowestExpenseDay = new java.util.HashMap<>();
+                lowestExpenseDay.put("date", minEntry.getKey().toString());
+                lowestExpenseDay.put("amount", minEntry.getValue());
+                lowestExpenseDay.put("dayName", minEntry.getKey().getDayOfWeek().toString());
+            }
+        }
+        
+        // Find most active category
+        String mostActiveCategory = categoryBreakdown.entrySet().stream()
+            .max(java.util.Map.Entry.comparingByValue())
+            .map(java.util.Map.Entry::getKey)
+            .orElse("");
+        
+        // Get top categories (limit to top 5)
+        java.util.List<java.util.Map<String, Object>> topCategories = categoryBreakdown.entrySet().stream()
+            .sorted(java.util.Map.Entry.<String, Double>comparingByValue().reversed())
+            .limit(5)
+            .map(entry -> {
+                java.util.Map<String, Object> categoryMap = new java.util.HashMap<>();
+                categoryMap.put("name", entry.getKey());
+                categoryMap.put("value", entry.getValue());
+                categoryMap.put("percentage", totalAmount > 0 ? Math.round((entry.getValue() / totalAmount) * 100) : 0);
+                return categoryMap;
+            })
+            .collect(java.util.stream.Collectors.toList());
+        
+        // Convert daily expenses to list format for charts
+        java.util.List<java.util.Map<String, Object>> dailyData = new java.util.ArrayList<>();
+        java.time.LocalDate currentDate = startDate;
+        
+        while (!currentDate.isAfter(endDate)) {
+            java.util.Map<String, Object> dayData = new java.util.HashMap<>();
+            dayData.put("date", currentDate.toString());
+            dayData.put("amount", dailyExpensesMap.getOrDefault(currentDate, 0.0));
+            dayData.put("dayName", currentDate.getDayOfWeek().toString());
+            dailyData.add(dayData);
+            currentDate = currentDate.plusDays(1);
+        }
+        
+        // Calculate average per category
+        java.util.List<java.util.Map<String, Object>> averagePerCategory = categoryBreakdown.entrySet().stream()
+            .map(entry -> {
+                String category = entry.getKey();
+                double totalCategoryAmount = entry.getValue();
+                long categoryTransactionCount = expenseTransactions.stream()
+                    .filter(e -> category.equals(e.getCategory()))
+                    .count();
+                
+                double avgAmount = categoryTransactionCount > 0 ? totalCategoryAmount / categoryTransactionCount : 0;
+                
+                java.util.Map<String, Object> categoryData = new java.util.HashMap<>();
+                categoryData.put("category", category);
+                categoryData.put("avgAmount", Math.round(avgAmount * 100.0) / 100.0);
+                categoryData.put("totalAmount", totalCategoryAmount);
+                categoryData.put("transactionCount", categoryTransactionCount);
+                return categoryData;
+            })
+            .sorted((a, b) -> Double.compare((Double) b.get("totalAmount"), (Double) a.get("totalAmount")))
+            .collect(java.util.stream.Collectors.toList());
+        
+        // Build response
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("totalAmount", Math.round(totalAmount * 100.0) / 100.0);
+        result.put("totalExpenses", Math.round(totalExpenses * 100.0) / 100.0);
+        result.put("totalIncome", Math.round(totalIncome * 100.0) / 100.0);
+        result.put("totalSavings", Math.round(totalSavings * 100.0) / 100.0);
+        result.put("netIncome", Math.round(netIncome * 100.0) / 100.0);
+        result.put("avgDaily", Math.round(avgDaily * 100.0) / 100.0);
+        result.put("maxDaily", maxDailyOpt.orElse(0.0));
+        result.put("minDaily", minDailyOpt.orElse(0.0));
+        result.put("transactionCount", expenseTransactions.size());
+        result.put("incomeTransactionCount", incomeTransactions.size());
+        result.put("savingsTransactionCount", savingsTransactions.size());
+        result.put("categoryBreakdown", topCategories);
+        result.put("dailyExpenses", dailyData);
+        result.put("startDate", startDateStr);
+        result.put("endDate", endDateStr);
+        result.put("dayCount", dayCount);
+        result.put("topExpenseDay", topExpenseDay);
+        result.put("lowestExpenseDay", lowestExpenseDay);
+        result.put("mostActiveCategory", mostActiveCategory);
+        result.put("averagePerCategory", averagePerCategory);
+        
+        return result;
+    }
 }
