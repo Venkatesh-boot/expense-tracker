@@ -146,33 +146,33 @@ const DashboardPage = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <Header />
       <div className="flex-1 w-full flex flex-col items-center justify-start px-2 py-4 sm:px-4 md:px-8 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="w-full max-w-xs sm:max-w-lg md:max-w-2xl lg:max-w-4xl">
+        <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-4xl">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-blue-700 dark:text-green-200">Expense Dashboard</h1>
           {/* Colorful summary cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-            <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-purple-400 to-purple-600 text-white flex flex-col items-start">
+          <div className="flex sm:grid sm:grid-cols-2 md:grid-cols-5 gap-4 mb-6 overflow-x-auto sm:overflow-visible snap-x snap-mandatory">
+            <div className="min-w-[240px] sm:min-w-0 snap-center rounded-xl shadow-lg p-4 bg-gradient-to-br from-purple-400 to-purple-600 text-white flex flex-col items-start">
               <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="daily expenses">📊</span><span className="font-semibold">Daily Expenses</span></div>
               <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {dailyExpenses.toFixed(2)}</div>
             </div>
-            <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-blue-400 to-blue-600 text-white flex flex-col items-start">
+            <div className="min-w-[240px] sm:min-w-0 snap-center rounded-xl shadow-lg p-4 bg-gradient-to-br from-blue-400 to-blue-600 text-white flex flex-col items-start">
               <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="monthly expenses">💸</span><span className="font-semibold">Monthly Expenses</span></div>
               <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlyExpenses.toFixed(2)}</div>
             </div>
-            <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-green-400 to-green-600 text-white flex flex-col items-start">
+            <div className="min-w-[240px] sm:min-w-0 snap-center rounded-xl shadow-lg p-4 bg-gradient-to-br from-green-400 to-green-600 text-white flex flex-col items-start">
               <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="yearly expenses">📅</span><span className="font-semibold">Yearly Expenses</span></div>
               <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {yearlyExpenses.toFixed(2)}</div>
             </div>
-            <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-pink-400 to-pink-600 text-white flex flex-col items-start">
+            <div className="min-w-[240px] sm:min-w-0 snap-center rounded-xl shadow-lg p-4 bg-gradient-to-br from-pink-400 to-pink-600 text-white flex flex-col items-start">
               <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="monthly income">💰</span><span className="font-semibold">Monthly Income</span></div>
               <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlyIncome.toFixed(2)}</div>
             </div>
-            <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-indigo-400 to-indigo-600 text-white flex flex-col items-start">
+            <div className="min-w-[240px] sm:min-w-0 snap-center rounded-xl shadow-lg p-4 bg-gradient-to-br from-indigo-400 to-indigo-600 text-white flex flex-col items-start">
               <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="monthly savings">🏦</span><span className="font-semibold">Monthly Savings</span></div>
               <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlySavings.toFixed(2)}</div>
             </div>
           </div>
           <div className="mb-6 sm:mb-8">
-            <div className="flex border-b mb-3 sm:mb-4 overflow-x-auto">
+            <div className="flex border-b mb-3 sm:mb-4 overflow-x-auto sticky top-16 z-30 bg-gray-50/80 dark:bg-gray-900/80 backdrop-blur -mx-2 px-2">
               <button
                 className={`px-2 sm:px-4 py-2 font-semibold focus:outline-none whitespace-nowrap ${activeTab === 'daily' ? 'border-b-2 border-purple-600 text-purple-700 dark:text-purple-200' : 'text-gray-500 dark:text-gray-300'}`}
                 onClick={() => handleTabChange('daily')}
@@ -255,7 +255,7 @@ const DashboardPage = () => {
       </div>
       {/* Floating Add Expense Button */}
       <button
-        className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center text-2xl sm:text-3xl transition duration-200"
+  className="fixed bottom-4 right-4 sm:bottom-8 sm:right-8 z-50 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center text-2xl sm:text-3xl transition duration-200 mb-[env(safe-area-inset-bottom)] mr-[env(safe-area-inset-right)]"
         title="Add Expense"
         onClick={() => navigate('/add-expenses')}
       >

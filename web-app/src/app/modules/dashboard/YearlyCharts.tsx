@@ -145,7 +145,7 @@ export default function YearlyCharts({ onFilterChange }: YearlyChartsProps) {
 
       {/* Summary Widgets */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
+    <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center w-full overflow-hidden">
           <div className="text-xs text-gray-500">Total Expenses</div>
           <div className="text-2xl font-bold text-red-600">₹{totalExpenses || totalAmount}</div>
         </div>

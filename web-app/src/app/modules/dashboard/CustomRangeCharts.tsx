@@ -357,7 +357,7 @@ const CustomRangeCharts: React.FC<CustomRangeChartsProps> = ({ onFilterChange })
       </div>
 
       {/* Interactive Chart Controls */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 w-full overflow-hidden">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <div>
             <h3 className="font-semibold text-gray-800 dark:text-gray-200">Interactive Analysis</h3>
@@ -395,7 +395,7 @@ const CustomRangeCharts: React.FC<CustomRangeChartsProps> = ({ onFilterChange })
         </div>
 
         {/* Enhanced Interactive Charts */}
-        <div className="h-80">
+  <div className="h-80">
           {activeChartView === 'pie' && categoryBreakdown.length > 0 && (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -554,7 +554,7 @@ const CustomRangeCharts: React.FC<CustomRangeChartsProps> = ({ onFilterChange })
 
       {/* Category Analysis */}
       {averagePerCategory.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 w-full overflow-hidden">
           <h3 className="font-semibold mb-4 text-purple-700 dark:text-purple-300">Category Analysis</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {averagePerCategory.slice(0, 6).map((category, index) => (
@@ -571,7 +571,7 @@ const CustomRangeCharts: React.FC<CustomRangeChartsProps> = ({ onFilterChange })
         </div>
       )}
 
-    </div>
+  </div>
   );
 };
 

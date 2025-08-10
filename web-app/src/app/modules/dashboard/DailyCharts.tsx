@@ -314,7 +314,7 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
       )}
 
       {/* Summary Widgets */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500">Total Spent</div>
           <div className="text-2xl font-bold text-blue-700">₹{totalAmount}</div>
@@ -415,7 +415,7 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
 
       {/* Enhanced Interactive Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center w-full overflow-hidden">
           <h3 className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Expense Breakdown</h3>
           {categoryBreakdown.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
@@ -449,7 +449,7 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
           )}
         </div>
         
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center w-full overflow-hidden">
           <h3 className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Time of Day Breakdown</h3>
           {timeOfDayData.some(d => d.value > 0) ? (
             <ResponsiveContainer width="100%" height={250}>
@@ -483,7 +483,7 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
       </div>
 
       {/* Enhanced Hourly Expenses Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center w-full overflow-hidden">
         <div className="flex justify-between items-center w-full mb-4">
           <h3 className="font-semibold text-blue-700 dark:text-blue-300">Hourly Expense Analysis</h3>
           <div className="flex gap-2">
@@ -617,7 +617,7 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
       </div>
 
       {/* Enhanced Cumulative Spend Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center w-full overflow-hidden">
         <h3 className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Cumulative Spend Throughout Day</h3>
         {lineData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>

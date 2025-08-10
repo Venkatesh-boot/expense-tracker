@@ -71,7 +71,7 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
   };
 
   return (
-    <header className="w-full bg-white dark:bg-gray-900 shadow flex items-center justify-between px-6 py-3 mb-6 relative z-40">
+    <header className="sticky top-0 w-full bg-white/80 dark:bg-gray-900/80 backdrop-blur border-b border-gray-200 dark:border-gray-800 shadow flex items-center justify-between px-4 sm:px-6 py-3 mb-6 z-40">
       {/* Logo */}
       <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/dashboard')}>
         <img src="/favicon.ico" alt="Company Logo" className="h-8 w-8" />

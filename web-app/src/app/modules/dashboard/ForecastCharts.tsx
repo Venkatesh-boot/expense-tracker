@@ -373,7 +373,7 @@ const ForecastCharts: React.FC = () => {
       </div>
 
       {/* Forecast Controls */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 w-full overflow-hidden">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
           <div>
             <h3 className="font-semibold text-gray-800 dark:text-gray-200">Forecast Settings</h3>
@@ -496,7 +496,7 @@ const ForecastCharts: React.FC = () => {
       )}
 
       {/* Forecast Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 w-full overflow-hidden">
         <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-4">
           Expense Forecast Visualization
         </h3>
@@ -572,7 +572,7 @@ const ForecastCharts: React.FC = () => {
 
       {/* Category Forecasts */}
       {categoryForecasts.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 w-full overflow-hidden">
           <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-4">Category Forecasts</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {categoryForecasts.slice(0, 6).map((forecast, index) => (
@@ -601,7 +601,7 @@ const ForecastCharts: React.FC = () => {
 
       {/* Forecast Timeline */}
       {forecast.forecasts.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 w-full overflow-hidden">
           <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-4">Forecast Timeline</h3>
           <div className="space-y-2 max-h-60 overflow-y-auto">
             {forecast.forecasts.map((f, index) => (

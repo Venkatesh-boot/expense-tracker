@@ -261,7 +261,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
       </div>
 
       {/* Summary Widgets */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500">Total Expenses</div>
           <div className="text-2xl font-bold text-red-600">₹{totalExpenses || totalAmount}</div>
@@ -283,7 +283,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
       </div>
 
       {/* Income vs Expenses vs Savings */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500">Avg Daily Spend</div>
           <div className="text-2xl font-bold text-blue-700">₹{avgDaily}</div>
@@ -486,7 +486,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
 
       {/* Enhanced Interactive Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center w-full overflow-hidden">
           <h3 className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Income vs Expenses vs Savings</h3>
           {(totalIncome || totalExpenses || totalSavings) ? (
             <ResponsiveContainer width="100%" height={250}>
@@ -528,7 +528,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
           )}
         </div>
         
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center w-full overflow-hidden">
           <h3 className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Expense Breakdown</h3>
           {categoryBreakdown.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>
@@ -565,7 +565,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
 
       {/* Enhanced Daily Expenses Chart */}
       <div className="grid grid-cols-1 gap-4">
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center w-full overflow-hidden">
           <div className="flex justify-between items-center w-full mb-4">
             <h3 className="font-semibold text-blue-700 dark:text-blue-300">Daily Expense Analysis</h3>
             <div className="flex gap-2">
@@ -695,7 +695,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
       </div>
 
       {/* Enhanced Cumulative Spend Chart */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+  <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center w-full overflow-hidden">
         <h3 className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Cumulative Monthly Spend</h3>
         {lineData.length > 0 ? (
           <ResponsiveContainer width="100%" height={300}>
