@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine, AreaChart, Area } from 'recharts';
 import { AppDispatch, RootState } from '../../store/store';
@@ -20,9 +20,14 @@ interface CustomTooltipProps {
   label?: string;
 }
 
-export default function MonthlyCharts() {
+interface MonthlyChartsProps {
+  onFilterChange?: (total: number) => void;
+}
+
+export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
   const dispatch = useDispatch<AppDispatch>();
   const { monthlyDetails, loadingMonthlyDetails, error } = useSelector((state: RootState) => state.dashboard);
+  const previousTotal = useRef<number | null>(null);
   
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -38,17 +43,27 @@ export default function MonthlyCharts() {
     dispatch(fetchMonthlyDetailsStart({ year: selectedYear, month: selectedMonth }));
   }, [dispatch, selectedYear, selectedMonth]);
 
+  // Notify parent component when data changes
+  useEffect(() => {
+    if (monthlyDetails && onFilterChange && monthlyDetails.totalAmount !== previousTotal.current) {
+      previousTotal.current = monthlyDetails.totalAmount;
+      onFilterChange(monthlyDetails.totalAmount);
+    }
+  }, [monthlyDetails, onFilterChange]);
+
   // Handle month/year changes
   const handleMonthChange = (month: number) => {
     setSelectedMonth(month);
     setSelectedCategory(null);
     setSelectedDay(null);
+    previousTotal.current = null; // Reset previous total when month changes
   };
 
   const handleYearChange = (year: number) => {
     setSelectedYear(year);
     setSelectedCategory(null);
     setSelectedDay(null);
+    previousTotal.current = null; // Reset previous total when year changes
   };
 
   // Interactive chart handlers

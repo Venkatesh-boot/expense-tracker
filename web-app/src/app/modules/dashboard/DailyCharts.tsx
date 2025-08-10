@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine, AreaChart, Area } from 'recharts';
 import { AppDispatch, RootState } from '../../store/store';
@@ -20,9 +20,14 @@ interface CustomTooltipProps {
   label?: string;
 }
 
-export default function DailyCharts() {
+interface DailyChartsProps {
+  onFilterChange?: (total: number) => void;
+}
+
+export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
   const dispatch = useDispatch<AppDispatch>();
   const { dailyDetails, loadingDailyDetails, error } = useSelector((state: RootState) => state.dashboard);
+  const previousTotal = useRef<number | null>(null);
   
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // YYYY-MM-DD format
   const [activeChartView, setActiveChartView] = useState<'pie' | 'bar' | 'line' | 'area'>('bar');
@@ -33,11 +38,20 @@ export default function DailyCharts() {
     dispatch(fetchDailyDetailsStart({ date: selectedDate }));
   }, [dispatch, selectedDate]);
 
+  // Notify parent component when data changes
+  useEffect(() => {
+    if (dailyDetails && onFilterChange && dailyDetails.totalAmount !== previousTotal.current) {
+      previousTotal.current = dailyDetails.totalAmount;
+      onFilterChange(dailyDetails.totalAmount);
+    }
+  }, [dailyDetails, onFilterChange]);
+
   // Handle date change
   const handleDateChange = (date: string) => {
     setSelectedDate(date);
     setSelectedCategory(null);
     setSelectedHour(null);
+    previousTotal.current = null; // Reset previous total when date changes
   };
 
   // Interactive chart handlers

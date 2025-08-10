@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   ResponsiveContainer,
@@ -53,10 +53,15 @@ const currencySymbols: { [key: string]: string } = {
   CNY: '¥',
 };
 
-const CustomRangeCharts: React.FC = () => {
+interface CustomRangeChartsProps {
+  onFilterChange?: (total: number) => void;
+}
+
+const CustomRangeCharts: React.FC<CustomRangeChartsProps> = ({ onFilterChange }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { customRangeDetails, loadingCustomRangeDetails, error } = useSelector((state: RootState) => state.dashboard);
   const { currency = 'INR' } = { currency: 'INR' }; // Mock currency setting
+  const previousTotal = useRef<number | null>(null);
   
   const [selectedRange, setSelectedRange] = useState<DateRange>({
     startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Last 7 days
@@ -85,9 +90,18 @@ const CustomRangeCharts: React.FC = () => {
     }
   }, [dispatch, selectedRange]);
 
+  // Notify parent component when data changes
+  useEffect(() => {
+    if (customRangeDetails && onFilterChange && customRangeDetails.totalAmount !== previousTotal.current) {
+      previousTotal.current = customRangeDetails.totalAmount;
+      onFilterChange(customRangeDetails.totalAmount);
+    }
+  }, [customRangeDetails, onFilterChange]);
+
   // Handle date range change
   const handleDateRangeChange = (range: DateRange) => {
     setSelectedRange(range);
+    previousTotal.current = null; // Reset previous total when range changes
     // Reset drill-down when date range changes
     setDrillDown({
       selectedCategory: null,

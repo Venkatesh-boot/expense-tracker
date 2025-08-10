@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell, LineChart, Line, ReferenceLine } from 'recharts';
 import { AppDispatch, RootState } from '../../store/store';
@@ -6,9 +6,14 @@ import { fetchYearlyDetailsStart } from '../../store/slices/dashboardSlice';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CFF'];
 
-export default function YearlyCharts() {
+interface YearlyChartsProps {
+  onFilterChange?: (total: number) => void;
+}
+
+export default function YearlyCharts({ onFilterChange }: YearlyChartsProps) {
   const dispatch = useDispatch<AppDispatch>();
   const { yearlyDetails, loadingYearlyDetails, error } = useSelector((state: RootState) => state.dashboard);
+  const previousTotal = useRef<number | null>(null);
   
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
@@ -16,9 +21,18 @@ export default function YearlyCharts() {
     dispatch(fetchYearlyDetailsStart({ year: selectedYear }));
   }, [dispatch, selectedYear]);
 
+  // Notify parent component when data changes
+  useEffect(() => {
+    if (yearlyDetails && onFilterChange && yearlyDetails.totalAmount !== previousTotal.current) {
+      previousTotal.current = yearlyDetails.totalAmount;
+      onFilterChange(yearlyDetails.totalAmount);
+    }
+  }, [yearlyDetails, onFilterChange]);
+
   // Handle year change
   const handleYearChange = (year: number) => {
     setSelectedYear(year);
+    previousTotal.current = null; // Reset previous total when year changes
   };
 
   // CSV Export
