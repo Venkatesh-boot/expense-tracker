@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { useNavigate } from 'react-router-dom';
@@ -15,6 +15,12 @@ import ForecastCharts from './ForecastCharts';
 
 const DashboardPage = () => {
   const [activeTab, setActiveTab] = useState<'daily' | 'monthly' | 'yearly' | 'custom-range' | 'forecast'>('daily');
+  const [filteredData, setFilteredData] = useState({
+    dailyTotal: 0,
+    monthlyTotal: 0,
+    yearlyTotal: 0,
+    customRangeTotal: 0
+  });
   const navigate = useNavigate();
 
   // Currency from settings
@@ -22,7 +28,7 @@ const DashboardPage = () => {
   const currencySymbols: Record<string, string> = { INR: '₹', USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
 
   const dispatch = useDispatch();
-  const { summary } = useSelector((state: RootState) => state.dashboard);
+  const { summary, dailyDetails, monthlyDetails, yearlyDetails } = useSelector((state: RootState) => state.dashboard);
 
   useEffect(() => {
     dispatch(fetchDashboardSummaryStart());
@@ -48,6 +54,14 @@ const DashboardPage = () => {
   const handleTabChange = (tab: 'daily' | 'monthly' | 'yearly' | 'custom-range' | 'forecast') => {
     setActiveTab(tab);
     
+    // Reset filtered data when changing tabs
+    setFilteredData({
+      dailyTotal: 0,
+      monthlyTotal: 0,
+      yearlyTotal: 0,
+      customRangeTotal: 0
+    });
+    
     if (tab === 'daily') {
       const today = new Date().toISOString().split('T')[0];
       dispatch(fetchDailyDetailsStart({ date: today }));
@@ -72,6 +86,62 @@ const DashboardPage = () => {
   const monthlySavings = summary?.monthlySavings ?? 0;
   const dailyExpenses = Math.round(monthlyExpenses / 30); // Estimate daily from monthly
 
+  // Get filtered values based on active tab
+  const getFilteredDailyExpenses = () => {
+    if (activeTab === 'daily' && filteredData.dailyTotal > 0) {
+      return filteredData.dailyTotal;
+    }
+    if (activeTab === 'daily' && dailyDetails) {
+      return dailyDetails.totalAmount;
+    }
+    return dailyExpenses;
+  };
+
+  const getFilteredMonthlyExpenses = () => {
+    if (activeTab === 'monthly' && filteredData.monthlyTotal > 0) {
+      return filteredData.monthlyTotal;
+    }
+    if (activeTab === 'monthly' && monthlyDetails) {
+      return monthlyDetails.totalAmount;
+    }
+    return monthlyExpenses;
+  };
+
+  const getFilteredYearlyExpenses = () => {
+    if (activeTab === 'yearly' && filteredData.yearlyTotal > 0) {
+      return filteredData.yearlyTotal;
+    }
+    if (activeTab === 'yearly' && yearlyDetails) {
+      return yearlyDetails.totalAmount;
+    }
+    return yearlyExpenses;
+  };
+
+  // Callback functions for child components to update filtered totals
+  const onDailyFilterChange = useCallback((total: number) => {
+    setFilteredData(prev => ({ ...prev, dailyTotal: total }));
+  }, []);
+
+  const onMonthlyFilterChange = useCallback((total: number) => {
+    setFilteredData(prev => ({ ...prev, monthlyTotal: total }));
+  }, []);
+
+  const onYearlyFilterChange = useCallback((total: number) => {
+    setFilteredData(prev => ({ ...prev, yearlyTotal: total }));
+  }, []);
+
+  const onCustomRangeFilterChange = useCallback((total: number) => {
+    setFilteredData(prev => ({ ...prev, customRangeTotal: total }));
+  }, []);
+
+  // For custom range, we'll show the period-specific data
+  const getCustomRangeTitle = () => {
+    if (activeTab === 'custom-range') {
+      return 'Period Expenses';
+    }
+    return 'Daily Expenses';
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       <Header />
@@ -82,23 +152,23 @@ const DashboardPage = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4 mb-6">
             <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-purple-400 to-purple-600 text-white flex flex-col items-start">
               <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="daily expenses">📊</span><span className="font-semibold">Daily Expenses</span></div>
-              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {dailyExpenses}</div>
+              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {dailyExpenses.toFixed(2)}</div>
             </div>
             <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-blue-400 to-blue-600 text-white flex flex-col items-start">
               <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="monthly expenses">💸</span><span className="font-semibold">Monthly Expenses</span></div>
-              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlyExpenses}</div>
+              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlyExpenses.toFixed(2)}</div>
             </div>
             <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-green-400 to-green-600 text-white flex flex-col items-start">
               <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="yearly expenses">📅</span><span className="font-semibold">Yearly Expenses</span></div>
-              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {yearlyExpenses}</div>
+              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {yearlyExpenses.toFixed(2)}</div>
             </div>
             <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-pink-400 to-pink-600 text-white flex flex-col items-start">
               <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="monthly income">💰</span><span className="font-semibold">Monthly Income</span></div>
-              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlyIncome}</div>
+              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlyIncome.toFixed(2)}</div>
             </div>
             <div className="rounded-xl shadow-lg p-4 bg-gradient-to-br from-indigo-400 to-indigo-600 text-white flex flex-col items-start">
               <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="monthly savings">🏦</span><span className="font-semibold">Monthly Savings</span></div>
-              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlySavings}</div>
+              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlySavings.toFixed(2)}</div>
             </div>
           </div>
           <div className="mb-6 sm:mb-8">
@@ -137,33 +207,34 @@ const DashboardPage = () => {
             {activeTab === 'daily' && (
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-3 sm:p-6 w-full overflow-x-auto">
                 <h2 className="text-lg sm:text-xl font-semibold mb-2 dark:text-purple-200">Daily Expenses</h2>
-                <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-300 mb-3 sm:mb-4">{currencySymbols[currency] || currency} {dailyExpenses}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-300 mb-3 sm:mb-4">{currencySymbols[currency] || currency} {getFilteredDailyExpenses().toFixed(2)}</div>
                 <div className="w-full mb-4">
-                  <DailyCharts />
+                  <DailyCharts onFilterChange={onDailyFilterChange} />
                 </div>
               </div>
             )}
             {activeTab === 'monthly' && (
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-3 sm:p-6 w-full overflow-x-auto">
                 <h2 className="text-lg sm:text-xl font-semibold mb-2 dark:text-blue-200">Monthly Expenses</h2>
-                <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-300 mb-3 sm:mb-4">{currencySymbols[currency] || currency} {monthlyExpenses}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-300 mb-3 sm:mb-4">{currencySymbols[currency] || currency} {getFilteredMonthlyExpenses().toFixed(2)}</div>
                 <div className="w-full mb-4">
-                  <MonthlyCharts />
+                  <MonthlyCharts onFilterChange={onMonthlyFilterChange} />
                 </div>
               </div>
             )}
             {activeTab === 'yearly' && (
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-3 sm:p-6 w-full overflow-x-auto">
                 <h2 className="text-lg sm:text-xl font-semibold mb-2 dark:text-green-200">Yearly Expenses</h2>
-                <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-300 mb-3 sm:mb-4">{currencySymbols[currency] || currency} {yearlyExpenses}</div>
-                <YearlyCharts />
+                <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-300 mb-3 sm:mb-4">{currencySymbols[currency] || currency} {getFilteredYearlyExpenses().toFixed(2)}</div>
+                <YearlyCharts onFilterChange={onYearlyFilterChange} />
               </div>
             )}
             {activeTab === 'custom-range' && (
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-3 sm:p-6 w-full overflow-x-auto">
                 <h2 className="text-lg sm:text-xl font-semibold mb-2 dark:text-orange-200">Custom Date Range Analysis</h2>
+                <div className="text-2xl sm:text-3xl font-bold text-orange-600 dark:text-orange-300 mb-3 sm:mb-4">{currencySymbols[currency] || currency} {filteredData.customRangeTotal.toFixed(2)}</div>
                 <div className="w-full mb-4">
-                  <CustomRangeCharts />
+                  <CustomRangeCharts onFilterChange={onCustomRangeFilterChange} />
                 </div>
               </div>
             )}
