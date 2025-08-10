@@ -17,9 +17,9 @@ import {
   Area,
   ReferenceLine,
 } from 'recharts';
-import { AppDispatch, RootState } from '../../store/store';
-import { fetchCustomRangeDetailsStart } from '../../store/slices/dashboardSlice';
-import DateRangePicker from '../../components/DateRangePicker';
+import { AppDispatch, RootState } from '../../../store/store';
+import { fetchCustomRangeDetailsStart } from '../../../store/dashboard/dashboard.slice';
+import DateRangePicker from '../../../components/ui/DateRangePicker';
 
 interface DateRange {
   startDate: string;
@@ -54,7 +54,7 @@ const currencySymbols: { [key: string]: string } = {
 const CustomRangeCharts: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { customRangeDetails, loadingCustomRangeDetails, error } = useSelector((state: RootState) => state.dashboard);
-  const { currency = 'INR' } = { currency: 'INR' }; // Mock currency setting
+  const { currency = 'INR' } = useSelector((state: RootState) => state.settings);
   
   const [selectedRange, setSelectedRange] = useState<DateRange>({
     startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Last 7 days
@@ -539,9 +539,9 @@ const CustomRangeCharts: React.FC = () => {
               <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                 <div className="font-medium text-gray-800 dark:text-gray-200 mb-1">{category.category}</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  <div>Total: {currencySymbols[currency]} {category.totalAmount.toFixed(2)}</div>
-                  <div>Avg/Day: {currencySymbols[currency]} {category.avgAmount.toFixed(2)}</div>
-                  <div>Transactions: {category.transactionCount}</div>
+                  <div>Total: {currencySymbols[currency]} {category.total.toFixed(2)}</div>
+                  <div>Avg/Day: {currencySymbols[currency]} {category.average.toFixed(2)}</div>
+                  <div>Transactions: {category.transactions}</div>
                 </div>
               </div>
             ))}

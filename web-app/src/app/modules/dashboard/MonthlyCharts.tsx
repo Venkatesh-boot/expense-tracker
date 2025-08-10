@@ -1,10 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine, AreaChart, Area } from 'recharts';
 import { AppDispatch, RootState } from '../../store/store';
 import { fetchMonthlyDetailsStart } from '../../store/slices/dashboardSlice';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CFF'];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CFF', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C', '#8DD1E1'];
+
+// Interactive chart component interfaces
+interface TooltipPayload {
+  name: string;
+  value: number;
+  payload: any;
+  color: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  label?: string;
+}
 
 export default function MonthlyCharts() {
   const dispatch = useDispatch<AppDispatch>();
@@ -16,6 +30,9 @@ export default function MonthlyCharts() {
   ];
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // API expects 1-based months
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [activeChartView, setActiveChartView] = useState<'pie' | 'bar' | 'line' | 'area'>('bar');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   useEffect(() => {
     dispatch(fetchMonthlyDetailsStart({ year: selectedYear, month: selectedMonth }));
@@ -24,10 +41,87 @@ export default function MonthlyCharts() {
   // Handle month/year changes
   const handleMonthChange = (month: number) => {
     setSelectedMonth(month);
+    setSelectedCategory(null);
+    setSelectedDay(null);
   };
 
   const handleYearChange = (year: number) => {
     setSelectedYear(year);
+    setSelectedCategory(null);
+    setSelectedDay(null);
+  };
+
+  // Interactive chart handlers
+  const handleCategoryClick = useCallback((data: any) => {
+    setSelectedCategory(data.name);
+  }, []);
+
+  const handleDayClick = useCallback((data: any) => {
+    setSelectedDay(data.day);
+  }, []);
+
+  const resetSelection = useCallback(() => {
+    setSelectedCategory(null);
+    setSelectedDay(null);
+  }, []);
+
+  // Custom tooltip components
+  const CustomPieTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0];
+      return (
+        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+          <p className="font-semibold text-gray-800 dark:text-gray-200">{data.name}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Amount: <span className="font-bold text-blue-600">₹{data.value}</span>
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Percentage: <span className="font-bold text-green-600">{data.payload?.percentage}%</span>
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+            Click to view details
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const CustomBarTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0];
+      const dayOfWeek = new Date(selectedYear, selectedMonth - 1, Number(label)).toLocaleDateString('en-US', { weekday: 'long' });
+      
+      return (
+        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+          <p className="font-semibold text-gray-800 dark:text-gray-200">Day {label}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{dayOfWeek}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Amount: <span className="font-bold text-blue-600">₹{data.value}</span>
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+            Click to analyze this day
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const CustomLineTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+          <p className="font-semibold text-gray-800 dark:text-gray-200">Day {label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} className="text-sm text-gray-600 dark:text-gray-400">
+              {entry.name}: <span className="font-bold" style={{ color: entry.color }}>₹{entry.value}</span>
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
   };
 
   // CSV Export
@@ -305,12 +399,82 @@ export default function MonthlyCharts() {
         </div>
       </div>
 
-      {/* Charts Section */}
+      {/* Interactive Chart Controls */}
+      {(selectedCategory || selectedDay) && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-4">
+          <div className="flex justify-between items-center mb-3">
+            <h4 className="font-semibold text-gray-800 dark:text-gray-200">
+              {selectedCategory && `Category Analysis: ${selectedCategory}`}
+              {selectedDay && `Day ${selectedDay} Analysis`}
+            </h4>
+            <button
+              onClick={resetSelection}
+              className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              ← Back to Overview
+            </button>
+          </div>
+          
+          {selectedCategory && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-medium">Category:</span> {selectedCategory}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-medium">Total Amount:</span> ₹
+                  {categoryBreakdown.find(c => c.name === selectedCategory)?.value || 0}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-medium">Percentage:</span> 
+                  {categoryBreakdown.find(c => c.name === selectedCategory)?.percentage || 0}%
+                </div>
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="font-medium mb-1">Monthly Insights:</div>
+                <ul className="space-y-1 text-xs">
+                  <li>• Daily average: ₹{Math.round((categoryBreakdown.find(c => c.name === selectedCategory)?.value || 0) / 30)}</li>
+                  <li>• % of monthly budget: {(((categoryBreakdown.find(c => c.name === selectedCategory)?.value || 0) / (monthlyBudget || 1)) * 100).toFixed(1)}%</li>
+                  <li>• vs previous month: {expensePercentChange > 0 ? '↑' : '↓'} {Math.abs(expensePercentChange || 0)}%</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {selectedDay && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-medium">Day:</span> {selectedDay}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-medium">Amount:</span> ₹
+                  {dailyExpenses.find(d => d.day === selectedDay)?.amount || 0}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-medium">Day of Week:</span> 
+                  {new Date(selectedYear, selectedMonth - 1, selectedDay).toLocaleDateString('en-US', { weekday: 'long' })}
+                </div>
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="font-medium mb-1">Daily Analysis:</div>
+                <ul className="space-y-1 text-xs">
+                  <li>• vs Daily Average: {((dailyExpenses.find(d => d.day === selectedDay)?.amount || 0) / Math.max(1, avgDaily) * 100 - 100).toFixed(1)}%</li>
+                  <li>• vs Highest Day: {((dailyExpenses.find(d => d.day === selectedDay)?.amount || 0) / Math.max(1, maxDaily) * 100).toFixed(1)}%</li>
+                  <li>• Cumulative Impact: ₹{lineData.find(d => d.day === selectedDay)?.cumulative || 0}</li>
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Enhanced Interactive Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
-          <h3 className="font-semibold mb-2 text-blue-700">Income vs Expenses vs Savings</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+          <h3 className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Income vs Expenses vs Savings</h3>
           {(totalIncome || totalExpenses || totalSavings) ? (
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
                   data={[
@@ -322,8 +486,9 @@ export default function MonthlyCharts() {
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius={70}
-                  label
+                  outerRadius={80}
+                  innerRadius={30}
+                  label={(entry) => `₹${entry.value}`}
                 >
                   {[
                     { name: 'Income', value: totalIncome || 0, color: '#10B981' },
@@ -333,18 +498,25 @@ export default function MonthlyCharts() {
                     <Cell key={`cell-${idx}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  formatter={(value: number, name: string) => [
+                    `₹${value}`,
+                    name
+                  ]}
+                  labelFormatter={() => 'Financial Overview'}
+                />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="text-gray-500 py-8">No financial data to display</div>
+            <div className="text-gray-500 dark:text-gray-400 py-8">No financial data to display</div>
           )}
         </div>
-        <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
-          <h3 className="font-semibold mb-2 text-blue-700">Expense Breakdown (Pie)</h3>
+        
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+          <h3 className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Expense Breakdown</h3>
           {categoryBreakdown.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
                   data={categoryBreakdown}
@@ -352,59 +524,199 @@ export default function MonthlyCharts() {
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius={70}
-                  label
+                  outerRadius={80}
+                  label={(entry) => `${entry.percentage}%`}
+                  onClick={handleCategoryClick}
+                  style={{ cursor: 'pointer' }}
                 >
                   {categoryBreakdown.map((entry, idx) => (
-                    <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
+                    <Cell 
+                      key={`cell-${idx}`} 
+                      fill={COLORS[idx % COLORS.length]}
+                      stroke={selectedCategory === entry.name ? '#333' : 'none'}
+                      strokeWidth={selectedCategory === entry.name ? 3 : 0}
+                    />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip content={<CustomPieTooltip />} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="text-gray-500 py-8">No expense data to display</div>
+            <div className="text-gray-500 dark:text-gray-400 py-8">No expense data to display</div>
           )}
         </div>
       </div>
 
-      {/* Daily Expenses Bar Chart */}
+      {/* Enhanced Daily Expenses Chart */}
       <div className="grid grid-cols-1 gap-4">
-        <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
-          <h3 className="font-semibold mb-2 text-blue-700">Expense by Day (Bar)</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+          <div className="flex justify-between items-center w-full mb-4">
+            <h3 className="font-semibold text-blue-700 dark:text-blue-300">Daily Expense Analysis</h3>
+            <div className="flex gap-2">
+              {(['bar', 'line', 'area'] as const).map((view) => (
+                <button
+                  key={view}
+                  onClick={() => setActiveChartView(view)}
+                  className={`px-2 py-1 rounded text-xs ${
+                    activeChartView === view 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+                  }`}
+                >
+                  {view.charAt(0).toUpperCase() + view.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
           {dailyExpenses.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={dailyExpenses}>
-                <XAxis dataKey="day" label={{ value: 'Day', position: 'insideBottom', offset: -5 }} />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="amount" fill="#0088FE" />
-              </BarChart>
-            </ResponsiveContainer>
+            <>
+              {activeChartView === 'bar' && (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={dailyExpenses}>
+                  <XAxis 
+                    dataKey="day" 
+                    label={{ value: 'Day', position: 'insideBottom', offset: -5 }}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip content={<CustomBarTooltip />} />
+                  <Legend />
+                  <Bar 
+                    dataKey="amount" 
+                    fill="#0088FE"
+                    onClick={handleDayClick}
+                    style={{ cursor: 'pointer' }}
+                    radius={[4, 4, 0, 0]}
+                  >
+                    {dailyExpenses.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={
+                          selectedDay === entry.day ? '#FF8042' :
+                          entry.amount > avgDaily ? '#00C49F' : '#0088FE'
+                        }
+                      />
+                    ))}
+                  </Bar>
+                  <ReferenceLine 
+                    y={avgDaily} 
+                    stroke="#FFBB28" 
+                    strokeDasharray="3 3"
+                    label="Avg"
+                  />
+                </BarChart>
+                </ResponsiveContainer>
+              )}
+
+              {activeChartView === 'line' && (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={dailyExpenses}>
+                    <XAxis 
+                      dataKey="day"
+                      label={{ value: 'Day', position: 'insideBottom', offset: -5 }}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip content={<CustomBarTooltip />} />
+                    <Legend />
+                    <Line 
+                      type="monotone" 
+                      dataKey="amount" 
+                      stroke="#0088FE" 
+                      strokeWidth={3}
+                      name="Daily Amount"
+                      dot={{ r: 5, strokeWidth: 2, fill: '#0088FE' }}
+                      activeDot={{ r: 7, strokeWidth: 2, fill: '#FF8042' }}
+                    />
+                    <ReferenceLine 
+                      y={avgDaily} 
+                      stroke="#00C49F" 
+                      strokeDasharray="3 3"
+                      label="Average"
+                    />
+                    <ReferenceLine 
+                      y={maxDaily} 
+                      stroke="#FF8042" 
+                      strokeDasharray="3 3"
+                      label="Max"
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}              {activeChartView === 'area' && (
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={dailyExpenses}>
+                    <XAxis 
+                      dataKey="day"
+                      label={{ value: 'Day', position: 'insideBottom', offset: -5 }}
+                      tick={{ fontSize: 12 }}
+                    />
+                    <YAxis tick={{ fontSize: 12 }} />
+                    <Tooltip content={<CustomBarTooltip />} />
+                    <Legend />
+                    <Area
+                      type="monotone"
+                      dataKey="amount"
+                      stroke="#0088FE"
+                      fill="#0088FE"
+                      fillOpacity={0.4}
+                      strokeWidth={2}
+                      name="Daily Spending"
+                    />
+                    <ReferenceLine 
+                      y={avgDaily} 
+                      stroke="#00C49F" 
+                      strokeDasharray="3 3"
+                      label="Average"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              )}
+            </>
           ) : (
-            <div className="text-gray-500 py-8">No daily expense data to display</div>
+            <div className="text-gray-500 dark:text-gray-400 py-8">No daily expense data to display</div>
           )}
         </div>
       </div>
 
-      {/* Cumulative Spend Line Chart */}
-      <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
-        <h3 className="font-semibold mb-2 text-blue-700">Cumulative Spend (Line)</h3>
+      {/* Enhanced Cumulative Spend Chart */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+        <h3 className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Cumulative Monthly Spend</h3>
         {lineData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={lineData}>
-              <XAxis dataKey="day" />
-              <YAxis />
-              <Tooltip />
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={lineData}>
+              <XAxis 
+                dataKey="day"
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip content={<CustomLineTooltip />} />
               <Legend />
-              <Line type="monotone" dataKey="cumulative" stroke="#00C49F" strokeWidth={2} dot={false} />
-              <ReferenceLine y={monthlyBudget} label="Budget" stroke="#FF8042" strokeDasharray="3 3" />
-            </LineChart>
+              <Area
+                type="monotone"
+                dataKey="cumulative"
+                stroke="#00C49F"
+                fill="#00C49F"
+                fillOpacity={0.3}
+                strokeWidth={3}
+                name="Cumulative Spend"
+              />
+              <ReferenceLine
+                y={monthlyBudget}
+                label="Budget"
+                stroke="#FF8042"
+                strokeDasharray="3 3"
+              />
+              <ReferenceLine
+                y={avgDaily * new Date(selectedYear, selectedMonth, 0).getDate()}
+                label="Projected"
+                stroke="#FFBB28"
+                strokeDasharray="3 3"
+              />
+            </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="text-gray-500 py-8">No data available for cumulative chart</div>
+          <div className="text-gray-500 dark:text-gray-400 py-8">No data available for cumulative chart</div>
         )}
       </div>
     </div>

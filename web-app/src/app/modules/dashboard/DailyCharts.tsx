@@ -1,16 +1,33 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine } from 'recharts';
+import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine, AreaChart, Area } from 'recharts';
 import { AppDispatch, RootState } from '../../store/store';
 import { fetchDailyDetailsStart } from '../../store/slices/dashboardSlice';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CFF'];
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CFF', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C', '#8DD1E1'];
+
+// Interactive chart component interfaces
+interface TooltipPayload {
+  name: string;
+  value: number;
+  payload: any;
+  color: string;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  label?: string;
+}
 
 export default function DailyCharts() {
   const dispatch = useDispatch<AppDispatch>();
   const { dailyDetails, loadingDailyDetails, error } = useSelector((state: RootState) => state.dashboard);
   
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // YYYY-MM-DD format
+  const [activeChartView, setActiveChartView] = useState<'pie' | 'bar' | 'line' | 'area'>('bar');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedHour, setSelectedHour] = useState<number | null>(null);
 
   useEffect(() => {
     dispatch(fetchDailyDetailsStart({ date: selectedDate }));
@@ -19,6 +36,88 @@ export default function DailyCharts() {
   // Handle date change
   const handleDateChange = (date: string) => {
     setSelectedDate(date);
+    setSelectedCategory(null);
+    setSelectedHour(null);
+  };
+
+  // Interactive chart handlers
+  const handleCategoryClick = useCallback((data: any) => {
+    setSelectedCategory(data.name);
+  }, []);
+
+  const handleHourClick = useCallback((data: any) => {
+    setSelectedHour(data.hour);
+  }, []);
+
+  const resetSelection = useCallback(() => {
+    setSelectedCategory(null);
+    setSelectedHour(null);
+  }, []);
+
+  // Custom tooltip components
+  const CustomPieTooltip: React.FC<CustomTooltipProps> = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0];
+      return (
+        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+          <p className="font-semibold text-gray-800 dark:text-gray-200">{data.name}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Amount: <span className="font-bold text-blue-600">₹{data.value}</span>
+          </p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Percentage: <span className="font-bold text-green-600">{data.payload?.percentage}%</span>
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+            Click to view details
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const CustomBarTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0];
+      const timeLabel = formatHour(Number(label));
+      
+      return (
+        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+          <p className="font-semibold text-gray-800 dark:text-gray-200">{timeLabel}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Amount: <span className="font-bold text-blue-600">₹{data.value}</span>
+          </p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+            Click to analyze this hour
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const CustomLineTooltip: React.FC<CustomTooltipProps> = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
+          <p className="font-semibold text-gray-800 dark:text-gray-200">{formatHour(Number(label))}</p>
+          {payload.map((entry, index) => (
+            <p key={index} className="text-sm text-gray-600 dark:text-gray-400">
+              {entry.name}: <span className="font-bold" style={{ color: entry.color }}>₹{entry.value}</span>
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Format hour for display
+  const formatHour = (hour: number) => {
+    if (hour === 0) return '12 AM';
+    if (hour < 12) return `${hour} AM`;
+    if (hour === 12) return '12 PM';
+    return `${hour - 12} PM`;
   };
 
   // CSV Export
@@ -94,26 +193,18 @@ export default function DailyCharts() {
 
   // Time of day data for chart
   const timeOfDayData = [
-    { name: 'Morning (6-12)', value: expensesByTimeOfDay.morning },
-    { name: 'Afternoon (12-18)', value: expensesByTimeOfDay.afternoon },
-    { name: 'Evening (18-22)', value: expensesByTimeOfDay.evening },
-    { name: 'Night (22-6)', value: expensesByTimeOfDay.night },
+    { name: 'Morning (6-12)', value: expensesByTimeOfDay?.morning || 0 },
+    { name: 'Afternoon (12-18)', value: expensesByTimeOfDay?.afternoon || 0 },
+    { name: 'Evening (18-22)', value: expensesByTimeOfDay?.evening || 0 },
+    { name: 'Night (22-6)', value: expensesByTimeOfDay?.night || 0 },
   ];
 
   // Cumulative spend for line chart
   let cumulative = 0;
   const lineData = hourlyExpenses.map(h => {
     cumulative += h.amount;
-    return { hour: h.hour, cumulative };
+    return { hour: h.hour, cumulative, amount: h.amount };
   });
-
-  // Format hour for display
-  const formatHour = (hour: number) => {
-    if (hour === 0) return '12 AM';
-    if (hour < 12) return `${hour} AM`;
-    if (hour === 12) return '12 PM';
-    return `${hour - 12} PM`;
-  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -123,7 +214,7 @@ export default function DailyCharts() {
           <label className="block text-gray-700 dark:text-gray-200 mb-1">Date</label>
           <input
             type="date"
-            className="w-full px-2 py-2 sm:px-3 border border-gray-300 rounded-lg text-sm sm:text-base"
+            className="w-full px-2 py-2 sm:px-3 border border-gray-300 dark:border-gray-600 rounded-lg text-sm sm:text-base dark:bg-gray-700 dark:text-gray-200"
             value={selectedDate}
             onChange={e => handleDateChange(e.target.value)}
             max={new Date().toISOString().split('T')[0]}
@@ -135,6 +226,78 @@ export default function DailyCharts() {
           </div>
         </div>
       </div>
+
+      {/* Interactive Selection Details */}
+      {(selectedCategory || selectedHour !== null) && (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 mb-4">
+          <div className="flex justify-between items-center mb-3">
+            <h4 className="font-semibold text-gray-800 dark:text-gray-200">
+              {selectedCategory && `Category Analysis: ${selectedCategory}`}
+              {selectedHour !== null && `Hour ${selectedHour} Analysis (${formatHour(selectedHour)})`}
+            </h4>
+            <button
+              onClick={resetSelection}
+              className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
+            >
+              ← Back to Overview
+            </button>
+          </div>
+          
+          {selectedCategory && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-medium">Category:</span> {selectedCategory}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-medium">Total Amount:</span> ₹
+                  {categoryBreakdown.find(c => c.name === selectedCategory)?.value || 0}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-medium">Percentage:</span> 
+                  {categoryBreakdown.find(c => c.name === selectedCategory)?.percentage || 0}%
+                </div>
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="font-medium mb-1">Daily Insights:</div>
+                <ul className="space-y-1 text-xs">
+                  <li>• % of daily total: {categoryBreakdown.find(c => c.name === selectedCategory)?.percentage || 0}%</li>
+                  <li>• Daily budget impact: ₹{Math.round((categoryBreakdown.find(c => c.name === selectedCategory)?.value || 0))}</li>
+                  <li>• Top category: {topExpenseCategory === selectedCategory ? 'Yes' : 'No'}</li>
+                </ul>
+              </div>
+            </div>
+          )}
+
+          {selectedHour !== null && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-medium">Hour:</span> {formatHour(selectedHour)}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-medium">Amount:</span> ₹
+                  {hourlyExpenses.find(h => h.hour === selectedHour)?.amount || 0}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <span className="font-medium">Time Period:</span> 
+                  {selectedHour >= 6 && selectedHour < 12 ? 'Morning' :
+                   selectedHour >= 12 && selectedHour < 18 ? 'Afternoon' :
+                   selectedHour >= 18 && selectedHour < 22 ? 'Evening' : 'Night'}
+                </div>
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="font-medium mb-1">Hourly Analysis:</div>
+                <ul className="space-y-1 text-xs">
+                  <li>• vs Hourly Average: {((hourlyExpenses.find(h => h.hour === selectedHour)?.amount || 0) / Math.max(1, avgHourly) * 100 - 100).toFixed(1)}%</li>
+                  <li>• vs Peak Hour: {((hourlyExpenses.find(h => h.hour === selectedHour)?.amount || 0) / Math.max(1, maxHourly) * 100).toFixed(1)}%</li>
+                  <li>• Cumulative up to this hour: ₹{lineData.find(d => d.hour === selectedHour)?.cumulative || 0}</li>
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Summary Widgets */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -236,12 +399,12 @@ export default function DailyCharts() {
         </div>
       </div>
 
-      {/* Charts Section */}
+      {/* Enhanced Interactive Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
-          <h3 className="font-semibold mb-2 text-blue-700">Expense Breakdown (Pie)</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+          <h3 className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Expense Breakdown</h3>
           {categoryBreakdown.length > 0 ? (
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
                   data={categoryBreakdown}
@@ -249,25 +412,33 @@ export default function DailyCharts() {
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius={70}
-                  label
+                  outerRadius={80}
+                  label={(entry) => `${entry.percentage}%`}
+                  onClick={handleCategoryClick}
+                  style={{ cursor: 'pointer' }}
                 >
                   {categoryBreakdown.map((entry, idx) => (
-                    <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
+                    <Cell 
+                      key={`cell-${idx}`} 
+                      fill={COLORS[idx % COLORS.length]}
+                      stroke={selectedCategory === entry.name ? '#333' : 'none'}
+                      strokeWidth={selectedCategory === entry.name ? 3 : 0}
+                    />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip content={<CustomPieTooltip />} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="text-gray-500 py-8">No expense data to display</div>
+            <div className="text-gray-500 dark:text-gray-400 py-8">No expense data to display</div>
           )}
         </div>
-        <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
-          <h3 className="font-semibold mb-2 text-blue-700">Time of Day Breakdown</h3>
+        
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+          <h3 className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Time of Day Breakdown</h3>
           {timeOfDayData.some(d => d.value > 0) ? (
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
                   data={timeOfDayData}
@@ -275,64 +446,203 @@ export default function DailyCharts() {
                   nameKey="name"
                   cx="50%"
                   cy="50%"
-                  outerRadius={70}
-                  label
+                  outerRadius={80}
+                  label={(entry) => `₹${entry.value}`}
                 >
                   {timeOfDayData.map((entry, idx) => (
                     <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  formatter={(value: number, name: string) => [
+                    `₹${value}`,
+                    name
+                  ]}
+                />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
           ) : (
-            <div className="text-gray-500 py-8">No time-based data to display</div>
+            <div className="text-gray-500 dark:text-gray-400 py-8">No time-based data to display</div>
           )}
         </div>
       </div>
 
-      {/* Hourly Expenses Bar Chart */}
-      <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
-        <h3 className="font-semibold mb-2 text-blue-700">Hourly Expenses (Bar)</h3>
+      {/* Enhanced Hourly Expenses Chart */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+        <div className="flex justify-between items-center w-full mb-4">
+          <h3 className="font-semibold text-blue-700 dark:text-blue-300">Hourly Expense Analysis</h3>
+          <div className="flex gap-2">
+            {(['bar', 'line', 'area'] as const).map((view) => (
+              <button
+                key={view}
+                onClick={() => setActiveChartView(view)}
+                className={`px-2 py-1 rounded text-xs ${
+                  activeChartView === view 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-300'
+                }`}
+              >
+                {view.charAt(0).toUpperCase() + view.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
         {hourlyExpenses.length > 0 ? (
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={hourlyExpenses}>
-              <XAxis 
-                dataKey="hour" 
-                label={{ value: 'Hour', position: 'insideBottom', offset: -5 }}
-                tickFormatter={formatHour}
-              />
-              <YAxis />
-              <Tooltip labelFormatter={(hour) => `Hour: ${formatHour(Number(hour))}`} />
-              <Legend />
-              <Bar dataKey="amount" fill="#0088FE" />
-            </BarChart>
-          </ResponsiveContainer>
+          <>
+            {activeChartView === 'bar' && (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={hourlyExpenses}>
+                <XAxis 
+                  dataKey="hour" 
+                  label={{ value: 'Hour', position: 'insideBottom', offset: -5 }}
+                  tickFormatter={formatHour}
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis tick={{ fontSize: 12 }} />
+                <Tooltip content={<CustomBarTooltip />} />
+                <Legend />
+                <Bar 
+                  dataKey="amount" 
+                  fill="#0088FE"
+                  onClick={handleHourClick}
+                  style={{ cursor: 'pointer' }}
+                  radius={[4, 4, 0, 0]}
+                >
+                  {hourlyExpenses.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={
+                        selectedHour === entry.hour ? '#FF8042' :
+                        entry.amount > avgHourly ? '#00C49F' : '#0088FE'
+                      }
+                    />
+                  ))}
+                </Bar>
+                <ReferenceLine 
+                  y={avgHourly} 
+                  stroke="#FFBB28" 
+                  strokeDasharray="3 3"
+                  label="Avg"
+                />
+              </BarChart>
+              </ResponsiveContainer>
+            )}
+            
+            {activeChartView === 'line' && (
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={hourlyExpenses}>
+                  <XAxis 
+                    dataKey="hour"
+                    label={{ value: 'Hour', position: 'insideBottom', offset: -5 }}
+                    tickFormatter={formatHour}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip content={<CustomBarTooltip />} />
+                  <Legend />
+                  <Line 
+                    type="monotone" 
+                    dataKey="amount" 
+                    stroke="#0088FE" 
+                    strokeWidth={3}
+                    name="Hourly Amount"
+                    dot={{ r: 5, strokeWidth: 2, fill: '#0088FE' }}
+                    activeDot={{ r: 7, strokeWidth: 2, fill: '#FF8042' }}
+                  />
+                  <ReferenceLine 
+                    y={avgHourly} 
+                    stroke="#00C49F" 
+                    strokeDasharray="3 3"
+                    label="Average"
+                  />
+                  <ReferenceLine 
+                    y={maxHourly} 
+                    stroke="#FF8042" 
+                    strokeDasharray="3 3"
+                    label="Max"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            )}
+            
+            {activeChartView === 'area' && (
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={hourlyExpenses}>
+                  <XAxis 
+                    dataKey="hour"
+                    label={{ value: 'Hour', position: 'insideBottom', offset: -5 }}
+                    tickFormatter={formatHour}
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis tick={{ fontSize: 12 }} />
+                  <Tooltip content={<CustomBarTooltip />} />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="#0088FE"
+                    fill="#0088FE"
+                    fillOpacity={0.4}
+                    strokeWidth={2}
+                    name="Hourly Spending"
+                  />
+                  <ReferenceLine 
+                    y={avgHourly} 
+                    stroke="#00C49F" 
+                    strokeDasharray="3 3"
+                    label="Average"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
+          </>
         ) : (
-          <div className="text-gray-500 py-8">No hourly expense data to display</div>
+          <div className="text-gray-500 dark:text-gray-400 py-8">No hourly expense data to display</div>
         )}
       </div>
 
-      {/* Cumulative Spend Line Chart */}
-      <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
-        <h3 className="font-semibold mb-2 text-blue-700">Cumulative Spend Throughout Day</h3>
+      {/* Enhanced Cumulative Spend Chart */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
+        <h3 className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Cumulative Spend Throughout Day</h3>
         {lineData.length > 0 ? (
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={lineData}>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={lineData}>
               <XAxis 
                 dataKey="hour" 
                 tickFormatter={formatHour}
+                tick={{ fontSize: 12 }}
               />
-              <YAxis />
-              <Tooltip labelFormatter={(hour) => `Hour: ${formatHour(Number(hour))}`} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip content={<CustomLineTooltip />} />
               <Legend />
-              <Line type="monotone" dataKey="cumulative" stroke="#00C49F" strokeWidth={2} dot={false} />
-              <ReferenceLine y={dailyBudget} label="Daily Budget" stroke="#FF8042" strokeDasharray="3 3" />
-            </LineChart>
+              <Area
+                type="monotone"
+                dataKey="cumulative"
+                stroke="#00C49F"
+                fill="#00C49F"
+                fillOpacity={0.3}
+                strokeWidth={3}
+                name="Cumulative Spend"
+              />
+              <Line 
+                type="monotone" 
+                dataKey="amount" 
+                stroke="#0088FE" 
+                strokeWidth={2}
+                name="Hourly Amount"
+                dot={{ r: 4, strokeWidth: 1, fill: '#0088FE' }}
+              />
+              <ReferenceLine
+                y={dailyBudget}
+                label="Budget"
+                stroke="#FF8042"
+                strokeDasharray="3 3"
+              />
+            </AreaChart>
           </ResponsiveContainer>
         ) : (
-          <div className="text-gray-500 py-8">No data available for cumulative chart</div>
+          <div className="text-gray-500 dark:text-gray-400 py-8">No data available for cumulative chart</div>
         )}
       </div>
     </div>
