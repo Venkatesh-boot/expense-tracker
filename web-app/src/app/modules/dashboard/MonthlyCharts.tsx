@@ -75,14 +75,25 @@ export default function MonthlyCharts() {
   // Process data from API
   const { 
     totalAmount, 
+    totalExpenses,
+    totalIncome,
+    totalSavings,
+    netIncome,
+    savingsRate,
     avgDaily, 
     maxDaily, 
     minDaily, 
     transactionCount,
+    incomeTransactionCount,
+    savingsTransactionCount,
     categoryBreakdown, 
     dailyExpenses, 
-    previousMonthTotal, 
-    percentChange,
+    previousMonthExpenses, 
+    previousMonthIncome,
+    previousMonthSavings,
+    expensePercentChange,
+    incomePercentChange,
+    savingsPercentChange,
     monthlyBudget,
     budgetUsed,
     budgetRemaining,
@@ -143,22 +154,40 @@ export default function MonthlyCharts() {
       {/* Summary Widgets */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
-          <div className="text-xs text-gray-500">Total Spent</div>
-          <div className="text-2xl font-bold text-blue-700">₹{totalAmount}</div>
+          <div className="text-xs text-gray-500">Total Expenses</div>
+          <div className="text-2xl font-bold text-red-600">₹{totalExpenses || totalAmount}</div>
         </div>
+        <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
+          <div className="text-xs text-gray-500">Total Income</div>
+          <div className="text-2xl font-bold text-green-600">₹{totalIncome || 0}</div>
+        </div>
+        <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
+          <div className="text-xs text-gray-500">Total Savings</div>
+          <div className="text-2xl font-bold text-blue-600">₹{totalSavings || 0}</div>
+        </div>
+        <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
+          <div className="text-xs text-gray-500">Net Income</div>
+          <div className={`text-2xl font-bold ${(netIncome || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            ₹{netIncome || 0}
+          </div>
+        </div>
+      </div>
+
+      {/* Income vs Expenses vs Savings */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500">Avg Daily Spend</div>
           <div className="text-2xl font-bold text-blue-700">₹{avgDaily}</div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
-          <div className="text-xs text-gray-500">Highest Day</div>
-          <div className="text-lg font-bold text-green-600">Day {highestDay?.day || 'N/A'}</div>
-          <div className="text-sm">₹{highestDay?.amount || 0}</div>
+          <div className="text-xs text-gray-500">Savings Rate</div>
+          <div className="text-2xl font-bold text-blue-600">{savingsRate || 0}%</div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
-          <div className="text-xs text-gray-500">Lowest Day</div>
-          <div className="text-lg font-bold text-red-600">Day {lowestDay?.day || 'N/A'}</div>
-          <div className="text-sm">₹{lowestDay?.amount || 0}</div>
+          <div className="text-xs text-gray-500">Transactions</div>
+          <div className="text-lg font-bold text-gray-700">
+            E: {transactionCount} | I: {incomeTransactionCount || 0} | S: {savingsTransactionCount || 0}
+          </div>
         </div>
       </div>
 
@@ -178,14 +207,36 @@ export default function MonthlyCharts() {
             )}
           </ul>
         </div>
-        <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2">
-          <div className="font-semibold text-blue-700 mb-1">This Month vs Last Month</div>
-          <div className="flex items-center gap-2">
-            <span className="text-lg font-bold">₹{totalAmount}</span>
-            <span className={percentChange >= 0 ? 'text-red-600' : 'text-green-600'}>
-              {percentChange >= 0 ? '▲' : '▼'} {Math.abs(percentChange)}%
-            </span>
-            <span className="text-xs text-gray-500">(Last: ₹{previousMonthTotal})</span>
+        <div className="bg-white rounded-xl shadow p-4">
+          <div className="font-semibold text-blue-700 mb-2">Month-over-Month Changes</div>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between items-center">
+              <span>Expenses:</span>
+              <div className="flex items-center gap-2">
+                <span>₹{totalExpenses || totalAmount}</span>
+                <span className={expensePercentChange >= 0 ? 'text-red-600' : 'text-green-600'}>
+                  {expensePercentChange >= 0 ? '▲' : '▼'} {Math.abs(expensePercentChange || 0)}%
+                </span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>Income:</span>
+              <div className="flex items-center gap-2">
+                <span>₹{totalIncome || 0}</span>
+                <span className={incomePercentChange >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  {incomePercentChange >= 0 ? '▲' : '▼'} {Math.abs(incomePercentChange || 0)}%
+                </span>
+              </div>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>Savings:</span>
+              <div className="flex items-center gap-2">
+                <span>₹{totalSavings || 0}</span>
+                <span className={savingsPercentChange >= 0 ? 'text-green-600' : 'text-red-600'}>
+                  {savingsPercentChange >= 0 ? '▲' : '▼'} {Math.abs(savingsPercentChange || 0)}%
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -257,6 +308,40 @@ export default function MonthlyCharts() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
+          <h3 className="font-semibold mb-2 text-blue-700">Income vs Expenses vs Savings</h3>
+          {(totalIncome || totalExpenses || totalSavings) ? (
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: 'Income', value: totalIncome || 0, color: '#10B981' },
+                    { name: 'Expenses', value: totalExpenses || totalAmount, color: '#EF4444' },
+                    { name: 'Savings', value: totalSavings || 0, color: '#3B82F6' }
+                  ].filter(item => item.value > 0)}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={70}
+                  label
+                >
+                  {[
+                    { name: 'Income', value: totalIncome || 0, color: '#10B981' },
+                    { name: 'Expenses', value: totalExpenses || totalAmount, color: '#EF4444' },
+                    { name: 'Savings', value: totalSavings || 0, color: '#3B82F6' }
+                  ].filter(item => item.value > 0).map((entry, idx) => (
+                    <Cell key={`cell-${idx}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="text-gray-500 py-8">No financial data to display</div>
+          )}
+        </div>
+        <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <h3 className="font-semibold mb-2 text-blue-700">Expense Breakdown (Pie)</h3>
           {categoryBreakdown.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
@@ -282,6 +367,10 @@ export default function MonthlyCharts() {
             <div className="text-gray-500 py-8">No expense data to display</div>
           )}
         </div>
+      </div>
+
+      {/* Daily Expenses Bar Chart */}
+      <div className="grid grid-cols-1 gap-4">
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <h3 className="font-semibold mb-2 text-blue-700">Expense by Day (Bar)</h3>
           {dailyExpenses.length > 0 ? (

@@ -16,10 +16,17 @@ export interface RecurringExpense {
 
 export interface MonthlyDetails {
   totalAmount: number;
+  totalExpenses: number;
+  totalIncome: number;
+  totalSavings: number;
+  netIncome: number;
+  savingsRate: number;
   avgDaily: number;
   maxDaily: number;
   minDaily: number;
   transactionCount: number;
+  incomeTransactionCount: number;
+  savingsTransactionCount: number;
   categoryBreakdown: Array<{
     name: string;
     value: number;
@@ -30,7 +37,13 @@ export interface MonthlyDetails {
     amount: number;
   }>;
   previousMonthTotal: number;
+  previousMonthExpenses: number;
+  previousMonthIncome: number;
+  previousMonthSavings: number;
   percentChange: number;
+  expensePercentChange: number;
+  incomePercentChange: number;
+  savingsPercentChange: number;
   year: number;
   month: number;
   monthName: string;
@@ -42,10 +55,17 @@ export interface MonthlyDetails {
 
 export interface YearlyDetails {
   totalAmount: number;
+  totalExpenses: number;
+  totalIncome: number;
+  totalSavings: number;
+  netIncome: number;
+  savingsRate: number;
   avgMonthly: number;
   maxMonthly: number;
   minMonthly: number;
   transactionCount: number;
+  incomeTransactionCount: number;
+  savingsTransactionCount: number;
   categoryBreakdown: Array<{
     name: string;
     value: number;
@@ -57,7 +77,13 @@ export interface YearlyDetails {
     amount: number;
   }>;
   previousYearTotal: number;
+  previousYearExpenses: number;
+  previousYearIncome: number;
+  previousYearSavings: number;
   percentChange: number;
+  expensePercentChange: number;
+  incomePercentChange: number;
+  savingsPercentChange: number;
   year: number;
   highestMonth: {
     month: string;

@@ -96,17 +96,30 @@ public class ExpenseService {
         java.time.LocalDate startOfMonth = targetMonth.atDay(1);
         java.time.LocalDate endOfMonth = targetMonth.atEndOfMonth();
         
-        // Fetch all expenses for the specified month
-        var monthlyExpenses = expenseRepository.findAllByCreatedByAndDateBetweenOrderByDateDesc(email, startOfMonth, endOfMonth);
+        // Fetch all transactions for the specified month
+        var monthlyTransactions = expenseRepository.findAllByCreatedByAndDateBetweenOrderByDateDesc(email, startOfMonth, endOfMonth);
         
-        // Filter only expense type transactions
-        var expenseTransactions = monthlyExpenses.stream()
+        // Filter transactions by type
+        var expenseTransactions = monthlyTransactions.stream()
             .filter(e -> e.getType() == Expense.ExpenseType.EXPENSE)
             .collect(java.util.stream.Collectors.toList());
         
-        // Calculate total amount
-        double totalAmount = expenseTransactions.stream()
-            .mapToDouble(Expense::getAmount).sum();
+        var incomeTransactions = monthlyTransactions.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.INCOME)
+            .collect(java.util.stream.Collectors.toList());
+        
+        var savingsTransactions = monthlyTransactions.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.SAVINGS)
+            .collect(java.util.stream.Collectors.toList());
+        
+        // Calculate totals for each type
+        double totalExpenses = expenseTransactions.stream().mapToDouble(Expense::getAmount).sum();
+        double totalIncome = incomeTransactions.stream().mapToDouble(Expense::getAmount).sum();
+        double totalSavings = savingsTransactions.stream().mapToDouble(Expense::getAmount).sum();
+        double netIncome = totalIncome - totalExpenses - totalSavings;
+        
+        // Calculate total amount (expenses only for backward compatibility)
+        double totalAmount = totalExpenses;
         
         // Group by category
         java.util.Map<String, Double> categoryBreakdown = expenseTransactions.stream()
@@ -128,18 +141,29 @@ public class ExpenseService {
         java.util.OptionalDouble maxDailyOpt = dailyExpenses.values().stream().mapToDouble(Double::doubleValue).max();
         java.util.OptionalDouble minDailyOpt = dailyExpenses.values().stream().mapToDouble(Double::doubleValue).min();
         
-        // Previous month comparison
+        // Get previous month data for comparison
         java.time.YearMonth previousMonth = targetMonth.minusMonths(1);
         java.time.LocalDate prevStartOfMonth = previousMonth.atDay(1);
         java.time.LocalDate prevEndOfMonth = previousMonth.atEndOfMonth();
         
-        var previousMonthExpenses = expenseRepository.findAllByCreatedByAndDateBetweenOrderByDateDesc(email, prevStartOfMonth, prevEndOfMonth);
-        double previousMonthTotal = previousMonthExpenses.stream()
+        var previousMonthTransactions = expenseRepository.findAllByCreatedByAndDateBetweenOrderByDateDesc(email, prevStartOfMonth, prevEndOfMonth);
+        double previousMonthExpenses = previousMonthTransactions.stream()
             .filter(e -> e.getType() == Expense.ExpenseType.EXPENSE)
             .mapToDouble(Expense::getAmount).sum();
+        double previousMonthIncome = previousMonthTransactions.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.INCOME)
+            .mapToDouble(Expense::getAmount).sum();
+        double previousMonthSavings = previousMonthTransactions.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.SAVINGS)
+            .mapToDouble(Expense::getAmount).sum();
         
-        // Calculate percentage change
-        double percentChange = previousMonthTotal > 0 ? ((totalAmount - previousMonthTotal) / previousMonthTotal) * 100 : 0;
+        // Calculate percentage changes
+        double expensePercentChange = previousMonthExpenses > 0 ? ((totalExpenses - previousMonthExpenses) / previousMonthExpenses) * 100 : 0;
+        double incomePercentChange = previousMonthIncome > 0 ? ((totalIncome - previousMonthIncome) / previousMonthIncome) * 100 : 0;
+        double savingsPercentChange = previousMonthSavings > 0 ? ((totalSavings - previousMonthSavings) / previousMonthSavings) * 100 : 0;
+        
+        // Calculate savings rate
+        double savingsRate = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
         
         // Get top categories (limit to top 5)
         java.util.List<java.util.Map<String, Object>> topCategories = categoryBreakdown.entrySet().stream()
@@ -175,14 +199,25 @@ public class ExpenseService {
         // Build response
         java.util.Map<String, Object> result = new java.util.HashMap<>();
         result.put("totalAmount", totalAmount);
+        result.put("totalExpenses", totalExpenses);
+        result.put("totalIncome", totalIncome);
+        result.put("totalSavings", totalSavings);
+        result.put("netIncome", netIncome);
+        result.put("savingsRate", Math.round(savingsRate * 100.0) / 100.0);
         result.put("avgDaily", Math.round(avgDaily * 100.0) / 100.0);
         result.put("maxDaily", maxDailyOpt.orElse(0.0));
         result.put("minDaily", minDailyOpt.orElse(0.0));
         result.put("transactionCount", expenseTransactions.size());
+        result.put("incomeTransactionCount", incomeTransactions.size());
+        result.put("savingsTransactionCount", savingsTransactions.size());
         result.put("categoryBreakdown", topCategories);
         result.put("dailyExpenses", dailyData);
-        result.put("previousMonthTotal", previousMonthTotal);
-        result.put("percentChange", Math.round(percentChange * 100.0) / 100.0);
+        result.put("previousMonthExpenses", previousMonthExpenses);
+        result.put("previousMonthIncome", previousMonthIncome);
+        result.put("previousMonthSavings", previousMonthSavings);
+        result.put("expensePercentChange", Math.round(expensePercentChange * 100.0) / 100.0);
+        result.put("incomePercentChange", Math.round(incomePercentChange * 100.0) / 100.0);
+        result.put("savingsPercentChange", Math.round(savingsPercentChange * 100.0) / 100.0);
         result.put("year", year);
         result.put("month", month);
         result.put("monthName", targetMonth.getMonth().toString());
@@ -199,17 +234,30 @@ public class ExpenseService {
         java.time.LocalDate startOfYear = targetYear.atDay(1);
         java.time.LocalDate endOfYear = targetYear.atDay(targetYear.length());
         
-        // Fetch all expenses for the specified year
-        var yearlyExpenses = expenseRepository.findAllByCreatedByAndDateBetweenOrderByDateDesc(email, startOfYear, endOfYear);
+        // Fetch all transactions for the specified year
+        var yearlyTransactions = expenseRepository.findAllByCreatedByAndDateBetweenOrderByDateDesc(email, startOfYear, endOfYear);
         
-        // Filter only expense type transactions
-        var expenseTransactions = yearlyExpenses.stream()
+        // Filter transactions by type
+        var expenseTransactions = yearlyTransactions.stream()
             .filter(e -> e.getType() == Expense.ExpenseType.EXPENSE)
             .collect(java.util.stream.Collectors.toList());
         
-        // Calculate total amount
-        double totalAmount = expenseTransactions.stream()
-            .mapToDouble(Expense::getAmount).sum();
+        var incomeTransactions = yearlyTransactions.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.INCOME)
+            .collect(java.util.stream.Collectors.toList());
+        
+        var savingsTransactions = yearlyTransactions.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.SAVINGS)
+            .collect(java.util.stream.Collectors.toList());
+        
+        // Calculate totals for each type
+        double totalExpenses = expenseTransactions.stream().mapToDouble(Expense::getAmount).sum();
+        double totalIncome = incomeTransactions.stream().mapToDouble(Expense::getAmount).sum();
+        double totalSavings = savingsTransactions.stream().mapToDouble(Expense::getAmount).sum();
+        double netIncome = totalIncome - totalExpenses - totalSavings;
+        
+        // Calculate total amount (expenses only for backward compatibility)
+        double totalAmount = totalExpenses;
         
         // Group by category
         java.util.Map<String, Double> categoryBreakdown = expenseTransactions.stream()
@@ -231,18 +279,29 @@ public class ExpenseService {
         java.util.OptionalDouble maxMonthlyOpt = monthlyExpenses.values().stream().mapToDouble(Double::doubleValue).max();
         java.util.OptionalDouble minMonthlyOpt = monthlyExpenses.values().stream().mapToDouble(Double::doubleValue).min();
         
-        // Previous year comparison
+        // Get previous year data for comparison
         java.time.Year previousYear = targetYear.minusYears(1);
         java.time.LocalDate prevStartOfYear = previousYear.atDay(1);
         java.time.LocalDate prevEndOfYear = previousYear.atDay(previousYear.length());
         
-        var previousYearExpenses = expenseRepository.findAllByCreatedByAndDateBetweenOrderByDateDesc(email, prevStartOfYear, prevEndOfYear);
-        double previousYearTotal = previousYearExpenses.stream()
+        var previousYearTransactions = expenseRepository.findAllByCreatedByAndDateBetweenOrderByDateDesc(email, prevStartOfYear, prevEndOfYear);
+        double previousYearExpenses = previousYearTransactions.stream()
             .filter(e -> e.getType() == Expense.ExpenseType.EXPENSE)
             .mapToDouble(Expense::getAmount).sum();
+        double previousYearIncome = previousYearTransactions.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.INCOME)
+            .mapToDouble(Expense::getAmount).sum();
+        double previousYearSavings = previousYearTransactions.stream()
+            .filter(e -> e.getType() == Expense.ExpenseType.SAVINGS)
+            .mapToDouble(Expense::getAmount).sum();
         
-        // Calculate percentage change
-        double percentChange = previousYearTotal > 0 ? ((totalAmount - previousYearTotal) / previousYearTotal) * 100 : 0;
+        // Calculate percentage changes
+        double expensePercentChange = previousYearExpenses > 0 ? ((totalExpenses - previousYearExpenses) / previousYearExpenses) * 100 : 0;
+        double incomePercentChange = previousYearIncome > 0 ? ((totalIncome - previousYearIncome) / previousYearIncome) * 100 : 0;
+        double savingsPercentChange = previousYearSavings > 0 ? ((totalSavings - previousYearSavings) / previousYearSavings) * 100 : 0;
+        
+        // Calculate savings rate
+        double savingsRate = totalIncome > 0 ? (totalSavings / totalIncome) * 100 : 0;
         
         // Get top categories (limit to top 5)
         java.util.List<java.util.Map<String, Object>> topCategories = categoryBreakdown.entrySet().stream()
@@ -292,14 +351,25 @@ public class ExpenseService {
         // Build response
         java.util.Map<String, Object> result = new java.util.HashMap<>();
         result.put("totalAmount", totalAmount);
+        result.put("totalExpenses", totalExpenses);
+        result.put("totalIncome", totalIncome);
+        result.put("totalSavings", totalSavings);
+        result.put("netIncome", netIncome);
+        result.put("savingsRate", Math.round(savingsRate * 100.0) / 100.0);
         result.put("avgMonthly", Math.round(avgMonthly * 100.0) / 100.0);
         result.put("maxMonthly", maxMonthlyOpt.orElse(0.0));
         result.put("minMonthly", minMonthlyOpt.orElse(0.0));
         result.put("transactionCount", expenseTransactions.size());
+        result.put("incomeTransactionCount", incomeTransactions.size());
+        result.put("savingsTransactionCount", savingsTransactions.size());
         result.put("categoryBreakdown", topCategories);
         result.put("monthlyExpenses", monthlyData);
-        result.put("previousYearTotal", previousYearTotal);
-        result.put("percentChange", Math.round(percentChange * 100.0) / 100.0);
+        result.put("previousYearExpenses", previousYearExpenses);
+        result.put("previousYearIncome", previousYearIncome);
+        result.put("previousYearSavings", previousYearSavings);
+        result.put("expensePercentChange", Math.round(expensePercentChange * 100.0) / 100.0);
+        result.put("incomePercentChange", Math.round(incomePercentChange * 100.0) / 100.0);
+        result.put("savingsPercentChange", Math.round(savingsPercentChange * 100.0) / 100.0);
         result.put("year", year);
         result.put("highestMonth", highestMonth);
         result.put("lowestMonth", lowestMonth);
