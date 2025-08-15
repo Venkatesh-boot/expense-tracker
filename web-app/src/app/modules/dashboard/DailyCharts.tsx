@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine, AreaChart, Area } from 'recharts';
 import { AppDispatch, RootState } from '../../store/store';
 import { fetchDailyDetailsStart } from '../../store/slices/dashboardSlice';
+import { formatCurrency } from '../../utils/currencyFormat';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CFF', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C', '#8DD1E1'];
 
@@ -25,6 +26,9 @@ interface DailyChartsProps {
 }
 
 export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
+  // Get currency from settings API (Redux store)
+  const settings = useSelector((state: RootState) => state.settings.settings);
+  const currency = settings?.currency || 'INR';
   const dispatch = useDispatch<AppDispatch>();
   const { dailyDetails, loadingDailyDetails, error } = useSelector((state: RootState) => state.dashboard);
   const previousTotal = useRef<number | null>(null);
@@ -76,7 +80,7 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
         <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
           <p className="font-semibold text-gray-800 dark:text-gray-200">{data.name}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Amount: <span className="font-bold text-blue-600">₹{data.value}</span>
+            Amount: <span className="font-bold text-blue-600">{formatCurrency(data.value, currency)}</span>
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Percentage: <span className="font-bold text-green-600">{data.payload?.percentage}%</span>
@@ -99,7 +103,7 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
         <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
           <p className="font-semibold text-gray-800 dark:text-gray-200">{timeLabel}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Amount: <span className="font-bold text-blue-600">₹{data.value}</span>
+            Amount: <span className="font-bold text-blue-600">{formatCurrency(data.value, currency)}</span>
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
             Click to analyze this hour
@@ -117,7 +121,7 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
           <p className="font-semibold text-gray-800 dark:text-gray-200">{formatHour(Number(label))}</p>
           {payload.map((entry, index) => (
             <p key={index} className="text-sm text-gray-600 dark:text-gray-400">
-              {entry.name}: <span className="font-bold" style={{ color: entry.color }}>₹{entry.value}</span>
+              {entry.name}: <span className="font-bold" style={{ color: entry.color }}>{formatCurrency(entry.value, currency)}</span>
             </p>
           ))}
         </div>
@@ -264,8 +268,7 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
                   <span className="font-medium">Category:</span> {selectedCategory}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  <span className="font-medium">Total Amount:</span> ₹
-                  {categoryBreakdown.find(c => c.name === selectedCategory)?.value || 0}
+                  <span className="font-medium">Total Amount:</span> {formatCurrency(categoryBreakdown.find(c => c.name === selectedCategory)?.value || 0, currency)}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   <span className="font-medium">Percentage:</span> 
@@ -276,7 +279,7 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
                 <div className="font-medium mb-1">Daily Insights:</div>
                 <ul className="space-y-1 text-xs">
                   <li>• % of daily total: {categoryBreakdown.find(c => c.name === selectedCategory)?.percentage || 0}%</li>
-                  <li>• Daily budget impact: ₹{Math.round((categoryBreakdown.find(c => c.name === selectedCategory)?.value || 0))}</li>
+                  <li>• Daily budget impact: {formatCurrency(Math.round((categoryBreakdown.find(c => c.name === selectedCategory)?.value || 0)), currency)}</li>
                   <li>• Top category: {topExpenseCategory === selectedCategory ? 'Yes' : 'No'}</li>
                 </ul>
               </div>
@@ -290,8 +293,7 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
                   <span className="font-medium">Hour:</span> {formatHour(selectedHour)}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  <span className="font-medium">Amount:</span> ₹
-                  {hourlyExpenses.find(h => h.hour === selectedHour)?.amount || 0}
+                  <span className="font-medium">Amount:</span> {formatCurrency(hourlyExpenses.find(h => h.hour === selectedHour)?.amount || 0, currency)}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   <span className="font-medium">Time Period:</span> 
@@ -305,7 +307,7 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
                 <ul className="space-y-1 text-xs">
                   <li>• vs Hourly Average: {((hourlyExpenses.find(h => h.hour === selectedHour)?.amount || 0) / Math.max(1, avgHourly) * 100 - 100).toFixed(1)}%</li>
                   <li>• vs Peak Hour: {((hourlyExpenses.find(h => h.hour === selectedHour)?.amount || 0) / Math.max(1, maxHourly) * 100).toFixed(1)}%</li>
-                  <li>• Cumulative up to this hour: ₹{lineData.find(d => d.hour === selectedHour)?.cumulative || 0}</li>
+                  <li>• Cumulative up to this hour: {formatCurrency(lineData.find(d => d.hour === selectedHour)?.cumulative || 0, currency)}</li>
                 </ul>
               </div>
             </div>
@@ -317,21 +319,21 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500">Total Spent</div>
-          <div className="text-2xl font-bold text-blue-700">₹{totalAmount}</div>
+          <div className="text-2xl font-bold text-blue-700">{formatCurrency(totalAmount, currency)}</div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500">Avg Hourly</div>
-          <div className="text-2xl font-bold text-blue-700">₹{avgHourly}</div>
+          <div className="text-2xl font-bold text-blue-700">{formatCurrency(avgHourly, currency)}</div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500">Peak Hour</div>
           <div className="text-lg font-bold text-green-600">{peakHour ? formatHour(peakHour.hour) : 'N/A'}</div>
-          <div className="text-sm">₹{peakHour?.amount || 0}</div>
+          <div className="text-sm">{formatCurrency(peakHour?.amount || 0, currency)}</div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500">Quietest Hour</div>
           <div className="text-lg font-bold text-red-600">{quietestHour ? formatHour(quietestHour.hour) : 'N/A'}</div>
-          <div className="text-sm">₹{quietestHour?.amount || 0}</div>
+          <div className="text-sm">{formatCurrency(quietestHour?.amount || 0, currency)}</div>
         </div>
       </div>
 
@@ -343,7 +345,7 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
             {categoryBreakdown.slice(0, 3).map(cat => (
               <li key={cat.name} className="flex justify-between py-1">
                 <span>{cat.name}</span>
-                <span className="font-semibold">₹{cat.value} ({cat.percentage}%)</span>
+                <span className="font-semibold">{formatCurrency(cat.value, currency)} ({cat.percentage}%)</span>
               </li>
             ))}
             {categoryBreakdown.length === 0 && (
@@ -359,11 +361,11 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
         <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2">
           <div className="font-semibold text-blue-700 mb-1">Today vs Yesterday</div>
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold">₹{totalAmount}</span>
+            <span className="text-lg font-bold">{formatCurrency(totalAmount, currency)}</span>
             <span className={percentChange >= 0 ? 'text-red-600' : 'text-green-600'}>
               {percentChange >= 0 ? '▲' : '▼'} {Math.abs(percentChange)}%
             </span>
-            <span className="text-xs text-gray-500">(Yesterday: ₹{previousDayTotal})</span>
+            <span className="text-xs text-gray-500">(Yesterday: {formatCurrency(previousDayTotal, currency)})</span>
           </div>
         </div>
       </div>
@@ -376,11 +378,11 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
             <div className="bg-blue-500 h-4 rounded-full transition-all" style={{ width: `${Math.min(budgetUsed, 100)}%` }}></div>
           </div>
           <div className="flex justify-between text-xs">
-            <span>₹{totalAmount} / ₹{dailyBudget}</span>
+            <span>{formatCurrency(totalAmount, currency)} / {formatCurrency(dailyBudget, currency)}</span>
             <span>{budgetUsed}% used</span>
           </div>
           <div className="text-xs text-gray-600 mt-1">
-            Remaining: ₹{budgetRemaining}
+            Remaining: {formatCurrency(budgetRemaining, currency)}
           </div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2">
@@ -399,11 +401,11 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2">
           <div className="font-semibold text-blue-700 mb-1">Max Hourly</div>
-          <div className="text-2xl font-bold text-blue-700">₹{maxHourly}</div>
+          <div className="text-2xl font-bold text-blue-700">{formatCurrency(maxHourly, currency)}</div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2">
           <div className="font-semibold text-blue-700 mb-1">Min Hourly</div>
-          <div className="text-2xl font-bold text-blue-700">₹{minHourly}</div>
+          <div className="text-2xl font-bold text-blue-700">{formatCurrency(minHourly, currency)}</div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2">
           <div className="font-semibold text-blue-700 mb-1">Most Active Time</div>
@@ -461,7 +463,7 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
                   cx="50%"
                   cy="50%"
                   outerRadius={80}
-                  label={(entry) => `₹${entry.value}`}
+                  label={(entry) => formatCurrency(entry.value ?? 0, currency)}
                 >
                   {timeOfDayData.map((entry, idx) => (
                     <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
@@ -469,7 +471,7 @@ export default function DailyCharts({ onFilterChange }: DailyChartsProps) {
                 </Pie>
                 <Tooltip 
                   formatter={(value: number, name: string) => [
-                    `₹${value}`,
+                    formatCurrency(value, currency),
                     name
                   ]}
                 />

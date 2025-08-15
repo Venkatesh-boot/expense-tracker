@@ -6,6 +6,7 @@ import { fetchExpensesTableRequest } from '../../store/slices/expensesTableSlice
 import type { ExpensesTableState } from '../../store/slices/expensesTableSlice';
 
 import Header from '../../components/Header';
+import { currencySymbols } from '../../config/currency-config';
 import Footer from '../../components/Footer';
 import { categories } from '../../config/categories';
 import { paymentMethods } from '../../config/paymentMethods';
@@ -20,8 +21,9 @@ const AddExpensesPage = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const editId = searchParams.get('id');
-  const currency = localStorage.getItem('currency') || 'INR';
-  const currencySymbols: Record<string, string> = { INR: '₹', USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
+  // Get currency from settings API (Redux store)
+  const settings = useAppSelector(state => state.settings.settings);
+  const currency = settings?.currency || 'INR';
   const [category, setCategory] = React.useState('');
   const [customCategory, setCustomCategory] = React.useState('');
   const [type, setType] = React.useState('EXPENSE');

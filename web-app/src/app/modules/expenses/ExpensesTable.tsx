@@ -1,6 +1,7 @@
 
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { formatCurrency } from '../../utils/currencyFormat';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchExpensesTableRequest, deleteExpenseRequest } from '../../store/slices/expensesTableSlice';
@@ -20,6 +21,9 @@ const columns = [
 
 
 export default function ExpensesTable() {
+  // Get currency from settings API (Redux store)
+  const settings = useAppSelector(state => state.settings.settings);
+  const currency = settings?.currency || 'INR';
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { rows: expenses } = useAppSelector(state => state.expensesTable as ExpensesTableState);
@@ -197,7 +201,7 @@ export default function ExpensesTable() {
           </div>
           <div className="text-right">
             <div className={`text-lg font-bold ${expense.type === 'INCOME' ? 'text-green-600' : expense.type === 'SAVINGS' ? 'text-blue-600' : 'text-red-600'}`}>
-              ₹{expense.amount.toLocaleString()}
+              {formatCurrency(expense.amount, currency)}
               {isLarge(expense.amount) && <span className="ml-1 text-red-500" title="Large expense">!</span>}
             </div>
             <div className="text-xs text-gray-500 dark:text-gray-400">{expense.date}</div>
@@ -320,7 +324,7 @@ export default function ExpensesTable() {
       if (cell.column.id === 'amount') {
         return (
           <div className="flex items-center justify-end gap-2">
-            <span>₹{typeof cell.value === 'number' ? cell.value.toLocaleString() : (cell.value as string)}</span>
+            <span>{typeof cell.value === 'number' ? formatCurrency(cell.value, currency) : (cell.value as string)}</span>
             {typeof cell.value === 'number' && isLarge(cell.value) && <span title="Large expense" className="ml-1 text-red-500 font-bold" role="img" aria-label="Large expense">!</span>}
           </div>
         );
@@ -350,8 +354,8 @@ export default function ExpensesTable() {
       {/* Info Bar */}
       <div className="flex flex-col gap-2 mb-3 sm:flex-row sm:justify-between items-center">
         <div className="flex flex-wrap gap-3 items-center text-sm">
-          <div className="text-sm text-gray-700 dark:text-gray-300">Total (filtered): <span className="font-semibold text-gray-900 dark:text-gray-100">₹{totalFiltered.toLocaleString()}</span></div>
-          <div className="text-sm text-gray-700 dark:text-gray-300">This page: <span className="font-semibold text-gray-900 dark:text-gray-100">₹{totalPage.toLocaleString()}</span></div>
+          <div className="text-sm text-gray-700 dark:text-gray-300">Total (filtered): <span className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(totalFiltered, currency)}</span></div>
+          <div className="text-sm text-gray-700 dark:text-gray-300">This page: <span className="font-semibold text-gray-900 dark:text-gray-100">{formatCurrency(totalPage, currency)}</span></div>
           <div className="text-sm text-gray-500 dark:text-gray-400">Showing {page.length} of {filteredData.length} expenses</div>
         </div>
         <div className="flex gap-2 items-center w-full sm:w-auto justify-end">
@@ -362,7 +366,7 @@ export default function ExpensesTable() {
       {/* Category Breakdown */}
       <div className="flex flex-wrap gap-2 mb-3">
         {Object.entries(categoryBreakdown).map(([cat, amt]) => (
-          <div key={cat} className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-medium">{cat}: <span className="font-semibold">₹{amt.toLocaleString()}</span></div>
+          <div key={cat} className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-medium">{cat}: <span className="font-semibold">{formatCurrency(amt, currency)}</span></div>
         ))}
       </div>
       {/* Filters */}

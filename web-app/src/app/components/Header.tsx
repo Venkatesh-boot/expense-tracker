@@ -9,8 +9,8 @@ import { logout } from '../store/slices/loginSlice';
 
 // Get user info from Redux
 function useUserInfo() {
-  const dispatch = useDispatch();
   const account = useSelector((state: RootState) => state.account);
+  const dispatch = useDispatch();
   React.useEffect(() => {
     if (!account.firstName && !account.lastName && !account.email) {
       dispatch(fetchAccountStart());
@@ -33,9 +33,13 @@ const LANGUAGES = [
 ];
 
 export default function Header({ showLogout = true }: { showLogout?: boolean }) {
+  // Define dispatch once for the component
+  const dispatch = useDispatch();
+  React.useEffect(() => {
+    dispatch(require('../store/slices/settingsSlice').fetchSettingsStart());
+  }, [dispatch]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');
   const [langDropdown, setLangDropdown] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
 
@@ -52,16 +56,10 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
 
   const { name, email, avatar } = useUserInfo();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
-  const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setLanguage(e.target.value);
-    localStorage.setItem('language', e.target.value);
-  };
 
   // Logout handler function
   const handleLogout = () => {
-    setMenuOpen(false);
     // Dispatch Redux logout action to clear authentication state
     dispatch(logout());
     // Clear any remaining storage (logout action already clears sessionStorage)
@@ -77,8 +75,8 @@ export default function Header({ showLogout = true }: { showLogout?: boolean }) 
         <img src="/favicon.ico" alt="Company Logo" className="h-8 w-8" />
         <span className="font-bold text-xl text-blue-700 dark:text-blue-200">ExpenseTracker</span>
       </div>
-  {/* Desktop Menu */}
-  <div className="relative flex items-center gap-4">
+      {/* Desktop Menu */}
+      <div className="relative flex items-center gap-4">
         {/* Desktop Nav Buttons - hidden on mobile */}
         <div className="hidden md:flex items-center gap-4">
           <button

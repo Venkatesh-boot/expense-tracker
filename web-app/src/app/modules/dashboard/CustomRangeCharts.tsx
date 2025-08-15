@@ -1,3 +1,5 @@
+import { currencySymbols } from '../../config/currency-config';
+import { formatCurrency } from '../../utils/currencyFormat';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -42,16 +44,6 @@ interface CustomTooltipProps {
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C'];
 
-const currencySymbols: { [key: string]: string } = {
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  JPY: '¥',
-  INR: '₹',
-  CAD: 'C$',
-  AUD: 'A$',
-  CNY: '¥',
-};
 
 interface CustomRangeChartsProps {
   onFilterChange?: (total: number) => void;
@@ -60,7 +52,9 @@ interface CustomRangeChartsProps {
 const CustomRangeCharts: React.FC<CustomRangeChartsProps> = ({ onFilterChange }) => {
   const dispatch = useDispatch<AppDispatch>();
   const { customRangeDetails, loadingCustomRangeDetails, error } = useSelector((state: RootState) => state.dashboard);
-  const { currency = 'INR' } = { currency: 'INR' }; // Mock currency setting
+  // Get currency from settings API (Redux store)
+  const settings = useSelector((state: RootState) => state.settings.settings);
+  const currency = settings?.currency || 'INR';
   const previousTotal = useRef<number | null>(null);
   
   const [selectedRange, setSelectedRange] = useState<DateRange>({
@@ -147,7 +141,7 @@ const CustomRangeCharts: React.FC<CustomRangeChartsProps> = ({ onFilterChange })
         <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
           <p className="font-semibold text-gray-800 dark:text-gray-200">{data.name}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Amount: <span className="font-bold text-blue-600">{currencySymbols[currency]}{data.value}</span>
+              Amount: <span className="font-bold text-blue-600">{formatCurrency(data.value, currency)}</span>
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Percentage: <span className="font-bold text-green-600">{data.payload?.percentage}%</span>
@@ -172,7 +166,7 @@ const CustomRangeCharts: React.FC<CustomRangeChartsProps> = ({ onFilterChange })
           <p className="font-semibold text-gray-800 dark:text-gray-200">{weekday}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">{label}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Amount: <span className="font-bold text-blue-600">{currencySymbols[currency]}{data.value}</span>
+              Amount: <span className="font-bold text-blue-600">{formatCurrency(data.value, currency)}</span>
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
             Click to view details
@@ -191,6 +185,7 @@ const CustomRangeCharts: React.FC<CustomRangeChartsProps> = ({ onFilterChange })
           {payload.map((entry, index) => (
             <p key={index} className="text-sm text-gray-600 dark:text-gray-400">
               {entry.name}: <span className="font-bold" style={{ color: entry.color }}>{currencySymbols[currency]}{entry.value}</span>
+              {entry.name}: <span className="font-bold" style={{ color: entry.color }}>{formatCurrency(entry.value, currency)}</span>
             </p>
           ))}
           <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
@@ -262,47 +257,37 @@ const CustomRangeCharts: React.FC<CustomRangeChartsProps> = ({ onFilterChange })
   }
 
   // Process data from API
-  const { 
-    totalAmount, 
+  const {
+    totalAmount,
     totalExpenses,
     totalIncome,
     totalSavings,
     netIncome,
-    avgDaily, 
-    maxDaily, 
-    minDaily, 
-    transactionCount,
-    incomeTransactionCount,
-    savingsTransactionCount,
-    categoryBreakdown, 
-    dailyExpenses, 
-    startDate,
-    endDate,
     dayCount,
-    topExpenseDay,
-    lowestExpenseDay,
-    mostActiveCategory,
+    avgDaily,
+    dailyExpenses = [],
+    categoryBreakdown = [],
     averagePerCategory = []
   } = customRangeDetails;
 
   // Format the daily expenses data for charts
-  const chartData = dailyExpenses.map(expense => ({
+  const chartData = dailyExpenses.map((expense: { date: string; amount: number }) => ({
     ...expense,
-    displayDate: new Date(expense.date).toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric' 
+    displayDate: new Date(expense.date).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric'
     }),
   }));
 
   // Calculate cumulative data for line chart
   let cumulative = 0;
-  const lineData = dailyExpenses.map(d => {
+  const lineData = dailyExpenses.map((d: { date: string; amount: number }) => {
     cumulative += d.amount;
-    return { 
-      date: d.date, 
-      displayDate: new Date(d.date).toLocaleDateString('en-US', { 
-        month: 'short', 
-        day: 'numeric' 
+    return {
+      date: d.date,
+      displayDate: new Date(d.date).toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
       }),
       cumulative,
       amount: d.amount
@@ -310,7 +295,7 @@ const CustomRangeCharts: React.FC<CustomRangeChartsProps> = ({ onFilterChange })
   });
 
   // Calculate savings rate
-  const savingsRate = totalIncome > 0 ? Math.round((totalSavings / totalIncome) * 100) : 0;
+  // Removed unused savingsRate to fix lint warning
 
   return (
     <div className="flex flex-col gap-6">
@@ -340,19 +325,19 @@ const CustomRangeCharts: React.FC<CustomRangeChartsProps> = ({ onFilterChange })
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500 dark:text-gray-400">Total Expenses</div>
-          <div className="text-2xl font-bold text-red-600 dark:text-red-400">{currencySymbols[currency]}{totalExpenses || totalAmount}</div>
+          <div className="text-2xl font-bold text-red-600 dark:text-red-400">{formatCurrency(totalExpenses || totalAmount, currency)}</div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500 dark:text-gray-400">Total Income</div>
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">{currencySymbols[currency]}{totalIncome || 0}</div>
+          <div className="text-2xl font-bold text-green-600 dark:text-green-400">{formatCurrency(totalIncome || 0, currency)}</div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500 dark:text-gray-400">Total Savings</div>
-          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{currencySymbols[currency]}{totalSavings || 0}</div>
+          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{formatCurrency(totalSavings || 0, currency)}</div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500 dark:text-gray-400">Net Income</div>
-          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{currencySymbols[currency]}{netIncome || 0}</div>
+          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{formatCurrency(netIncome || 0, currency)}</div>
         </div>
       </div>
 
@@ -411,7 +396,7 @@ const CustomRangeCharts: React.FC<CustomRangeChartsProps> = ({ onFilterChange })
                   onClick={handleCategoryClick}
                   style={{ cursor: 'pointer' }}
                 >
-                  {categoryBreakdown.map((entry, idx) => (
+                  {categoryBreakdown.map((entry: { name: string; percentage: number }, idx: number) => (
                     <Cell 
                       key={`cell-${idx}`} 
                       fill={COLORS[idx % COLORS.length]}
@@ -442,7 +427,7 @@ const CustomRangeCharts: React.FC<CustomRangeChartsProps> = ({ onFilterChange })
                   onClick={handleDateClick}
                   style={{ cursor: 'pointer' }}
                 >
-                  {chartData.map((entry, index) => (
+                  {chartData.map((entry: { date: string }, index: number) => (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={drillDown.selectedDateRange?.start === entry.date ? '#FF8042' : '#0088FE'}
@@ -561,8 +546,8 @@ const CustomRangeCharts: React.FC<CustomRangeChartsProps> = ({ onFilterChange })
               <div key={index} className="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                 <div className="font-medium text-gray-800 dark:text-gray-200 mb-1">{category.category}</div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  <div>Total: {currencySymbols[currency]} {category.totalAmount.toFixed(2)}</div>
-                  <div>Avg/Day: {currencySymbols[currency]} {category.avgAmount.toFixed(2)}</div>
+                  <div>Total: {formatCurrency(category.totalAmount, currency)}</div>
+                  <div>Avg/Day: {formatCurrency(category.avgAmount, currency)}</div>
                   <div>Transactions: {category.transactionCount}</div>
                 </div>
               </div>

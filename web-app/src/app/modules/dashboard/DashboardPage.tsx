@@ -1,9 +1,12 @@
+import { currencySymbols } from '../../config/currency-config';
+import { formatCurrency } from '../../utils/currencyFormat';
+import { useAppSelector } from '../../store/hooks';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
-import { useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store/store';
 import { fetchDashboardSummaryStart, fetchMonthlyDetailsStart, fetchYearlyDetailsStart, fetchDailyDetailsStart } from '../../store/slices/dashboardSlice';
 // import ExpenseTable from './ExpenseTable';
@@ -23,12 +26,12 @@ const DashboardPage = () => {
   });
   const navigate = useNavigate();
 
-  // Currency from settings
-  const currency = localStorage.getItem('currency') || 'INR';
-  const currencySymbols: Record<string, string> = { INR: '₹', USD: '$', EUR: '€', GBP: '£', JPY: '¥' };
+  // Get currency from settings API (Redux store)
+  const settings = useAppSelector(state => state.settings.settings);
+  const currency = settings?.currency || 'INR';
 
   const dispatch = useDispatch();
-  const { summary, dailyDetails, monthlyDetails, yearlyDetails } = useSelector((state: RootState) => state.dashboard);
+  const { summary, dailyDetails, monthlyDetails, yearlyDetails } = useAppSelector((state: RootState) => state.dashboard);
 
   useEffect(() => {
     dispatch(fetchDashboardSummaryStart());
@@ -148,27 +151,28 @@ const DashboardPage = () => {
       <div className="flex-1 w-full flex flex-col items-center justify-start px-2 py-4 sm:px-4 md:px-8 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="w-full max-w-md sm:max-w-lg md:max-w-2xl lg:max-w-4xl">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-blue-700 dark:text-green-200">Expense Dashboard</h1>
+          <span className="ml-4 text-base font-semibold text-gray-700 dark:text-gray-200">Currency: {currencySymbols[currency] || currency} ({currency})</span>
           {/* Colorful summary cards */}
           <div className="flex sm:grid sm:grid-cols-2 md:grid-cols-5 gap-4 mb-6 overflow-x-auto sm:overflow-visible snap-x snap-mandatory">
             <div className="min-w-[240px] sm:min-w-0 snap-center rounded-xl shadow-lg p-4 bg-gradient-to-br from-purple-400 to-purple-600 text-white flex flex-col items-start">
               <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="daily expenses">📊</span><span className="font-semibold">Daily Expenses</span></div>
-              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {dailyExpenses.toFixed(2)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(dailyExpenses, currency)}</div>
             </div>
             <div className="min-w-[240px] sm:min-w-0 snap-center rounded-xl shadow-lg p-4 bg-gradient-to-br from-blue-400 to-blue-600 text-white flex flex-col items-start">
               <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="monthly expenses">💸</span><span className="font-semibold">Monthly Expenses</span></div>
-              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlyExpenses.toFixed(2)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(monthlyExpenses, currency)}</div>
             </div>
             <div className="min-w-[240px] sm:min-w-0 snap-center rounded-xl shadow-lg p-4 bg-gradient-to-br from-green-400 to-green-600 text-white flex flex-col items-start">
               <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="yearly expenses">📅</span><span className="font-semibold">Yearly Expenses</span></div>
-              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {yearlyExpenses.toFixed(2)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(yearlyExpenses, currency)}</div>
             </div>
             <div className="min-w-[240px] sm:min-w-0 snap-center rounded-xl shadow-lg p-4 bg-gradient-to-br from-pink-400 to-pink-600 text-white flex flex-col items-start">
               <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="monthly income">💰</span><span className="font-semibold">Monthly Income</span></div>
-              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlyIncome.toFixed(2)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(monthlyIncome, currency)}</div>
             </div>
             <div className="min-w-[240px] sm:min-w-0 snap-center rounded-xl shadow-lg p-4 bg-gradient-to-br from-indigo-400 to-indigo-600 text-white flex flex-col items-start">
               <div className="flex items-center gap-2 mb-2"><span className="text-2xl" role="img" aria-label="monthly savings">🏦</span><span className="font-semibold">Monthly Savings</span></div>
-              <div className="text-2xl font-bold">{currencySymbols[currency] || currency} {monthlySavings.toFixed(2)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(monthlySavings, currency)}</div>
             </div>
           </div>
           <div className="mb-6 sm:mb-8">
@@ -207,7 +211,7 @@ const DashboardPage = () => {
             {activeTab === 'daily' && (
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-3 sm:p-6 w-full overflow-x-auto">
                 <h2 className="text-lg sm:text-xl font-semibold mb-2 dark:text-purple-200">Daily Expenses</h2>
-                <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-300 mb-3 sm:mb-4">{currencySymbols[currency] || currency} {getFilteredDailyExpenses().toFixed(2)}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-purple-600 dark:text-purple-300 mb-3 sm:mb-4">{formatCurrency(getFilteredDailyExpenses(), currency)}</div>
                 <div className="w-full mb-4">
                   <DailyCharts onFilterChange={onDailyFilterChange} />
                 </div>
@@ -216,7 +220,7 @@ const DashboardPage = () => {
             {activeTab === 'monthly' && (
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-3 sm:p-6 w-full overflow-x-auto">
                 <h2 className="text-lg sm:text-xl font-semibold mb-2 dark:text-blue-200">Monthly Expenses</h2>
-                <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-300 mb-3 sm:mb-4">{currencySymbols[currency] || currency} {getFilteredMonthlyExpenses().toFixed(2)}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-blue-600 dark:text-blue-300 mb-3 sm:mb-4">{formatCurrency(getFilteredMonthlyExpenses(), currency)}</div>
                 <div className="w-full mb-4">
                   <MonthlyCharts onFilterChange={onMonthlyFilterChange} />
                 </div>
@@ -225,14 +229,14 @@ const DashboardPage = () => {
             {activeTab === 'yearly' && (
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-3 sm:p-6 w-full overflow-x-auto">
                 <h2 className="text-lg sm:text-xl font-semibold mb-2 dark:text-green-200">Yearly Expenses</h2>
-                <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-300 mb-3 sm:mb-4">{currencySymbols[currency] || currency} {getFilteredYearlyExpenses().toFixed(2)}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-300 mb-3 sm:mb-4">{formatCurrency(getFilteredYearlyExpenses(), currency)}</div>
                 <YearlyCharts onFilterChange={onYearlyFilterChange} />
               </div>
             )}
             {activeTab === 'custom-range' && (
               <div className="bg-gray-50 dark:bg-gray-900 rounded-lg shadow p-3 sm:p-6 w-full overflow-x-auto">
                 <h2 className="text-lg sm:text-xl font-semibold mb-2 dark:text-orange-200">Custom Date Range Analysis</h2>
-                <div className="text-2xl sm:text-3xl font-bold text-orange-600 dark:text-orange-300 mb-3 sm:mb-4">{currencySymbols[currency] || currency} {filteredData.customRangeTotal.toFixed(2)}</div>
+                <div className="text-2xl sm:text-3xl font-bold text-orange-600 dark:text-orange-300 mb-3 sm:mb-4">{formatCurrency(filteredData.customRangeTotal, currency)}</div>
                 <div className="w-full mb-4">
                   <CustomRangeCharts onFilterChange={onCustomRangeFilterChange} />
                 </div>

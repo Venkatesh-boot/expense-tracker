@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { formatCurrency } from '../../utils/currencyFormat';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   ResponsiveContainer,
@@ -10,7 +11,6 @@ import {
   YAxis,
   Tooltip,
   Legend,
-  ReferenceLine,
 } from 'recharts';
 import { AppDispatch, RootState } from '../../store/store';
 import { fetchCustomRangeDetailsStart } from '../../store/slices/dashboardSlice';
@@ -54,21 +54,13 @@ interface CustomTooltipProps {
   label?: string;
 }
 
-const currencySymbols: { [key: string]: string } = {
-  USD: '$',
-  EUR: '€',
-  GBP: '£',
-  JPY: '¥',
-  INR: '₹',
-  CAD: 'C$',
-  AUD: 'A$',
-  CNY: '¥',
-};
 
 const ForecastCharts: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { customRangeDetails, loadingCustomRangeDetails, error } = useSelector((state: RootState) => state.dashboard);
-  const { currency = 'INR' } = { currency: 'INR' }; // Mock currency setting
+  // Get currency from settings API (Redux store)
+  const settings = useSelector((state: RootState) => state.settings.settings);
+  const currency = settings?.currency || 'INR';
   
   const [selectedRange, setSelectedRange] = useState<DateRange>({
     startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // Last 30 days for better forecast
@@ -259,13 +251,13 @@ const ForecastCharts: React.FC = () => {
           <p className="font-semibold text-gray-800 dark:text-gray-200">{label}</p>
           {actualData && (
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Actual: <span className="font-bold" style={{ color: actualData.color }}>{currencySymbols[currency]}{actualData.value}</span>
+                Actual: <span className="font-bold" style={{ color: actualData.color }}>{formatCurrency(actualData.value, currency)}</span>
             </p>
           )}
           {forecastData && (
             <>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Predicted: <span className="font-bold" style={{ color: forecastData.color }}>{currencySymbols[currency]}{forecastData.value?.toFixed(2)}</span>
+                  Predicted: <span className="font-bold" style={{ color: forecastData.color }}>{formatCurrency(forecastData.value, currency)}</span>
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-500">
                 Confidence: {((forecastData.payload?.confidence || 0) * 100).toFixed(0)}%
@@ -452,7 +444,7 @@ const ForecastCharts: React.FC = () => {
           <div className="bg-gradient-to-r from-purple-100 to-purple-50 dark:from-purple-900 dark:to-purple-800 rounded-lg p-4">
             <div className="text-xs text-purple-600 dark:text-purple-300">Predicted Total</div>
             <div className="text-2xl font-bold text-purple-700 dark:text-purple-200">
-              {currencySymbols[currency]}{forecastSummary.totalPredicted.toFixed(2)}
+                {formatCurrency(forecastSummary.totalPredicted, currency)}
             </div>
             <div className="text-xs text-purple-500 dark:text-purple-400">
               Next {forecast.period} days
@@ -462,7 +454,7 @@ const ForecastCharts: React.FC = () => {
           <div className="bg-gradient-to-r from-blue-100 to-blue-50 dark:from-blue-900 dark:to-blue-800 rounded-lg p-4">
             <div className="text-xs text-blue-600 dark:text-blue-300">Daily Average</div>
             <div className="text-2xl font-bold text-blue-700 dark:text-blue-200">
-              {currencySymbols[currency]}{forecastSummary.avgDaily.toFixed(2)}
+                {formatCurrency(forecastSummary.avgDaily, currency)}
             </div>
             <div className="text-xs text-blue-500 dark:text-blue-400">
               Per day forecast
@@ -590,7 +582,7 @@ const ForecastCharts: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  <div>Predicted: {currencySymbols[currency]}{forecast.predicted.toFixed(2)}</div>
+                  <div>Predicted: {formatCurrency(forecast.predicted, currency)}</div>
                   <div>Confidence: {(forecast.confidence * 100).toFixed(0)}%</div>
                 </div>
               </div>
@@ -613,7 +605,7 @@ const ForecastCharts: React.FC = () => {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="font-medium text-sm">{currencySymbols[currency]}{f.predicted.toFixed(2)}</div>
+                  <div className="font-medium text-sm">{formatCurrency(f.predicted, currency)}</div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
                     {(f.confidence * 100).toFixed(0)}% conf.
                   </div>

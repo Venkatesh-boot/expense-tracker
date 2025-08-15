@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { PieChart, Pie, Cell, Tooltip, BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine, AreaChart, Area } from 'recharts';
 import { AppDispatch, RootState } from '../../store/store';
 import { fetchMonthlyDetailsStart } from '../../store/slices/dashboardSlice';
+import { formatCurrency } from '../../utils/currencyFormat';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A28CFF', '#8884D8', '#82CA9D', '#FFC658', '#FF7C7C', '#8DD1E1'];
 
@@ -25,6 +26,9 @@ interface MonthlyChartsProps {
 }
 
 export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
+  // Get currency from settings API (Redux store)
+  const settings = useSelector((state: RootState) => state.settings.settings);
+  const currency = settings?.currency || 'INR';
   const dispatch = useDispatch<AppDispatch>();
   const { monthlyDetails, loadingMonthlyDetails, error } = useSelector((state: RootState) => state.dashboard);
   const previousTotal = useRef<number | null>(null);
@@ -88,7 +92,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
         <div className="bg-white dark:bg-gray-800 p-3 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg">
           <p className="font-semibold text-gray-800 dark:text-gray-200">{data.name}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Amount: <span className="font-bold text-blue-600">₹{data.value}</span>
+            Amount: <span className="font-bold text-blue-600">{formatCurrency(data.value, currency)}</span>
           </p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             Percentage: <span className="font-bold text-green-600">{data.payload?.percentage}%</span>
@@ -112,7 +116,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
           <p className="font-semibold text-gray-800 dark:text-gray-200">Day {label}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">{dayOfWeek}</p>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Amount: <span className="font-bold text-blue-600">₹{data.value}</span>
+            Amount: <span className="font-bold text-blue-600">{formatCurrency(data.value, currency)}</span>
           </p>
           <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
             Click to analyze this day
@@ -130,7 +134,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
           <p className="font-semibold text-gray-800 dark:text-gray-200">Day {label}</p>
           {payload.map((entry, index) => (
             <p key={index} className="text-sm text-gray-600 dark:text-gray-400">
-              {entry.name}: <span className="font-bold" style={{ color: entry.color }}>₹{entry.value}</span>
+              {entry.name}: <span className="font-bold" style={{ color: entry.color }}>{formatCurrency(entry.value, currency)}</span>
             </p>
           ))}
         </div>
@@ -264,20 +268,20 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500">Total Expenses</div>
-          <div className="text-2xl font-bold text-red-600">₹{totalExpenses || totalAmount}</div>
+          <div className="text-2xl font-bold text-red-600">{formatCurrency(totalExpenses || totalAmount, currency)}</div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500">Total Income</div>
-          <div className="text-2xl font-bold text-green-600">₹{totalIncome || 0}</div>
+          <div className="text-2xl font-bold text-green-600">{formatCurrency(totalIncome || 0, currency)}</div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500">Total Savings</div>
-          <div className="text-2xl font-bold text-blue-600">₹{totalSavings || 0}</div>
+          <div className="text-2xl font-bold text-blue-600">{formatCurrency(totalSavings || 0, currency)}</div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500">Net Income</div>
           <div className={`text-2xl font-bold ${(netIncome || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-            ₹{netIncome || 0}
+            {formatCurrency(netIncome || 0, currency)}
           </div>
         </div>
       </div>
@@ -286,7 +290,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500">Avg Daily Spend</div>
-          <div className="text-2xl font-bold text-blue-700">₹{avgDaily}</div>
+          <div className="text-2xl font-bold text-blue-700">{formatCurrency(avgDaily, currency)}</div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col items-center">
           <div className="text-xs text-gray-500">Savings Rate</div>
@@ -308,7 +312,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
             {categoryBreakdown.slice(0, 3).map(cat => (
               <li key={cat.name} className="flex justify-between py-1">
                 <span>{cat.name}</span>
-                <span className="font-semibold">₹{cat.value} ({cat.percentage}%)</span>
+                <span className="font-semibold">{formatCurrency(cat.value, currency)} ({cat.percentage}%)</span>
               </li>
             ))}
             {categoryBreakdown.length === 0 && (
@@ -322,7 +326,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
             <div className="flex justify-between items-center">
               <span>Expenses:</span>
               <div className="flex items-center gap-2">
-                <span>₹{totalExpenses || totalAmount}</span>
+                <span>{formatCurrency(totalExpenses || totalAmount, currency)}</span>
                 <span className={expensePercentChange >= 0 ? 'text-red-600' : 'text-green-600'}>
                   {expensePercentChange >= 0 ? '▲' : '▼'} {Math.abs(expensePercentChange || 0)}%
                 </span>
@@ -331,7 +335,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
             <div className="flex justify-between items-center">
               <span>Income:</span>
               <div className="flex items-center gap-2">
-                <span>₹{totalIncome || 0}</span>
+                <span>{formatCurrency(totalIncome || 0, currency)}</span>
                 <span className={incomePercentChange >= 0 ? 'text-green-600' : 'text-red-600'}>
                   {incomePercentChange >= 0 ? '▲' : '▼'} {Math.abs(incomePercentChange || 0)}%
                 </span>
@@ -340,7 +344,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
             <div className="flex justify-between items-center">
               <span>Savings:</span>
               <div className="flex items-center gap-2">
-                <span>₹{totalSavings || 0}</span>
+                <span>{formatCurrency(totalSavings || 0, currency)}</span>
                 <span className={savingsPercentChange >= 0 ? 'text-green-600' : 'text-red-600'}>
                   {savingsPercentChange >= 0 ? '▲' : '▼'} {Math.abs(savingsPercentChange || 0)}%
                 </span>
@@ -358,11 +362,11 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
             <div className="bg-blue-500 h-4 rounded-full transition-all" style={{ width: `${budgetUsed}%` }}></div>
           </div>
           <div className="flex justify-between text-xs">
-            <span>₹{totalAmount} / ₹{monthlyBudget}</span>
+            <span>{formatCurrency(totalAmount, currency)} / {formatCurrency(monthlyBudget, currency)}</span>
             <span>{budgetUsed}% used</span>
           </div>
           <div className="text-xs text-gray-600 mt-1">
-            Remaining: ₹{budgetRemaining}
+            Remaining: {formatCurrency(budgetRemaining, currency)}
           </div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2">
@@ -385,11 +389,11 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2">
           <div className="font-semibold text-blue-700 mb-1">Max Daily</div>
-          <div className="text-2xl font-bold text-blue-700">₹{maxDaily}</div>
+          <div className="text-2xl font-bold text-blue-700">{formatCurrency(maxDaily, currency)}</div>
         </div>
         <div className="bg-white rounded-xl shadow p-4 flex flex-col gap-2">
           <div className="font-semibold text-blue-700 mb-1">Min Daily</div>
-          <div className="text-2xl font-bold text-blue-700">₹{minDaily}</div>
+          <div className="text-2xl font-bold text-blue-700">{formatCurrency(minDaily, currency)}</div>
         </div>
       </div>
 
@@ -401,7 +405,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
             {recurringExpenses.length > 0 ? recurringExpenses.map(r => (
               <li key={r.category} className="flex justify-between py-1">
                 <span>{r.category}</span>
-                <span className="font-semibold">₹{r.amount}</span>
+                <span className="font-semibold">{formatCurrency(r.amount, currency)}</span>
               </li>
             )) : (
               <li className="text-gray-500">No recurring expenses found</li>
@@ -437,8 +441,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
                   <span className="font-medium">Category:</span> {selectedCategory}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  <span className="font-medium">Total Amount:</span> ₹
-                  {categoryBreakdown.find(c => c.name === selectedCategory)?.value || 0}
+                  <span className="font-medium">Total Amount:</span> {formatCurrency(categoryBreakdown.find(c => c.name === selectedCategory)?.value || 0, currency)}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   <span className="font-medium">Percentage:</span> 
@@ -448,7 +451,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
               <div className="text-sm text-gray-600 dark:text-gray-400">
                 <div className="font-medium mb-1">Monthly Insights:</div>
                 <ul className="space-y-1 text-xs">
-                  <li>• Daily average: ₹{Math.round((categoryBreakdown.find(c => c.name === selectedCategory)?.value || 0) / 30)}</li>
+                  <li>• Daily average: {formatCurrency(Math.round((categoryBreakdown.find(c => c.name === selectedCategory)?.value || 0) / 30), currency)}</li>
                   <li>• % of monthly budget: {(((categoryBreakdown.find(c => c.name === selectedCategory)?.value || 0) / (monthlyBudget || 1)) * 100).toFixed(1)}%</li>
                   <li>• vs previous month: {expensePercentChange > 0 ? '↑' : '↓'} {Math.abs(expensePercentChange || 0)}%</li>
                 </ul>
@@ -463,8 +466,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
                   <span className="font-medium">Day:</span> {selectedDay}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  <span className="font-medium">Amount:</span> ₹
-                  {dailyExpenses.find(d => d.day === selectedDay)?.amount || 0}
+                  <span className="font-medium">Amount:</span> {formatCurrency(dailyExpenses.find(d => d.day === selectedDay)?.amount || 0, currency)}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
                   <span className="font-medium">Day of Week:</span> 
@@ -476,7 +478,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
                 <ul className="space-y-1 text-xs">
                   <li>• vs Daily Average: {((dailyExpenses.find(d => d.day === selectedDay)?.amount || 0) / Math.max(1, avgDaily) * 100 - 100).toFixed(1)}%</li>
                   <li>• vs Highest Day: {((dailyExpenses.find(d => d.day === selectedDay)?.amount || 0) / Math.max(1, maxDaily) * 100).toFixed(1)}%</li>
-                  <li>• Cumulative Impact: ₹{lineData.find(d => d.day === selectedDay)?.cumulative || 0}</li>
+                  <li>• Cumulative Impact: {formatCurrency(lineData.find(d => d.day === selectedDay)?.cumulative || 0, currency)}</li>
                 </ul>
               </div>
             </div>
@@ -503,7 +505,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
                   cy="50%"
                   outerRadius={80}
                   innerRadius={30}
-                  label={(entry) => `₹${entry.value}`}
+                  label={(entry) => formatCurrency(entry.value ?? 0, currency)}
                 >
                   {[
                     { name: 'Income', value: totalIncome || 0, color: '#10B981' },
@@ -515,7 +517,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
                 </Pie>
                 <Tooltip 
                   formatter={(value: number, name: string) => [
-                    `₹${value}`,
+                    formatCurrency(value, currency),
                     name
                   ]}
                   labelFormatter={() => 'Financial Overview'}
@@ -553,7 +555,7 @@ export default function MonthlyCharts({ onFilterChange }: MonthlyChartsProps) {
                     />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomPieTooltip />} />
+                <Tooltip content={< CustomPieTooltip />} />
                 <Legend />
               </PieChart>
             </ResponsiveContainer>
