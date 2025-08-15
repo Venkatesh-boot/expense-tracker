@@ -367,21 +367,41 @@ export default function ExpensesTable() {
       </div>
       {/* Filters */}
   <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:justify-between items-center">
-        <div className="flex gap-2 items-center w-full sm:w-auto">
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={e => setDateFrom(e.target.value)}
-            className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 w-1/2 sm:w-auto"
-            placeholder="From"
-          />
-          <input
-            type="date"
-            value={dateTo}
-            onChange={e => setDateTo(e.target.value)}
-            className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 w-1/2 sm:w-auto"
-            placeholder="To"
-          />
+        <div className="flex flex-col gap-2 items-center w-full sm:w-auto">
+          <div className="flex gap-2 mb-1">
+            {[7, 15, 30, 90].map(days => (
+              <button
+                key={days}
+                type="button"
+                className="px-2 py-1 rounded bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 text-xs font-medium border border-blue-200 dark:border-blue-800 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors"
+                onClick={() => {
+                  const today = new Date();
+                  const from = new Date(today);
+                  from.setDate(today.getDate() - (days - 1));
+                  setDateFrom(formatLocalDate(from));
+                  setDateTo(formatLocalDate(today));
+                }}
+              >
+                Last {days} days
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2 items-center w-full sm:w-auto">
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 w-1/2 sm:w-auto"
+              placeholder="From"
+            />
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 w-1/2 sm:w-auto"
+              placeholder="To"
+            />
+          </div>
         </div>
         <div className="flex gap-2 items-center w-full sm:w-auto">
           <div className="relative w-full sm:w-64">
