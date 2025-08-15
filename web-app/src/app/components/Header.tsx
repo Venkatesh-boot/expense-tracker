@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ThemeToggle } from './ThemeToggle';
+import { useSettings } from '../hooks/useSettings';
 
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../store/store';
@@ -33,11 +34,10 @@ const LANGUAGES = [
 ];
 
 export default function Header({ showLogout = true }: { showLogout?: boolean }) {
+  // Initialize settings fetch using custom hook (only once on mount)
+    // Removed useSettings to fetch settings only once in App.tsx
   // Define dispatch once for the component
   const dispatch = useDispatch();
-  React.useEffect(() => {
-    dispatch(require('../store/slices/settingsSlice').fetchSettingsStart());
-  }, [dispatch]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [langDropdown, setLangDropdown] = useState(false);

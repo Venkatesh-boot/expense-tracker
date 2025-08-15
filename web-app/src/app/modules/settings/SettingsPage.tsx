@@ -3,9 +3,9 @@ import React, { useEffect, useState } from 'react';
 import Header from '../../components/Header';
 import Footer from '../../components/Footer';
 import { ThemeToggle } from '../../components/ThemeToggle';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { useAppDispatch } from '../../store/hooks';
+import { useSettings } from '../../hooks/useSettings';
 import {
-  fetchSettingsStart,
   updateSettingsStart,
   clearError,
   UserSettings,
@@ -27,17 +27,14 @@ const dateFormatOptions = [
 
 export default function SettingsPage() {
   const dispatch = useAppDispatch();
-  const { settings, loading, error } = useAppSelector(state => state.settings);
+  
+  // Use the custom settings hook instead of manual fetch
+  const { settings, loading, error } = useSettings();
   
   const [currency, setCurrency] = useState('INR');
   const [dateFormat, setDateFormat] = useState('DD/MM/YYYY');
   const [monthlyBudget, setMonthlyBudget] = useState(12000);
   const [successMessage, setSuccessMessage] = useState('');
-
-  useEffect(() => {
-    // Fetch settings from API when component mounts
-    dispatch(fetchSettingsStart());
-  }, [dispatch]);
 
   useEffect(() => {
     // Update local state when settings are loaded from API
