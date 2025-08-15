@@ -19,4 +19,13 @@ public class FilterConfig {
         registrationBean.setOrder(1);
         return registrationBean;
     }
+
+    @Bean
+    public FilterRegistrationBean<RateLimitingFilter> rateLimitingFilter() {
+        FilterRegistrationBean<RateLimitingFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new RateLimitingFilter());
+        registrationBean.addUrlPatterns("/api/*");
+        registrationBean.setOrder(0); // Run before JwtAuthFilter
+        return registrationBean;
+    }
 }
