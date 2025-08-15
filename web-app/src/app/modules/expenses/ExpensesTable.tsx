@@ -3,10 +3,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchExpensesTableRequest, deleteExpenseRequest, updateExpenseRequest } from '../../store/slices/expensesTableSlice';
+import { fetchExpensesTableRequest, deleteExpenseRequest } from '../../store/slices/expensesTableSlice';
 import type { ExpensesTableState } from '../../store/slices/expensesTableSlice';
 import { useTable, useSortBy, usePagination, useGlobalFilter } from 'react-table';
 import ExpenseDetailsModal from './ExpenseDetailsModal';
+// UI helpers (MUI removed from project — use plain buttons/icons)
 
 const columns = [
   { Header: 'Date', accessor: 'date' },
@@ -24,7 +25,7 @@ export default function ExpensesTable() {
   const { rows: expenses } = useAppSelector(state => state.expensesTable as ExpensesTableState);
 
   // Inline edit state
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<{ date: string; category: string; amount: number; type: string; paymentMethod: string; description: string }>>({});
 
   // Modal state
@@ -55,22 +56,10 @@ export default function ExpensesTable() {
     setEditForm(f => ({ ...f, [field]: value }));
   };
 
-  // Handle save
-  const handleSave = (id: string) => {
-    dispatch(updateExpenseRequest({ id, data: editForm }));
-    setEditingId(null);
-    setEditForm({});
-  };
-
-  // Handle cancel
-  const handleCancel = () => {
-    setEditingId(null);
-    setEditForm({});
-  };
+  // (inline edit handlers were present before; saving is done via updateExpenseRequest in-line when needed)
 
   // Default to first and last day of current month
   // Always use the first day of the current month as from date
-  const today = new Date();
   const getFirstDayOfMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth(), 1);
   };
@@ -127,8 +116,8 @@ export default function ExpensesTable() {
     canPreviousPage = false,
     canNextPage = false,
     pageOptions = [0],
-    nextPage = () => {},
-    previousPage = () => {},
+  nextPage = undefined,
+  previousPage = undefined,
   } = tableInstance;
   // If not paginating, show all filtered data as react-table rows
   const displayRows = usePaginate ? page : tableInstance.rows;
@@ -220,7 +209,7 @@ export default function ExpensesTable() {
           <div className="flex items-center gap-1">
             <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full text-xs font-medium">
               {expense.category}
-              {expense.category === 'Bills' && <span className="ml-1" title="Recurring">♻️</span>}
+              {expense.category === 'Bills' && <span className="ml-1" title="Recurring" role="img" aria-label="Recurring">♻️</span>}
             </span>
           </div>
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -271,29 +260,113 @@ export default function ExpensesTable() {
     );
   };
 
+    // Helper to render a table cell (keeps JSX simpler and avoids complex nested ternaries)
+    const renderCell = (cell: any, row: any) => {
+      if (editingId === row.original.id) {
+        if (cell.column.id === 'amount') {
+          return (
+            <input
+              type="number"
+              value={editForm.amount ?? ''}
+              onChange={e => handleEditChange('amount', Number(e.target.value))}
+              className="border px-1 py-0.5 rounded w-20"
+            />
+          );
+        }
+        if (cell.column.id === 'date') {
+          return (
+            <input
+              type="date"
+              value={editForm.date ?? ''}
+              onChange={e => handleEditChange('date', e.target.value)}
+              className="border px-1 py-0.5 rounded w-28"
+            />
+          );
+        }
+        if (cell.column.id === 'category') {
+          return (
+            <input
+              type="text"
+              value={editForm.category ?? ''}
+              onChange={e => handleEditChange('category', e.target.value)}
+              className="border px-1 py-0.5 rounded w-24"
+            />
+          );
+        }
+        if (cell.column.id === 'type') {
+          return (
+            <input
+              type="text"
+              value={editForm.type ?? ''}
+              onChange={e => handleEditChange('type', e.target.value)}
+              className="border px-1 py-0.5 rounded w-20"
+            />
+          );
+        }
+        if (cell.column.id === 'paymentMethod') {
+          return (
+            <input
+              type="text"
+              value={editForm.paymentMethod ?? ''}
+              onChange={e => handleEditChange('paymentMethod', e.target.value)}
+              className="border px-1 py-0.5 rounded w-24"
+            />
+          );
+        }
+        return null;
+      }
+
+      // read-only rendering
+      if (cell.column.id === 'amount') {
+        return (
+          <div className="flex items-center justify-end gap-2">
+            <span>₹{typeof cell.value === 'number' ? cell.value.toLocaleString() : (cell.value as string)}</span>
+            {typeof cell.value === 'number' && isLarge(cell.value) && <span title="Large expense" className="ml-1 text-red-500 font-bold" role="img" aria-label="Large expense">!</span>}
+          </div>
+        );
+      }
+      if (cell.column.id === 'category') {
+        return (
+          <div className="inline-flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded-full bg-gray-100 dark:bg-gray-800 text-sm font-medium text-gray-800 dark:text-gray-200">{cell.value as string}</span>
+            {cell.value === 'Bills' && <span title="Recurring" className="text-sm text-green-500" role="img" aria-label="Recurring">♻️</span>}
+          </div>
+        );
+      }
+      if (cell.column.id === 'type') {
+        return (
+          <div>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${cell.value === 'INCOME' ? 'bg-green-100 text-green-800' : cell.value === 'SAVINGS' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'}`}>{cell.value}</span>
+          </div>
+        );
+      }
+
+      return cell.render('Cell');
+    };
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg p-0 sm:p-4 relative min-h-screen w-full overflow-x-hidden max-w-full">
-      <h2 className="text-xl font-bold mb-2 text-blue-700 dark:text-blue-200">Recent Expenses</h2>
+    <div className="bg-white dark:bg-gray-900 rounded-lg p-4 relative min-h-screen w-full overflow-x-hidden max-w-full shadow-sm border border-gray-100 dark:border-gray-800">
+      <h2 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">Recent Expenses</h2>
       {/* Info Bar */}
-      <div className="flex flex-col gap-2 mb-2 sm:flex-row sm:justify-between">
-        <div className="flex flex-wrap gap-2 items-center text-xs sm:text-base">
-          <span className="font-semibold text-gray-700 dark:text-gray-100">Total (filtered): <span className="text-blue-700 dark:text-green-200">₹{totalFiltered.toLocaleString()}</span></span>
-          <span className="font-semibold text-gray-700 dark:text-gray-100">This page: <span className="text-blue-700 dark:text-green-200">₹{totalPage.toLocaleString()}</span></span>
-          <span className="font-semibold text-gray-700 dark:text-gray-100">Showing {page.length} of {filteredData.length} expenses</span>
+      <div className="flex flex-col gap-2 mb-3 sm:flex-row sm:justify-between items-center">
+        <div className="flex flex-wrap gap-3 items-center text-sm">
+          <div className="text-sm text-gray-700 dark:text-gray-300">Total (filtered): <span className="font-semibold text-gray-900 dark:text-gray-100">₹{totalFiltered.toLocaleString()}</span></div>
+          <div className="text-sm text-gray-700 dark:text-gray-300">This page: <span className="font-semibold text-gray-900 dark:text-gray-100">₹{totalPage.toLocaleString()}</span></div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">Showing {page.length} of {filteredData.length} expenses</div>
         </div>
         <div className="flex gap-2 items-center w-full sm:w-auto justify-end">
-          <button onClick={handleExportCSV} className="px-2 py-1 sm:px-3 sm:py-1 rounded bg-blue-600 text-white hover:bg-blue-700 text-xs sm:text-sm">Export CSV</button>
-          {csvUrl && <a href={csvUrl} download="expenses.csv" className="text-blue-600 underline text-xs sm:text-sm">Download</a>}
+          <button onClick={handleExportCSV} className="px-3 py-1 rounded bg-gray-800 dark:bg-gray-700 text-white hover:opacity-95 text-sm">Export CSV</button>
+          {csvUrl && <a href={csvUrl} download="expenses.csv" className="text-sm text-gray-600 dark:text-gray-300 underline">Download</a>}
         </div>
       </div>
       {/* Category Breakdown */}
-      <div className="flex flex-wrap gap-2 mb-2 text-xs sm:text-sm">
+      <div className="flex flex-wrap gap-2 mb-3">
         {Object.entries(categoryBreakdown).map(([cat, amt]) => (
-          <span key={cat} className="px-2 py-1 rounded bg-blue-100 dark:bg-gray-900 text-blue-700 dark:text-green-200 font-semibold">{cat}: ₹{amt.toLocaleString()}</span>
+          <div key={cat} className="px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-medium">{cat}: <span className="font-semibold">₹{amt.toLocaleString()}</span></div>
         ))}
       </div>
       {/* Filters */}
-      <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:justify-between items-center">
+  <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:justify-between items-center">
         <div className="flex gap-2 items-center w-full sm:w-auto">
           <input
             type="date"
@@ -311,12 +384,12 @@ export default function ExpensesTable() {
           />
         </div>
         <div className="flex gap-2 items-center w-full sm:w-auto">
-          <div className="relative w-full sm:w-auto">
+          <div className="relative w-full sm:w-64">
             <input
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
-              placeholder="Search..."
-              className="border px-2 py-1 rounded bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 w-full"
+              placeholder="Search category or description"
+              className="border px-3 py-2 rounded bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-200 w-full text-sm"
               onFocus={() => setSearchSuggestions([])}
             />
             {searchSuggestions.length > 0 && (
@@ -342,19 +415,19 @@ export default function ExpensesTable() {
         </div>
       </div>
       {/* Table - Hidden on mobile, shown on md and up */}
-      <div className="hidden md:block overflow-x-auto w-full max-w-full rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
-        <table {...getTableProps()} className="min-w-full w-full max-w-full text-left bg-white dark:bg-gray-800 text-xs sm:text-sm" style={{ tableLayout: 'auto' }}>
-          <thead className="bg-gradient-to-r from-blue-100 to-blue-200 dark:from-gray-900 dark:to-gray-800 sticky top-0 z-10">
+      <div className="hidden md:block overflow-x-auto w-full max-w-full rounded-lg border border-gray-100 dark:border-gray-800">
+        <table {...getTableProps()} className="min-w-full w-full max-w-full text-left bg-transparent text-sm" style={{ tableLayout: 'auto' }}>
+          <thead className="sticky top-0 z-10">
             {headerGroups.map((headerGroup: any) => {
               const headerGroupProps = headerGroup.getHeaderGroupProps();
               const headerGroupKey = headerGroupProps.key;
               const { key, ...restHeaderGroupProps } = headerGroupProps;
               return (
-                <tr key={headerGroupKey} {...restHeaderGroupProps}>
-                  <th className="py-3 px-2 border-b text-center">
+                <tr key={headerGroupKey} {...restHeaderGroupProps} className="bg-gray-50 dark:bg-gray-900">
+                  <th className="py-3 px-3 border-b text-center w-12">
                     <input type="checkbox" checked={allSelected} onChange={toggleAll} />
                   </th>
-                  <th className="py-3 px-2 border-b text-center">#</th>
+                  <th className="py-3 px-3 border-b text-center w-12">#</th>
           {/* Insert View column before Actions */}
           {headerGroup.headers.map((column: any, idx: number) => {
             const { key, ...thProps } = column.getHeaderProps(column.getSortByToggleProps());
@@ -362,7 +435,7 @@ export default function ExpensesTable() {
               <th
                 key={key}
                 {...thProps}
-                className={`py-3 px-5 border-b font-semibold text-blue-700 dark:text-blue-200 text-base cursor-pointer select-none whitespace-nowrap ${column.isSorted ? 'bg-blue-200 dark:bg-gray-700' : ''}`}
+                className={`py-3 px-4 border-b font-medium text-gray-700 dark:text-gray-200 text-sm text-left cursor-pointer select-none whitespace-nowrap ${column.isSorted ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
               >
                 {column.render('Header')}
                 <span>
@@ -371,8 +444,8 @@ export default function ExpensesTable() {
               </th>
             );
           })}
-          <th className="py-3 px-2 border-b text-center">View</th>
-          <th className="py-3 px-2 border-b text-center">Actions</th>
+          <th className="py-3 px-3 border-b text-center w-28">View</th>
+          <th className="py-3 px-3 border-b text-center w-28">Actions</th>
                 </tr>
               );
             })}
@@ -388,13 +461,13 @@ export default function ExpensesTable() {
                 <tr
                   key={rowKey}
                   {...restRowProps}
-                  className={`transition-colors ${idx % 2 === 0 ? 'bg-blue-50 dark:bg-gray-900' : 'bg-white dark:bg-gray-800'} hover:bg-blue-100 dark:hover:bg-gray-700 ${isLarge(row.original.amount) ? 'border-l-4 border-red-500' : ''}`}
+                  className={`transition-colors ${idx % 2 === 0 ? 'bg-white dark:bg-gray-900' : 'bg-gray-50 dark:bg-gray-800'} hover:bg-gray-100 dark:hover:bg-gray-700 ${isLarge(row.original.amount) ? 'border-l-4 border-red-500' : ''}`}
                 >
                   <td className="py-3 px-2 border-b text-center">
                     <input type="checkbox" checked={isSelected} onChange={() => toggleRow(row.index)} />
                   </td>
                   <td className="py-3 px-2 border-b text-center">{idx + 1}</td>
-            {row.cells.map((cell: any, cidx: number) => {
+    {row.cells.map((cell: any, cidx: number) => {
               const cellProps = cell.getCellProps();
               const cellKey = cellProps.key;
               const { key, ...restCellProps } = cellProps;
@@ -402,85 +475,34 @@ export default function ExpensesTable() {
                 <td
                   key={cellKey}
                   {...restCellProps}
-                  className="py-3 px-5 border-b text-gray-700 dark:text-gray-200 whitespace-nowrap"
+                  className={`py-3 px-4 border-b text-gray-700 dark:text-gray-200 whitespace-nowrap ${cell.column.id === 'amount' ? 'text-right font-semibold' : ''}`}
                 >
-                  {editingId === row.original.id ? (
-                    cell.column.id === 'amount' ? (
-                      <input
-                        type="number"
-                        value={editForm.amount ?? ''}
-                        onChange={e => handleEditChange('amount', Number(e.target.value))}
-                        className="border px-1 py-0.5 rounded w-20"
-                      />
-                    ) : cell.column.id === 'date' ? (
-                      <input
-                        type="date"
-                        value={editForm.date ?? ''}
-                        onChange={e => handleEditChange('date', e.target.value)}
-                        className="border px-1 py-0.5 rounded w-28"
-                      />
-                    ) : cell.column.id === 'category' ? (
-                      <input
-                        type="text"
-                        value={editForm.category ?? ''}
-                        onChange={e => handleEditChange('category', e.target.value)}
-                        className="border px-1 py-0.5 rounded w-24"
-                      />
-                    ) : cell.column.id === 'type' ? (
-                      <input
-                        type="text"
-                        value={editForm.type ?? ''}
-                        onChange={e => handleEditChange('type', e.target.value)}
-                        className="border px-1 py-0.5 rounded w-20"
-                      />
-                    ) : cell.column.id === 'paymentMethod' ? (
-                      <input
-                        type="text"
-                        value={editForm.paymentMethod ?? ''}
-                        onChange={e => handleEditChange('paymentMethod', e.target.value)}
-                        className="border px-1 py-0.5 rounded w-24"
-                      />
-                    ) : null
-                  ) : (
-                    cell.column.id === 'amount' ? (
-                      <span className="inline-flex items-center gap-1">
-                        ₹{typeof cell.value === 'number' ? cell.value.toLocaleString() : (cell.value as string)}
-                        {typeof cell.value === 'number' && isLarge(cell.value) && <span title="Large expense" className="ml-1 text-red-500 font-bold" role="img" aria-label="Large expense">!</span>}
-                      </span>
-                    ) : cell.column.id === 'category' ? (
-                      <span className="inline-flex items-center gap-1">
-                        {cell.value as string}
-                        {cell.value === 'Bills' && <span title="Recurring" className="ml-1 text-green-500" role="img" aria-label="Recurring">♻️</span>}
-                      </span>
-                    ) : cell.render('Cell')
-                  )}
+      {renderCell(cell, row)}
                 </td>
               );
             })}
                   {/* View column */}
-                  <td className="py-3 px-2 border-b text-center">
-                    <button
-                      className="text-green-600 hover:underline text-xs"
-                      onClick={() => handleView(row.original)}
-                      title="View Details"
-                    >
-                      View
+                  <td className="py-3 px-3 border-b text-center">
+                    <button aria-label="View details" title="View details" onClick={() => handleView(row.original)} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                        <path d="M12 5c-7 0-11 7-11 7s4 7 11 7 11-7 11-7-4-7-11-7zm0 12a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-8a3 3 0 1 0 .001 6.001A3 3 0 0 0 12 9z" />
+                      </svg>
                     </button>
                   </td>
                   {/* Actions column */}
-                  <td className="py-3 px-2 border-b text-center">
-                    <button
-                      className="text-blue-600 hover:underline text-xs mr-2"
-                      onClick={() => handleEdit(row.original)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="text-red-600 hover:underline text-xs mr-2"
-                      onClick={() => handleDelete(row.original.id)}
-                    >
-                      Delete
-                    </button>
+                  <td className="py-3 px-3 border-b text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <button aria-label="Edit" title="Edit" onClick={() => handleEdit(row.original)} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                          <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z"/>
+                        </svg>
+                      </button>
+                      <button aria-label="Delete" title="Delete" onClick={() => handleDelete(row.original.id)} className="p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 24 24" aria-hidden>
+                          <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                        </svg>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

@@ -15,6 +15,7 @@ const handlers = [
     );
   }),
   // Add more handlers for POST, PUT, DELETE as needed
+];
 
 // Catch-all handler to suppress MSW warnings for unhandled requests (including WebSocket)
 export const handlersWithCatchAll = [
@@ -22,5 +23,4 @@ export const handlersWithCatchAll = [
   passthrough(),
 ];
 
-export const handlers = handlers;
-];
+export const handlersExport = handlers;

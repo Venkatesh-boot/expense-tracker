@@ -27,7 +27,13 @@ const AddExpensesPage = () => {
   const [type, setType] = React.useState('EXPENSE');
   const [categorySearch, setCategorySearch] = React.useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = React.useState(false);
-  const [date, setDate] = React.useState('');
+  // Preselect today's date in YYYY-MM-DD format unless editing
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  const defaultDate = `${yyyy}-${mm}-${dd}`;
+  const [date, setDate] = React.useState(defaultDate);
   const [amount, setAmount] = React.useState('');
   const [description, setDescription] = React.useState('');
   const [paymentMethod, setPaymentMethod] = React.useState('UPI');

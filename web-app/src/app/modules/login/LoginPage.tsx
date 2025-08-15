@@ -49,7 +49,9 @@ const LoginPage = () => {
     if (typeof error === 'string') {
       try {
         if (error.trim().startsWith('{') && error.trim().endsWith('}')) errorObj = JSON.parse(error);
-      } catch {}
+      } catch (e) {
+        // ignore JSON parse errors for non-JSON error strings
+      }
     }
     const msg = typeof errorObj === 'string' ? errorObj : errorObj && errorObj.message ? errorObj.message : 'An error occurred. Please try again.';
     return (

@@ -12,9 +12,11 @@ const OtpPage = () => {
   const { loading, error, success } = useSelector((state: RootState) => state.otp);
 
   const [otp, setOtp] = useState<string[]>(Array(OTP_LENGTH).fill(''));
-  // Always create 10 refs to support OTP_LENGTH 3-10, but do it dynamically
-  const allRefs = Array.from({ length: 10 }, () => useRef<HTMLInputElement>(null));
-  const inputRefs = allRefs.slice(0, OTP_LENGTH);
+  // Create a stable refs array for inputs
+  const allRefs = React.useRef<Array<React.RefObject<HTMLInputElement | null>>>(
+    Array.from({ length: 10 }, () => React.createRef<HTMLInputElement>())
+  );
+  const inputRefs = allRefs.current.slice(0, OTP_LENGTH);
   
   // Validate OTP_LENGTH
   const isOtpLengthValid = OTP_LENGTH >= 3 && OTP_LENGTH <= 10;

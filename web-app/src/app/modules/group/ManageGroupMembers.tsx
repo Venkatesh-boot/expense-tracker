@@ -14,7 +14,7 @@ interface ManageGroupMembersProps {
 const ManageGroupMembers: React.FC<Partial<ManageGroupMembersProps>> = ({ members, onRemove }) => {
   // Use mock data if no members prop is provided
   const displayMembers = members && members.length > 0 ? members : mockGroupMembers;
-  const handleRemove = onRemove || ((_) => {});
+  const handleRemove = onRemove || (() => {/* intentionally empty fallback */});
   return (
     <ul className="mb-6 divide-y divide-gray-200 dark:divide-gray-700">
       {displayMembers.map(member => (
